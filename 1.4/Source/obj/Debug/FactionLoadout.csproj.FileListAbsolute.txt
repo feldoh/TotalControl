@@ -1,0 +1,5 @@
+C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\TotalControl\1.4\Source\obj\Debug\FactionLoadout.csproj.AssemblyReference.cache
+C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\TotalControl\1.4\Source\obj\Debug\FactionLoadout.csproj.CoreCompileInputs.cache
+C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\TotalControl\Assemblies\FactionLoadout.dll
+C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\TotalControl\1.4\Source\obj\Debug\FactionLoadout.dll
+C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\TotalControl\1.4\Assemblies\FactionLoadout.dll
