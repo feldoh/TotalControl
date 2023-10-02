@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
+using Debug = System.Diagnostics.Debug;
 
 namespace FactionLoadout
 {
@@ -697,7 +698,7 @@ namespace FactionLoadout
                 chanceRect.y += 34;
                 chanceRect.height = 30;
                 if(item.SelectionMode != ApparelSelectionMode.AlwaysTake)
-                    item.SelectionChance = Widgets.HorizontalSlider(chanceRect, item.SelectionChance, 0f, 1f, label: $"{(item.SelectionMode == ApparelSelectionMode.RandomChance ? "Chance" : "Weight")}: {item.SelectionChance * 100f:F0}%");
+                    Widgets.HorizontalSlider(chanceRect, ref item.SelectionChance, FloatRange.ZeroToOne, label: $"{(item.SelectionMode == ApparelSelectionMode.RandomChance ? "Chance" : "Weight")}: {item.SelectionChance * 100f:F0}%");
 
                 ui.Gap();
             }
@@ -820,9 +821,9 @@ namespace FactionLoadout
                     defRect.height = 20;
 
                     if(isChildOfAll)
-                        part.SkipChance = Widgets.HorizontalSlider(defRect, part.SkipChance, 0, 1, leftAlignedLabel: $"Skip chance: {100f * part.SkipChance:F0}%");
+                        Widgets.HorizontalSlider(defRect, ref part.SkipChance, FloatRange.ZeroToOne, label: $"Skip chance: {100f * part.SkipChance:F0}%");
                     if(isChildOfOne)
-                        part.ChoiceChance = Widgets.HorizontalSlider(defRect, part.ChoiceChance, 0, 1, leftAlignedLabel: $"Weight: {100f * part.ChoiceChance:F0}%");
+                        Widgets.HorizontalSlider(defRect, ref part.ChoiceChance, FloatRange.ZeroToOne, label: $"Weight: {100f * part.ChoiceChance:F0}%");
                 }
 
                 clone.x += 220;
@@ -896,7 +897,9 @@ namespace FactionLoadout
         {
             if (active)
             {
-                field = Widgets.HorizontalSlider(rect, field.Value, 0f, 1f, label: $"Chance: {(100f * field):F0}% (default: {(100f * defaultValue):F0}%)");
+                var fieldVal = field!.Value;
+                Widgets.HorizontalSlider(rect, ref fieldVal, FloatRange.ZeroToOne, label: $"Chance: {(100f * field):F0}% (default: {(100f * defaultValue):F0}%)");
+                field = fieldVal;
             }
             else
             {
