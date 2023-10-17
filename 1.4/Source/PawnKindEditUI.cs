@@ -3,6 +3,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using HarmonyLib;
 using UnityEngine;
 using Verse;
 using Debug = System.Diagnostics.Debug;
@@ -21,6 +23,8 @@ namespace FactionLoadout
         private static List<ThingDef> AllInvItems;
         private static List<ThingDef> AllHumanlikeRaces;
         private static List<PawnKindDef> AllAnimalKindDefs;
+
+        private static List<string> AllPowerDefs;
 
         public static Texture2D TryGetIcon(Def def, out Color color)
         {
@@ -45,7 +49,9 @@ namespace FactionLoadout
                     return fd.FactionIcon;
                 default:
                     return null;
-            };
+            }
+
+            ;
         }
 
         private static void ScanDefs()
@@ -71,29 +77,29 @@ namespace FactionLoadout
                 }
             }
 
-            foreach(var def in DefDatabase<ThingDef>.AllDefsListForReading)
+            foreach (var def in DefDatabase<ThingDef>.AllDefsListForReading)
             {
-                if(def.race != null && !def.race.Animal)                
-                    allHumanlikeRaces.Add(def);                
+                if (def.race != null && !def.race.Animal)
+                    allHumanlikeRaces.Add(def);
 
-                if(def.isTechHediff && !def.IsNaturalOrgan)
+                if (def.isTechHediff && !def.IsNaturalOrgan)
                 {
-                    if(def.techHediffsTags != null)
-                        foreach(var item in def.techHediffsTags)                    
-                            if(item != null)
-                                techTags.Add(item);                    
+                    if (def.techHediffsTags != null)
+                        foreach (var item in def.techHediffsTags)
+                            if (item != null)
+                                techTags.Add(item);
 
                     allTech.Add(def);
                 }
 
-                if(def.IsApparel)
+                if (def.IsApparel)
                 {
-                    if(def.apparel?.tags != null)                  
-                        foreach(var item in def.apparel.tags)                    
+                    if (def.apparel?.tags != null)
+                        foreach (var item in def.apparel.tags)
                             if (item != null)
                                 apparelTags.Add(item);
 
-                    apparel.Add(def);                    
+                    apparel.Add(def);
                 }
 
                 if (def.IsWeapon)
@@ -136,6 +142,26 @@ namespace FactionLoadout
 
             AllAnimalKindDefs = new List<PawnKindDef>(allAnimalKindDefs);
             AllAnimalKindDefs.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
+
+            if (ModLister.GetActiveModWithIdentifier("VanillaExpanded.VFEA") == null) return;
+            Type powerDefType = AccessTools.TypeByName("VFEAncients.PowerDef");
+            Type defDatabaseGenericType = typeof(DefDatabase<>);
+            Type listGenericType = typeof(List<>);
+            Type closedDefDatabaseType = defDatabaseGenericType.MakeGenericType(powerDefType);
+            Type closedListType = listGenericType.MakeGenericType(powerDefType);
+            PropertyInfo getPowerDefsMethod = closedDefDatabaseType.GetProperty("AllDefsListForReading");
+            if (getPowerDefsMethod?.GetValue(null) is IList powerList)
+            {
+                AllPowerDefs = new List<string>();
+                foreach (var power in powerList)
+                {
+                    if (power is Def pd)
+                    {
+                        AllPowerDefs.Add(pd.defName);
+                    }
+                }
+                AllPowerDefs.Sort();
+            }
         }
 
         private static void DrawRegionTitle(Listing_Standard ui, string title)
@@ -147,6 +173,8 @@ namespace FactionLoadout
         public readonly PawnKindEdit Current;
 
         private string maxTechBuffer = null;
+        private string numVFEAncientsPowersBuffer = null;
+        private string numVFEAncientsWeaknessesBuffer = null;
         private List<string> tagBin = new List<string>();
         private List<Def> thingBin = new List<Def>();
         private Vector2[] scrolls = new Vector2[64];
@@ -157,6 +185,7 @@ namespace FactionLoadout
         private Vector2 globalScroll;
         private int selectedTab;
         private List<Tab> tabs;
+
         private PawnKindDef DefaultKind
         {
             get
@@ -179,7 +208,7 @@ namespace FactionLoadout
         public PawnKindEditUI(PawnKindEdit toEdit)
         {
             draggable = true;
-            resizeable = true;            
+            resizeable = true;
             doCloseX = true;
             Current = toEdit;
 
@@ -194,7 +223,7 @@ namespace FactionLoadout
 
         public override void DoWindowContents(Rect inRect)
         {
-            if(Current == null || Current.DeletedOrClosed)
+            if (Current == null || Current.DeletedOrClosed)
             {
                 Close();
                 return;
@@ -205,7 +234,7 @@ namespace FactionLoadout
             scrollIndex = 0;
             bufferIndex = 0;
 
-            if(tabs == null)
+            if (tabs == null)
             {
                 tabs = new List<Tab>()
                 {
@@ -234,7 +263,7 @@ namespace FactionLoadout
             Rect tabRect = inRect;
             tabRect.height = 40;
             tabRect.y += 50;
-            for(int i = 0; i < tabs.Count; i++)
+            for (int i = 0; i < tabs.Count; i++)
             {
                 Rect button = tabRect;
                 button.width = 140;
@@ -247,7 +276,7 @@ namespace FactionLoadout
                     selectedTab = i;
                 }
 
-                if(selectedTab == i)
+                if (selectedTab == i)
                 {
                     Rect contentArea = inRect;
                     contentArea.yMin += 100;
@@ -265,7 +294,7 @@ namespace FactionLoadout
                     Widgets.EndScrollView();
                 }
             }
-        }        
+        }
 
         private void DrawGeneralTab(Listing_Standard ui)
         {
@@ -355,7 +384,8 @@ namespace FactionLoadout
             // Disabled for now. Not very useful.
             //DrawOverride(ui, DefaultFac.apparelDisallowTags, ref Current.ApparelDisallowedTags, "Disallowed Apparel Types", DrawDisallowedApparelTags, GetHeightFor(Current.ApparelDisallowedTags), true);
             DrawOverride(ui, DefaultKind.apparelColor, ref Current.ApparelColor, "Apparel Color (where applicable)", DrawApparelColor);
-            DrawOverride(ui, DefaultKind.apparelRequired, ref Current.ApparelRequired, "Required Apparel (simple)", DrawRequiredApparel, GetHeightFor(Current.ApparelRequired), true);
+            DrawOverride(ui, DefaultKind.apparelRequired, ref Current.ApparelRequired, "Required Apparel (simple)", DrawRequiredApparel, GetHeightFor(Current.ApparelRequired),
+                true);
             DrawSpecificGear(ui, ref Current.SpecificApparel, "Required Apparel (advanced)", t => t.IsApparel, ThingDefOf.Apparel_Parka);
         }
 
@@ -378,16 +408,17 @@ namespace FactionLoadout
                 if (active)
                     edits = null;
                 else
-                    edits = new List<SpecRequirementEdit>();                
+                    edits = new List<SpecRequirementEdit>();
                 active = !active;
             }
+
             var content = new Rect(rect.x + 122, rect.y, ui.ColumnWidth - 124, rect.height);
             Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
             content = content.ExpandedBy(-2);
 
             ref Vector2 scroll = ref scrolls[scrollIndex++];
             if (active)
-            {                
+            {
                 Widgets.BeginScrollView(content, ref scroll, new Rect(0, 0, 100, 152 * edits.Count - 10));
                 var tempUI = new Listing_Standard();
                 tempUI.Begin(new Rect(0, 0, content.width - 20, 152 * edits.Count));
@@ -397,7 +428,7 @@ namespace FactionLoadout
                 content.y += content.height + 5;
                 content.height = 28;
                 content.width = 250;
-                if(Widgets.ButtonText(content, "<b>Add New</b>"))
+                if (Widgets.ButtonText(content, "<b>Add New</b>"))
                 {
                     edits.Add(new SpecRequirementEdit() { Thing = defaultThing });
                 }
@@ -417,9 +448,9 @@ namespace FactionLoadout
         {
             bool active = edits != null;
             if (!active)
-                return;            
+                return;
 
-            for(int i = 0; i < edits.Count; i++)
+            for (int i = 0; i < edits.Count; i++)
             {
                 var item = edits[i];
 
@@ -441,11 +472,12 @@ namespace FactionLoadout
 
                 Rect delete = new Rect(area.xMax - 105, area.y + 5, 100, 20);
                 GUI.color = Color.red;
-                if(Widgets.ButtonText(delete, "<b>REMOVE</b>"))
+                if (Widgets.ButtonText(delete, "<b>REMOVE</b>"))
                 {
                     edits.RemoveAt(i);
                     i--;
                 }
+
                 GUI.color = Color.white;
 
                 Rect defSel = area;
@@ -454,7 +486,7 @@ namespace FactionLoadout
                 defSel.width = 220;
                 defSel.height = 50;
                 Widgets.DrawHighlightIfMouseover(defSel);
-                if(Widgets.ButtonInvisible(defSel))
+                if (Widgets.ButtonInvisible(defSel))
                 {
                     var defs = DefDatabase<ThingDef>.AllDefsListForReading.Where(thingFilter);
                     var items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out var c), c, d.description));
@@ -486,7 +518,7 @@ namespace FactionLoadout
                         Widgets.DefLabelWithIcon(material, item.Material, 5);
                     else
                         Widgets.Label(material, "None");
-                }                
+                }
 
                 material.x = area.x + 5;
                 material.width = 220;
@@ -512,7 +544,7 @@ namespace FactionLoadout
                             item.Material = s;
                         });
                     }
-                }                
+                }
 
                 Rect style = area;
                 style.width = 220;
@@ -536,10 +568,7 @@ namespace FactionLoadout
                 {
                     var items = CustomFloatMenu.MakeItems(StyleHelper.GetValidStyles(item.Thing), s => new MenuItemText(s.style, s.name, s.exampleIcon));
                     items.Add(new MenuItemText(null, "_ No Style _", null, default, "This item will have no style at all."));
-                    CustomFloatMenu.Open(items, raw =>
-                    {
-                        item.Style = raw.Payload == null ? null : raw.GetPayload<ThingStyleDef>();
-                    });
+                    CustomFloatMenu.Open(items, raw => { item.Style = raw.Payload == null ? null : raw.GetPayload<ThingStyleDef>(); });
                 }
 
                 Rect biocode = material;
@@ -558,9 +587,10 @@ namespace FactionLoadout
                 qualityCheck.y += 10;
                 qualityCheck.width = 150;
                 qualityCheck.height = 28;
-                if(canDoQuality && Widgets.ButtonText(qualityCheck, $"<b>Specific quality: </b><color={(item.Quality != null ? "#81f542" : "#ff4d4d")}>{(item.Quality != null ? "Yes" : "No")}</color>"))
+                if (canDoQuality && Widgets.ButtonText(qualityCheck,
+                        $"<b>Specific quality: </b><color={(item.Quality != null ? "#81f542" : "#ff4d4d")}>{(item.Quality != null ? "Yes" : "No")}</color>"))
                 {
-                    if(item.Quality == null)
+                    if (item.Quality == null)
                     {
                         item.Quality = QualityCategory.Normal;
                     }
@@ -569,7 +599,7 @@ namespace FactionLoadout
                         item.Quality = null;
                     }
                 }
-                else if(!canDoQuality)
+                else if (!canDoQuality)
                 {
                     item.Quality = null;
                 }
@@ -579,17 +609,14 @@ namespace FactionLoadout
                 if (canDoQuality && item.Quality != null && Widgets.ButtonText(quality, item.Quality.ToString()))
                 {
                     var enums = Enum.GetValues(typeof(QualityCategory)).Cast<QualityCategory>();
-                    FloatMenuUtility.MakeMenu(enums, e => e.ToString(), e => () =>
-                    {
-                        item.Quality = e;
-                    });
+                    FloatMenuUtility.MakeMenu(enums, e => e.ToString(), e => () => { item.Quality = e; });
                 }
 
                 bool canDoColor = item.Thing?.CompDefForAssignableFrom<CompColorable>() != null;
                 Rect color = quality;
                 color.x += 2;
                 color.y += 34;
-                if(canDoColor)
+                if (canDoColor)
                     Widgets.Label(color, "<b>Color: </b>");
                 color.x += 60;
                 bool isDefault = item.Color == default;
@@ -608,6 +635,7 @@ namespace FactionLoadout
                             item.Color = c;
                         }));
                     }
+
                     if (isDefault)
                     {
                         Widgets.Label(color.GetCentered("No color"), "No color");
@@ -657,7 +685,7 @@ namespace FactionLoadout
                 modeButton.y += 22;
                 modeButton.height = 30;
 
-                if(Widgets.ButtonText(modeButton, name))
+                if (Widgets.ButtonText(modeButton, name))
                 {
                     IEnumerable<ApparelSelectionMode> MakeEnumerable(Array normal)
                     {
@@ -685,20 +713,18 @@ namespace FactionLoadout
                                 return mode.ToString();
                         }
                     }
-                    
+
                     var values = MakeEnumerable(Enum.GetValues(typeof(ApparelSelectionMode)));
-                    FloatMenuUtility.MakeMenu(values, e => Name(e), e => () =>
-                    {
-                        item.SelectionMode = e;
-                    });                    
+                    FloatMenuUtility.MakeMenu(values, e => Name(e), e => () => { item.SelectionMode = e; });
                 }
 
                 Rect chanceRect = modeBox;
                 chanceRect = modeButton.ExpandedBy(-5);
                 chanceRect.y += 34;
                 chanceRect.height = 30;
-                if(item.SelectionMode != ApparelSelectionMode.AlwaysTake)
-                    Widgets.HorizontalSlider(chanceRect, ref item.SelectionChance, FloatRange.ZeroToOne, label: $"{(item.SelectionMode == ApparelSelectionMode.RandomChance ? "Chance" : "Weight")}: {item.SelectionChance * 100f:F0}%");
+                if (item.SelectionMode != ApparelSelectionMode.AlwaysTake)
+                    Widgets.HorizontalSlider(chanceRect, ref item.SelectionChance, FloatRange.ZeroToOne,
+                        label: $"{(item.SelectionMode == ApparelSelectionMode.RandomChance ? "Chance" : "Weight")}: {item.SelectionChance * 100f:F0}%");
 
                 ui.Gap();
             }
@@ -717,10 +743,21 @@ namespace FactionLoadout
         {
             DrawOverride(ui, DefaultKind.techHediffsMoney, ref Current.TechMoney, "Implants & Bionics Value", DrawTechMoney);
             DrawOverride(ui, DefaultKind.techHediffsTags, ref Current.TechHediffTags, "Allowed Implants & Bionics Types", DrawTechTags, GetHeightFor(Current.TechHediffTags), true);
-            DrawOverride(ui, DefaultKind.techHediffsDisallowTags, ref Current.TechHediffDisallowedTags, "Disallowed Implants & Bionics Types", DrawDisallowedTechTags, GetHeightFor(Current.TechHediffDisallowedTags), true);
+            DrawOverride(ui, DefaultKind.techHediffsDisallowTags, ref Current.TechHediffDisallowedTags, "Disallowed Implants & Bionics Types", DrawDisallowedTechTags,
+                GetHeightFor(Current.TechHediffDisallowedTags), true);
             DrawOverride(ui, DefaultKind.techHediffsRequired, ref Current.TechRequired, "Required Implants & Bionics", DrawRequiredTech, GetHeightFor(Current.TechRequired), true);
             DrawOverride(ui, DefaultKind.techHediffsChance, ref Current.TechHediffChance, "Implants & Bionics Chance", DrawTechChance);
             DrawOverride(ui, DefaultKind.techHediffsMaxAmount, ref Current.TechHediffsMaxAmount, "Max # of Implants & Bionics", DrawMaxTech);
+
+            if (ModLister.GetActiveModWithIdentifier("VanillaExpanded.VFEA") == null) return;
+            DrawOverride(ui, 0, ref Current.NumVFEAncientsSuperPowers, "# of VFE Ancients Super Powers", DrawNumVFEAncientsSuperPowers);
+            DrawOverride(ui, 0, ref Current.NumVFEAncientsSuperWeaknesses, "# of VFE Ancients Super Weaknesses", DrawNumVFEAncientsSuperWeaknesses);
+            DrawOverride(ui, new List<string>(), ref Current.ForcedVFEAncientsItems, "Forced Powers and Weaknesses", DrawVFEAncientsPowers, GetHeightFor(Current.ForcedVFEAncientsItems), true);
+        }
+
+        private void DrawVFEAncientsPowers(Rect rect, bool active, List<string> defaultPowers)
+        {
+            DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.ForcedVFEAncientsItems, new List<string>(), AllPowerDefs);
         }
 
         private void DrawInventoryTab(Listing_Standard ui)
@@ -729,9 +766,11 @@ namespace FactionLoadout
             {
                 var rect = ui.GetRect(30);
                 Widgets.DrawHighlightIfMouseover(rect);
-                TooltipHandler.TipRegion(rect, "If true, the override inventory entirely replaces the default one.\nIf false, the override inventory is added to the default inventory.");
+                TooltipHandler.TipRegion(rect,
+                    "If true, the override inventory entirely replaces the default one.\nIf false, the override inventory is added to the default inventory.");
                 Widgets.CheckboxLabeled(rect, "Replace default inventory? ", ref Current.ReplaceDefaultInventory, placeCheckboxNearText: true);
             }
+
             DrawInventory(ui);
         }
 
@@ -761,14 +800,16 @@ namespace FactionLoadout
                 {
                     Current.Inventory = new InventoryOptionEdit(Current.Def.inventoryOptions);
                 }
+
                 active = !active;
             }
+
             var content = new Rect(rect.x + 122, rect.y, ui.ColumnWidth - 124, rect.height);
             Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
             content = content.ExpandedBy(-2);
             GUI.enabled = active;
 
-            if(Current.Inventory != null)
+            if (Current.Inventory != null)
             {
                 Current.Inventory.Thing = null;
                 DrawInvPart(ui, Current.Inventory, false, false);
@@ -787,29 +828,27 @@ namespace FactionLoadout
             var defRect = ui.GetRect(28);
             bool delete = false;
 
-            if(part.Thing != null)
+            if (part.Thing != null)
             {
                 var delRect = defRect;
                 delRect.width = 48;
                 GUI.color = Color.red;
-                if(Widgets.ButtonText(delRect, " [DEL]"))
+                if (Widgets.ButtonText(delRect, " [DEL]"))
                 {
                     delete = true;
                 }
+
                 GUI.color = Color.white;
                 defRect.xMin += 52;
 
-                if(isChildOfAll || isChildOfOne)
+                if (isChildOfAll || isChildOfOne)
                     defRect.xMin += 100;
                 defRect.width = 240;
                 Widgets.DefLabelWithIcon(defRect, part.Thing);
                 if (Widgets.ButtonInvisible(defRect))
                 {
                     var items = CustomFloatMenu.MakeItems(AllInvItems, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out var c), c, d.description));
-                    CustomFloatMenu.Open(items, raw =>
-                    {
-                        part.Thing = raw.GetPayload<ThingDef>();
-                    });
+                    CustomFloatMenu.Open(items, raw => { part.Thing = raw.GetPayload<ThingDef>(); });
                 }
 
                 var clone = defRect;
@@ -820,9 +859,9 @@ namespace FactionLoadout
                     defRect.width = 100;
                     defRect.height = 20;
 
-                    if(isChildOfAll)
+                    if (isChildOfAll)
                         Widgets.HorizontalSlider(defRect, ref part.SkipChance, FloatRange.ZeroToOne, label: $"Skip chance: {100f * part.SkipChance:F0}%");
-                    if(isChildOfOne)
+                    if (isChildOfOne)
                         Widgets.HorizontalSlider(defRect, ref part.ChoiceChance, FloatRange.ZeroToOne, label: $"Weight: {100f * part.ChoiceChance:F0}%");
                 }
 
@@ -846,7 +885,7 @@ namespace FactionLoadout
             ui.Gap(5);
             Rect addRect = ui.GetRect(20);
             addRect.width = 80;
-            if(hasTakeAll)
+            if (hasTakeAll)
             {
                 ui.Label("<b>TAKE ALL:</b>");
                 ui.Indent(20);
@@ -858,6 +897,7 @@ namespace FactionLoadout
                         i--;
                     }
                 }
+
                 ui.Outdent(20);
             }
 
@@ -867,12 +907,13 @@ namespace FactionLoadout
                 ui.Indent(20);
                 for (int i = 0; i < part.SubOptionsChooseOne.Count; i++)
                 {
-                    if(DrawInvPart(ui, part.SubOptionsChooseOne[i], false, true))
+                    if (DrawInvPart(ui, part.SubOptionsChooseOne[i], false, true))
                     {
                         part.SubOptionsChooseOne.RemoveAt(i);
                         i--;
                     }
                 }
+
                 ui.Outdent(20);
             }
 
@@ -881,6 +922,7 @@ namespace FactionLoadout
                 part.SubOptionsTakeAll ??= new List<InventoryOptionEdit>();
                 part.SubOptionsTakeAll.Add(new InventoryOptionEdit());
             }
+
             addRect.x += 90;
             if (Widgets.ButtonText(addRect, "+ Take one"))
             {
@@ -947,7 +989,7 @@ namespace FactionLoadout
 
         private void DrawWeaponQuality(Rect rect, bool active, QualityCategory _)
         {
-            DrawEnumSelector(rect, active, Current.ForcedWeaponQuality, Current.Def.forceWeaponQuality ?? QualityCategory.Normal, q => Current.ForcedWeaponQuality = q); ;
+            DrawEnumSelector(rect, active, Current.ForcedWeaponQuality, Current.Def.forceWeaponQuality ?? QualityCategory.Normal, q => Current.ForcedWeaponQuality = q);
         }
 
         private void DrawApparelColor(Rect rect, bool active, Color def)
@@ -974,6 +1016,7 @@ namespace FactionLoadout
                 {
                     Widgets.DrawBoxSolid(picker, Current.ApparelColor.Value);
                 }
+
                 if (Widgets.ButtonInvisible(picker))
                 {
                     Find.WindowStack.Add(new Window_ColorPicker(Current.ApparelColor.Value, col =>
@@ -981,7 +1024,7 @@ namespace FactionLoadout
                         col.a = 1f;
                         Current.ApparelColor = col;
                     })
-                    { 
+                    {
                         grayOutIfOtherDialogOpen = false,
                     });
                 }
@@ -997,15 +1040,15 @@ namespace FactionLoadout
                 preview.xMin += 100;
                 preview = preview.ExpandedBy(-3);
                 Widgets.Label(label, txt);
-                if (forced)                
-                    Widgets.DrawBoxSolidWithOutline(preview, Current.Def.apparelColor, Color.black, 2);                
+                if (forced)
+                    Widgets.DrawBoxSolidWithOutline(preview, Current.Def.apparelColor, Color.black, 2);
             }
         }
 
         private void DrawBiocodeChance(Rect rect, bool active, float def)
         {
             DrawChance(ref Current.BiocodeWeaponChance, def, rect, active);
-        }        
+        }
 
         private void DrawTechChance(Rect rect, bool active, float def)
         {
@@ -1029,7 +1072,62 @@ namespace FactionLoadout
                 Widgets.Label(rect.GetCentered(txt), txt);
             }
         }
-        
+
+        private void DrawNumVFEAncientsSuperPowers(Rect rect, bool active, int _)
+        {
+            if (numVFEAncientsPowersBuffer == null && active)
+                numVFEAncientsPowersBuffer = Current.NumVFEAncientsSuperPowers?.ToString() ?? "";
+            if (active)
+            {
+                int value = Current.NumVFEAncientsSuperPowers.GetValueOrDefault(0);
+                Widgets.IntEntry(rect, ref value, ref numVFEAncientsPowersBuffer);
+                Current.NumVFEAncientsSuperPowers = value;
+            }
+            else
+            {
+                DefModExtension ancientsExtension = Current.Def.modExtensions?.Find(me => me.GetType().FullName == "VFEAncients.PawnKindExtension_Powers");
+                var defaultValue = "NA";
+                if (ancientsExtension != null)
+                {
+                    defaultValue = AccessTools.TypeByName("VFEAncients.PawnKindExtension_Powers")
+                        ?.GetField("numRandomSuperpowers")
+                        ?.GetValue(ancientsExtension)
+                        ?.ToString();
+                }
+
+                string txt = Current.IsGlobal ? "---" : $"[Default] {defaultValue}";
+                Widgets.Label(rect.GetCentered(txt), txt);
+            }
+        }
+
+        private void DrawNumVFEAncientsSuperWeaknesses(Rect rect, bool active, int _)
+        {
+            if (numVFEAncientsWeaknessesBuffer == null && active)
+                numVFEAncientsWeaknessesBuffer = Current.NumVFEAncientsSuperWeaknesses?.ToString() ?? "";
+
+            if (active)
+            {
+                int value = Current.NumVFEAncientsSuperWeaknesses.GetValueOrDefault(0);
+                Widgets.IntEntry(rect, ref value, ref numVFEAncientsWeaknessesBuffer);
+                Current.NumVFEAncientsSuperWeaknesses = value;
+            }
+            else
+            {
+                DefModExtension ancientsExtension = Current.Def.modExtensions?.Find(me => me.GetType().FullName == "VFEAncients.PawnKindExtension_Powers");
+                var defaultValue = "NA";
+                if (ancientsExtension != null)
+                {
+                    defaultValue = AccessTools.TypeByName("VFEAncients.PawnKindExtension_Powers")
+                        ?.GetField("numRandomWeaknesses")
+                        ?.GetValue(ancientsExtension)
+                        ?.ToString();
+                }
+
+                string txt = Current.IsGlobal ? "---" : $"[Default] {defaultValue}";
+                Widgets.Label(rect.GetCentered(txt), txt);
+            }
+        }
+
         private void DrawTechTags(Rect rect, bool active, List<string> defaultTags)
         {
             DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.TechHediffTags, Current.Def.techHediffsTags, AllTechHediffTags);
@@ -1067,7 +1165,8 @@ namespace FactionLoadout
             DrawDefList(rect, active, ref scrolls[scrollIndex++], Current.TechRequired, Current.Def.techHediffsRequired, AllTech, true);
         }
 
-        private CustomFloatMenu DrawDefList<T>(Rect rect, bool active, ref Vector2 scroll, IList<T> current, IList<T> defaultThings, IEnumerable<T> allThings, bool allowDupes, Func<T, MenuItemBase> makeItems = null) where T : Def
+        private CustomFloatMenu DrawDefList<T>(Rect rect, bool active, ref Vector2 scroll, IList<T> current, IList<T> defaultThings, IEnumerable<T> allThings, bool allowDupes,
+            Func<T, MenuItemBase> makeItems = null) where T : Def
         {
             string MakeString(IList<T> list)
             {
@@ -1090,9 +1189,10 @@ namespace FactionLoadout
                     {
                         var t = raw.GetPayload<T>();
                         if (allowDupes || !current.Contains(t))
-                                current.Add(t);
+                            current.Add(t);
                     });
                 }
+
                 rect.yMin += 30;
 
                 Widgets.BeginScrollView(rect, ref scroll, new Rect(0, 0, 100, 26 * current.Count));
@@ -1120,12 +1220,14 @@ namespace FactionLoadout
                     curr.y += 26;
                     currButton.y += 26;
                 }
+
                 Widgets.EndScrollView();
 
                 foreach (var item in thingBin)
                 {
                     current.Remove((T)item);
                 }
+
                 thingBin.Clear();
 
                 return toReturn;
@@ -1135,6 +1237,7 @@ namespace FactionLoadout
                 string txt = Current.IsGlobal ? "---" : $"[Default] {MakeString(defaultThings)}";
                 Widgets.Label(rect.GetCentered(txt), txt);
             }
+
             return null;
         }
 
@@ -1204,13 +1307,14 @@ namespace FactionLoadout
                         current.Add(selected);
                     }));
                 }
+
                 rect.yMin += 30;
 
                 Widgets.BeginScrollView(rect, ref scroll, new Rect(0, 0, 100, 38 * current.Count));
                 Rect curr = new Rect(26, 3, rect.width, 36);
                 Rect currButton = new Rect(3, 3, 20, 20);
 
-                for(int i = 0; i < current.Count; i++)
+                for (int i = 0; i < current.Count; i++)
                 {
                     var color = current[i];
 
@@ -1221,6 +1325,7 @@ namespace FactionLoadout
                         i--;
                         continue;
                     }
+
                     GUI.color = Color.white;
 
                     Rect real = curr.ExpandedBy(-4, -2);
@@ -1239,6 +1344,7 @@ namespace FactionLoadout
                     curr.y += 38;
                     currButton.y += 38;
                 }
+
                 Widgets.EndScrollView();
             }
             else
@@ -1273,6 +1379,7 @@ namespace FactionLoadout
                             current.Add(t);
                     });
                 }
+
                 rect.yMin += 30;
 
                 Widgets.BeginScrollView(rect, ref scroll, new Rect(0, 0, 100, 26 * current.Count));
@@ -1290,12 +1397,14 @@ namespace FactionLoadout
                     curr.y += 26;
                     currButton.y += 26;
                 }
+
                 Widgets.EndScrollView();
 
                 foreach (var item in tagBin)
                 {
                     current.Remove(item);
                 }
+
                 tagBin.Clear();
             }
             else
@@ -1317,10 +1426,12 @@ namespace FactionLoadout
                     field = null;
                 else
                 {
-                    field = defaultValue;                    
+                    field = defaultValue;
                 }
+
                 active = !active;
             }
+
             var content = new Rect(rect.x + 122, rect.y, ui.ColumnWidth - 124, rect.height);
             Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
             content = content.ExpandedBy(-2);
@@ -1344,8 +1455,10 @@ namespace FactionLoadout
                 {
                     field = defaultValue;
                 }
+
                 active = !active;
             }
+
             var content = new Rect(rect.x + 122, rect.y, ui.ColumnWidth - 124, rect.height);
             Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
             content = content.ExpandedBy(-2);
@@ -1356,7 +1469,8 @@ namespace FactionLoadout
         }
 
         // For lists, takes T and T
-        private void DrawOverride<T>(Listing_Standard ui, T defaultValue, ref T field, string label, Action<Rect, bool, T> drawContent, float height = 32, bool cloneDefault = true) where T : IList
+        private void DrawOverride<T>(Listing_Standard ui, T defaultValue, ref T field, string label, Action<Rect, bool, T> drawContent, float height = 32, bool cloneDefault = true)
+            where T : IList
         {
             ui.Label($"<b>{label}</b>");
             var rect = ui.GetRect(height);
@@ -1366,14 +1480,16 @@ namespace FactionLoadout
                 if (active)
                     field = default;
                 else
-                {  
+                {
                     field = (T)Activator.CreateInstance(typeof(List<>).MakeGenericType(typeof(T).GenericTypeArguments));
-                    if(cloneDefault && defaultValue != null)
+                    if (cloneDefault && defaultValue != null)
                         foreach (var value in defaultValue)
-                            field.Add(value);                       
+                            field.Add(value);
                 }
+
                 active = !active;
             }
+
             var content = new Rect(rect.x + 122, rect.y, ui.ColumnWidth - 124, rect.height);
             Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
             content = content.ExpandedBy(-2);

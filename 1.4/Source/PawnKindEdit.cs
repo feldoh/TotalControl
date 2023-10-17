@@ -2,7 +2,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
+using HarmonyLib;
 using UnityEngine;
 using Verse;
 
@@ -10,16 +13,16 @@ namespace FactionLoadout
 {
     public class PawnKindEdit : IExposable
     {
-        private static Dictionary<PawnKindDef, List<PawnKindEdit>> activeEdits = new Dictionary<PawnKindDef, List<PawnKindEdit>>();
+        private static Dictionary<PawnKindDef, List<PawnKindEdit>> activeEdits = new();
 
         public static IEnumerable<PawnKindEdit> GetEditsFor(PawnKindDef def)
         {
             if (def == null)
                 yield break;
 
-            if(activeEdits.TryGetValue(def, out var list))            
-                foreach (var item in list)
-                    yield return item;            
+            if (!activeEdits.TryGetValue(def, out var list)) yield break;
+            foreach (PawnKindEdit item in list)
+                yield return item;
         }
 
         private static void AddActiveEdit(PawnKindDef def, PawnKindEdit edit)
@@ -27,13 +30,13 @@ namespace FactionLoadout
             if (def == null || edit == null)
                 return;
 
-            if(!activeEdits.TryGetValue(def, out var list))
+            if (!activeEdits.TryGetValue(def, out var list))
             {
                 list = new List<PawnKindEdit>();
                 activeEdits.Add(def, list);
             }
 
-            if(!list.Contains(edit))
+            if (!list.Contains(edit))
                 list.Add(edit);
         }
 
@@ -44,15 +47,9 @@ namespace FactionLoadout
         {
             get
             {
-                foreach(var preset in Preset.LoadedPresets)
-                {
-                    foreach(var change in preset.factionChanges)
-                    {
-                        if (change.KindEdits.Contains(this))
-                            return change;
-                    }
-                }
-                return null;
+                return Preset.LoadedPresets
+                    .SelectMany(preset => preset.factionChanges)
+                    .FirstOrDefault(change => change.KindEdits.Contains(this));
             }
         }
 
@@ -84,9 +81,15 @@ namespace FactionLoadout
         public List<Color> CustomHairColors = null;
         public bool DeletedOrClosed;
 
+        public int? NumVFEAncientsSuperPowers = null;
+        public int? NumVFEAncientsSuperWeaknesses = null;
+        public List<string> ForcedVFEAncientsItems = null;
+
         private PawnKindEdit globalEdit = null;
 
-        public PawnKindEdit() { }
+        public PawnKindEdit()
+        {
+        }
 
         public PawnKindEdit(PawnKindDef def)
         {
@@ -123,6 +126,11 @@ namespace FactionLoadout
             Scribe_Defs.Look(ref Race, "race");
             Scribe_Collections.Look(ref CustomHair, "customHair", LookMode.Def);
             Scribe_Collections.Look(ref CustomHairColors, "customHairColors");
+
+            // VFEAncients Compatibility
+            Scribe_Values.Look(ref NumVFEAncientsSuperPowers, "numVFEAncientsSuperPowers");
+            Scribe_Values.Look(ref NumVFEAncientsSuperWeaknesses, "numVFEAncientsSuperWeaknesses");
+            Scribe_Collections.Look(ref ForcedVFEAncientsItems, "forcedVFEAncientsEffects");
         }
 
         private void ReplaceMaybe<T>(ref T field, T maybe) where T : class
@@ -154,8 +162,8 @@ namespace FactionLoadout
             if (maybe == null)
                 return;
 
-            if(tryAdd && field != null)
-            {                
+            if (tryAdd && field != null)
+            {
                 foreach (var value in maybe)
                 {
                     if (!field.Contains(value))
@@ -177,14 +185,14 @@ namespace FactionLoadout
 
             if (globalEdit?.Inventory != null || (IsGlobal && !ReplaceDefaultInventory))
             {
-                if(inv == null)
+                if (inv == null)
                 {
                     inv = maybe.ConvertToVanilla();
                 }
                 else
                 {
-                    var vanilla = maybe.ConvertToVanilla();
-                    if(vanilla.subOptionsTakeAll != null)
+                    PawnInventoryOption vanilla = maybe.ConvertToVanilla();
+                    if (vanilla.subOptionsTakeAll != null)
                         inv.subOptionsTakeAll.AddRange(vanilla.subOptionsTakeAll);
                     if (vanilla.subOptionsChooseOne != null)
                         inv.subOptionsChooseOne.AddRange(vanilla.subOptionsChooseOne);
@@ -216,7 +224,7 @@ namespace FactionLoadout
             ReplaceMaybe(ref def.itemQuality, ItemQuality);
             ReplaceMaybe(ref def.biocodeWeaponChance, BiocodeWeaponChance);
             ReplaceMaybe(ref def.techHediffsChance, TechHediffChance);
-            ReplaceMaybe(ref def.techHediffsMaxAmount, TechHediffsMaxAmount);           
+            ReplaceMaybe(ref def.techHediffsMaxAmount, TechHediffsMaxAmount);
             ReplaceMaybe(ref def.apparelMoney, ApparelMoney);
             ReplaceMaybe(ref def.techHediffsMoney, TechMoney);
             ReplaceMaybe(ref def.weaponMoney, WeaponMoney);
@@ -233,7 +241,7 @@ namespace FactionLoadout
             ReplaceMaybeList(ref def.apparelRequired, ApparelRequired, global?.ApparelRequired != null);
             ReplaceMaybeList(ref def.techHediffsRequired, TechRequired, global?.TechRequired != null);
 
-            bool removeSpecific = ApparelRequired != null || SpecificApparel != null;
+            var removeSpecific = ApparelRequired != null || SpecificApparel != null;
             if (removeSpecific)
                 def.specificApparelRequirements = null;
 
@@ -241,19 +249,68 @@ namespace FactionLoadout
             if (Race != null)
             {
                 // Try find life stages of new race.
-                var realKind = DefDatabase<PawnKindDef>.AllDefsListForReading.FirstOrDefault(k => k != def && k.defName != def.defName && k.race == Race);
+                PawnKindDef realKind = DefDatabase<PawnKindDef>.AllDefsListForReading
+                    .FirstOrDefault(k => k != def && k.defName != def.defName && k.race == Race);
                 if (realKind != null)
                     def.lifeStages = realKind.lifeStages;
             }
 
             // Special case: color cannot be pure white, because Rimworld will then ignore it.
             // If color is not null and is pure white, change it to a slightly off-white.
-            Color? color = ApparelColor;
+            var color = ApparelColor;
             if (color != null && color == Color.white)
                 color = new Color(0.995f, 0.995f, 0.995f, 1f);
             ReplaceMaybe(ref def.apparelColor, color);
 
             globalEdit = null;
+
+            if (NumVFEAncientsSuperPowers != null || NumVFEAncientsSuperWeaknesses != null || ForcedVFEAncientsItems != null)
+            {
+                def.modExtensions ??= new List<DefModExtension>();
+                DefModExtension ancientsExtension = def.modExtensions.Find(me => me.GetType().FullName == "VFEAncients.PawnKindExtension_Powers");
+                Type type = AccessTools.TypeByName("VFEAncients.PawnKindExtension_Powers");
+                Type powerDefType = AccessTools.TypeByName("VFEAncients.PowerDef");
+                if (ancientsExtension == null)
+                {
+                    ancientsExtension = AccessTools.CreateInstance(type) as DefModExtension;
+                    def.modExtensions.Add(ancientsExtension);
+                }
+
+                // Get the public fields by name
+                FieldInfo numRandomSuperpowersField = type?.GetField("numRandomSuperpowers");
+                FieldInfo numRandomWeaknessesField = type?.GetField("numRandomWeaknesses");
+                FieldInfo forcePowersField = type?.GetField("forcePowers");
+
+
+                Type defDatabaseGenericType = typeof(DefDatabase<>);
+                Type closedDefDatabaseType = defDatabaseGenericType.MakeGenericType(powerDefType);
+                Type powerListGenericType = typeof(List<>);
+                Type closedPowerListGenericType = powerListGenericType.MakeGenericType(powerDefType);
+                TypeConverter powerDefConverter = TypeDescriptor.GetConverter(powerDefType);
+                MethodInfo getPowerDefMethod = closedDefDatabaseType.GetMethod("GetNamedSilentFail");
+
+                // Set the field values
+                if (NumVFEAncientsSuperPowers != null) numRandomSuperpowersField?.SetValue(ancientsExtension, NumVFEAncientsSuperPowers);
+                if (NumVFEAncientsSuperWeaknesses != null) numRandomWeaknessesField?.SetValue(ancientsExtension, NumVFEAncientsSuperWeaknesses);
+                if (ForcedVFEAncientsItems != null)
+                {
+                    object powers = forcePowersField.GetValue(ancientsExtension);
+                    if (powers == null)
+                    {
+                        powers = AccessTools.CreateInstance(closedPowerListGenericType);
+                        forcePowersField.SetValue(ancientsExtension, powers);
+                    }
+
+                    if (powers is IList powerList)
+                    {
+                        powerList.Clear();
+                        ForcedVFEAncientsItems.Select(i => getPowerDefMethod.Invoke(null, new object[]{i}))
+                            .Where(p => p != null)
+                            .DoIf(p => !powerList.Contains(p), p => powerList.Add(p));
+                    }
+                }
+            }
+
             return def;
         }
 
