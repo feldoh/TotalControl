@@ -113,16 +113,14 @@ public class FactionEdit : IExposable
         return originalFactionDefs.TryGetValue(factionDefName, out FactionDef found) ? found : null;
     }
 
-    private static void EnsureOriginal(FactionDef def)
+    private static FactionDef EnsureOriginal(FactionDef def)
     {
-        if (def == null)
-            return;
-
-        if (originalFactionDefs.ContainsKey(def.defName))
-            return;
+        if (def == null || originalFactionDefs.ContainsKey(def.defName))
+            return def;
 
         FactionDef copy = CloningUtility.Clone(def);
         originalFactionDefs.Add(def.defName, copy);
+        return def;
     }
 
     public bool HasEditFor(PawnKindDef def)
@@ -156,9 +154,15 @@ public class FactionEdit : IExposable
         //if (ApparelStuffFilter != null)
         //    def.apparelStuffFilter = ApparelStuffFilter;
 
-        EnsureOriginal(def);
-
+        def = EnsureOriginal(def);
         var kinds = GetAllPawnKinds(def);
+
+            // .Select(d => Tuple.Create(d, CloningUtility.Clone(d)))
+            // .Select(t =>
+            // {
+            //     ReplaceKind(def, t.Item1, t.Item2);
+            //     return t.Item2;
+            // });
 
         PawnKindEdit global = GetGlobalEditor();
         if (global != null)

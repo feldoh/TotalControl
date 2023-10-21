@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
 using Verse;
@@ -143,24 +142,21 @@ namespace FactionLoadout
             AllAnimalKindDefs = new List<PawnKindDef>(allAnimalKindDefs);
             AllAnimalKindDefs.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
-            if (ModLister.GetActiveModWithIdentifier("VanillaExpanded.VFEA") == null) return;
-            Type powerDefType = AccessTools.TypeByName("VFEAncients.PowerDef");
-            Type defDatabaseGenericType = typeof(DefDatabase<>);
-            Type listGenericType = typeof(List<>);
-            Type closedDefDatabaseType = defDatabaseGenericType.MakeGenericType(powerDefType);
-            Type closedListType = listGenericType.MakeGenericType(powerDefType);
-            PropertyInfo getPowerDefsMethod = closedDefDatabaseType.GetProperty("AllDefsListForReading");
-            if (getPowerDefsMethod?.GetValue(null) is IList powerList)
+            if (ModLister.GetActiveModWithIdentifier("VanillaExpanded.VFEA") != null)
             {
-                AllPowerDefs = new List<string>();
-                foreach (var power in powerList)
+                if (VFEAncientsReflectionHelper.GetPowerDefsMethod.Value?.GetValue(null) is IList powerList)
                 {
-                    if (power is Def pd)
+                    AllPowerDefs = new List<string>();
+                    foreach (var power in powerList)
                     {
-                        AllPowerDefs.Add(pd.defName);
+                        if (power is Def pd)
+                        {
+                            AllPowerDefs.Add(pd.defName);
+                        }
                     }
+
+                    AllPowerDefs.Sort();
                 }
-                AllPowerDefs.Sort();
             }
         }
 
@@ -172,9 +168,15 @@ namespace FactionLoadout
 
         public readonly PawnKindEdit Current;
 
+        // VFE Ancients
         private string maxTechBuffer = null;
         private string numVFEAncientsPowersBuffer = null;
         private string numVFEAncientsWeaknessesBuffer = null;
+
+        // VPE
+        private string vpeGiveRandomAbilitiesBuffer = null;
+        private string vpeLevelBuffer = null;
+
         private List<string> tagBin = new List<string>();
         private List<Def> thingBin = new List<Def>();
         private Vector2[] scrolls = new Vector2[64];
@@ -752,7 +754,13 @@ namespace FactionLoadout
             if (ModLister.GetActiveModWithIdentifier("VanillaExpanded.VFEA") == null) return;
             DrawOverride(ui, 0, ref Current.NumVFEAncientsSuperPowers, "# of VFE Ancients Super Powers", DrawNumVFEAncientsSuperPowers);
             DrawOverride(ui, 0, ref Current.NumVFEAncientsSuperWeaknesses, "# of VFE Ancients Super Weaknesses", DrawNumVFEAncientsSuperWeaknesses);
-            DrawOverride(ui, new List<string>(), ref Current.ForcedVFEAncientsItems, "Forced Powers and Weaknesses", DrawVFEAncientsPowers, GetHeightFor(Current.ForcedVFEAncientsItems), true);
+            DrawOverride(ui, new List<string>(), ref Current.ForcedVFEAncientsItems, "Forced Powers and Weaknesses", DrawVFEAncientsPowers,
+                GetHeightFor(Current.ForcedVFEAncientsItems), true);
+
+            if (ModLister.GetActiveModWithIdentifier("VanillaExpanded.VPsycastsE") == null) return;
+            DrawOverride(ui, false, ref Current.VEPsycastRandomAbilities, "Give Random Abilities", DrawVPERandomAbilities);
+            DrawOverride(ui, 1, ref Current.VEPsycastLevel, "Psycaster Level", DrawVPELevel);
+            DrawOverride(ui, IntRange.zero, ref Current.VEPsycastStatPoints, "Psycaster Stat Points", DrawVPEStats);
         }
 
         private void DrawVFEAncientsPowers(Rect rect, bool active, List<string> defaultPowers)
@@ -1085,12 +1093,11 @@ namespace FactionLoadout
             }
             else
             {
-                DefModExtension ancientsExtension = Current.Def.modExtensions?.Find(me => me.GetType().FullName == "VFEAncients.PawnKindExtension_Powers");
+                DefModExtension ancientsExtension = Current.Def.modExtensions?.Find(me => me.GetType().FullName == VFEAncientsReflectionHelper.VfeAncientsExtensionClassName);
                 var defaultValue = "NA";
                 if (ancientsExtension != null)
                 {
-                    defaultValue = AccessTools.TypeByName("VFEAncients.PawnKindExtension_Powers")
-                        ?.GetField("numRandomSuperpowers")
+                    defaultValue = VFEAncientsReflectionHelper.NumRandomSuperpowersField.Value
                         ?.GetValue(ancientsExtension)
                         ?.ToString();
                 }
@@ -1113,11 +1120,11 @@ namespace FactionLoadout
             }
             else
             {
-                DefModExtension ancientsExtension = Current.Def.modExtensions?.Find(me => me.GetType().FullName == "VFEAncients.PawnKindExtension_Powers");
+                DefModExtension ancientsExtension = Current.Def.modExtensions?.Find(me => me.GetType().FullName == VFEAncientsReflectionHelper.VfeAncientsExtensionClassName);
                 var defaultValue = "NA";
                 if (ancientsExtension != null)
                 {
-                    defaultValue = AccessTools.TypeByName("VFEAncients.PawnKindExtension_Powers")
+                    defaultValue = AccessTools.TypeByName(VFEAncientsReflectionHelper.VfeAncientsExtensionClassName)
                         ?.GetField("numRandomWeaknesses")
                         ?.GetValue(ancientsExtension)
                         ?.ToString();
@@ -1254,6 +1261,86 @@ namespace FactionLoadout
         private void DrawWeaponMoney(Rect rect, bool active, FloatRange defaultRange)
         {
             DrawFloatRange(rect, active, ref Current.WeaponMoney, Current.Def.weaponMoney, ref buffers[bufferIndex++], ref buffers[bufferIndex++]);
+        }
+
+        private void DrawVPERandomAbilities(Rect rect, bool active, bool _)
+        {
+            if (vpeGiveRandomAbilitiesBuffer == null && active)
+                vpeGiveRandomAbilitiesBuffer = Current.VEPsycastRandomAbilities?.ToString() ?? "NA";
+
+            if (active)
+            {
+                var value = Current.VEPsycastRandomAbilities
+                            ?? (VEPsycastsReflectionHelper.FindVEPsycastsExtension(Current.Def) is { } psycastsExtension
+                                && VEPsycastsReflectionHelper.GiveRandomAbilitiesField.Value
+                                    ?.GetValue(psycastsExtension) is true);
+                Widgets.CheckboxLabeled(rect, "GiveRandomAbilities", ref value);
+                Current.VEPsycastRandomAbilities = value;
+            }
+            else
+            {
+                var txt = Current.IsGlobal ? "---" : $"[Default] 1";
+                Widgets.Label(rect.GetCentered(txt), txt);
+            }
+        }
+
+        private void DrawVPELevel(Rect rect, bool active, int _)
+        {
+            if (vpeLevelBuffer == null && active)
+                vpeLevelBuffer = Current.VEPsycastLevel?.ToString() ?? "NA";
+
+            if (active)
+            {
+                var value = Current.VEPsycastLevel
+                            ?? (VEPsycastsReflectionHelper.FindVEPsycastsExtension(Current.Def) is { } psycastsExtension
+                                && VEPsycastsReflectionHelper.LevelField.Value
+                                    ?.GetValue(psycastsExtension) is int i
+                                ? i
+                                : 1);
+                Widgets.IntEntry(rect, ref value, ref vpeLevelBuffer);
+                Current.VEPsycastLevel = value;
+            }
+            else
+            {
+                var txt = Current.IsGlobal ? "---" : $"[Default] 1";
+                Widgets.Label(rect.GetCentered(txt), txt);
+            }
+        }
+
+        private void DrawVPEStats(Rect rect, bool active, IntRange defaultRange)
+        {
+            if (VEPsycastsReflectionHelper.FindVEPsycastsExtension(Current.Def) is { } psycastsExtension && VEPsycastsReflectionHelper.StatUpgradePointsField.Value
+                    ?.GetValue(psycastsExtension) is IntRange ir) defaultRange = ir;
+
+            DrawIntRange(rect, active, ref Current.VEPsycastStatPoints, defaultRange, ref buffers[bufferIndex++], ref buffers[bufferIndex++]);
+        }
+
+        private void DrawIntRange(Rect rect, bool active, ref IntRange? current, IntRange defaultRange, ref string buffer, ref string buffer2)
+        {
+            if (active)
+            {
+                int value = current?.min ?? 0;
+                Rect left = rect;
+                left.width = 220;
+                Widgets.IntEntry(left, ref value, ref buffer);
+                current = new IntRange(value, current?.max ?? value + 1);
+
+                value = current.Value.max;
+                Rect right = new(rect.xMax - 220, rect.y, 220, rect.height);
+                Widgets.IntEntry(right, ref value, ref buffer2);
+                current = new IntRange(current.Value.min, value);
+
+                Rect mid = new(rect);
+                mid.xMin += 220;
+                mid.xMax -= 220;
+                var txt = $"{current.Value.TrueMin:F0} to {current.Value.TrueMax:F0}";
+                Widgets.Label(rect.GetCentered(txt), txt);
+            }
+            else
+            {
+                var txt = Current.IsGlobal ? "---" : $"[Default] {defaultRange}";
+                Widgets.Label(rect.GetCentered(txt), txt);
+            }
         }
 
         private void DrawFloatRange(Rect rect, bool active, ref FloatRange? current, FloatRange defaultRange, ref string buffer, ref string buffer2)
