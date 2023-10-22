@@ -83,15 +83,11 @@
                 </Reference>
             </ItemGroup>
         </When>
-        <Otherwise>
-            <ItemGroup>
-                <PackageReference Include="Krafs.Rimworld.Ref">
-                    <Version>1.4.3704</Version>
-                </PackageReference>
-            </ItemGroup>
-        </Otherwise>
     </Choose>
     <ItemGroup>
+        <PackageReference Include="Krafs.Rimworld.Ref">
+            <Version>1.4.3704</Version>
+        </PackageReference>
         <PackageReference Include="Krafs.Publicizer" Version="2.2.1">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>

@@ -155,14 +155,13 @@ public class FactionEdit : IExposable
         //    def.apparelStuffFilter = ApparelStuffFilter;
 
         def = EnsureOriginal(def);
-        var kinds = GetAllPawnKinds(def);
-
-            // .Select(d => Tuple.Create(d, CloningUtility.Clone(d)))
-            // .Select(t =>
-            // {
-            //     ReplaceKind(def, t.Item1, t.Item2);
-            //     return t.Item2;
-            // });
+        var kinds = GetAllPawnKinds(def)
+            .Select(d => Tuple.Create(d, CloningUtility.Clone(d)))
+            .Select(t =>
+            {
+                ReplaceKind(def, t.Item1, t.Item2);
+                return t.Item2;
+            });
 
         PawnKindEdit global = GetGlobalEditor();
         if (global != null)
