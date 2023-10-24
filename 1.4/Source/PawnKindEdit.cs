@@ -283,60 +283,64 @@ namespace FactionLoadout
             ReplaceMaybe(ref def.apparelColor, color);
 
             if (def.RaceProps.Animal) return def; // Animals can't have powers
-            if (NumVFEAncientsSuperPowers != null || NumVFEAncientsSuperWeaknesses != null || ForcedVFEAncientsItems != null)
-            {
-                def.modExtensions ??= new List<DefModExtension>();
-                DefModExtension ancientsExtension = def.modExtensions.Find(me => me.GetType().FullName == VFEAncientsReflectionHelper.VfeAncientsExtensionClassName);
-                if (ancientsExtension == null)
-                {
-                    ancientsExtension = AccessTools.CreateInstance(VFEAncientsReflectionHelper.VfeAncientsExtensionType.Value) as DefModExtension;
-                    def.modExtensions.Add(ancientsExtension);
-                }
-
-                // Set the field values
-                if (NumVFEAncientsSuperPowers != null) VFEAncientsReflectionHelper.NumRandomSuperpowersField.Value?.SetValue(ancientsExtension, NumVFEAncientsSuperPowers);
-                if (NumVFEAncientsSuperWeaknesses != null) VFEAncientsReflectionHelper.NumRandomWeaknessesField.Value?.SetValue(ancientsExtension, NumVFEAncientsSuperWeaknesses);
-                if (ForcedVFEAncientsItems != null)
-                {
-                    var powers = VFEAncientsReflectionHelper.ForcePowersField.Value?.GetValue(ancientsExtension);
-                    if (powers == null)
-                    {
-                        powers = AccessTools.CreateInstance(VFEAncientsReflectionHelper.ClosedPowerListGenericType.Value);
-                        VFEAncientsReflectionHelper.ForcePowersField.Value.SetValue(ancientsExtension, powers);
-                    }
-
-                    if (powers is IList powerList)
-                    {
-                        powerList.Clear();
-                        ForcedVFEAncientsItems.Select(i => VFEAncientsReflectionHelper.GetPowerDefMethod.Value.Invoke(null, new object[] { i }))
-                            .Where(p => p != null)
-                            .DoIf(p => !powerList.Contains(p), p => powerList.Add(p));
-                    }
-                }
-            }
-
-            // VPE
-            if (VEPsycastLevel != null || VEPsycastStatPoints != null || VEPsycastRandomAbilities != null)
-            {
-                def.modExtensions ??= new List<DefModExtension>();
-                DefModExtension vePsycastExtension = def.modExtensions.Find(me => me.GetType().FullName == VEPsycastsReflectionHelper.VpeExtensionClassName);
-                if (vePsycastExtension == null)
-                {
-                    vePsycastExtension = AccessTools.CreateInstance(VEPsycastsReflectionHelper.VpeExtensionType.Value) as DefModExtension;
-                    VEPsycastsReflectionHelper.ImplantDefField.Value?.SetValue(vePsycastExtension, DefDatabase<HediffDef>.GetNamed("VPE_PsycastAbilityImplant"));
-                    VEPsycastsReflectionHelper.UnlockedPathsField.Value?.SetValue(vePsycastExtension,
-                        AccessTools.CreateInstance(VEPsycastsReflectionHelper.ClosedUnlockedPathsListGenericType.Value));
-                    def.modExtensions.Add(vePsycastExtension);
-                }
-
-                // Set the field values
-                if (VEPsycastLevel != null) VEPsycastsReflectionHelper.LevelField.Value?.SetValue(vePsycastExtension, VEPsycastLevel);
-                if (VEPsycastStatPoints != null) VEPsycastsReflectionHelper.StatUpgradePointsField.Value?.SetValue(vePsycastExtension, VEPsycastStatPoints);
-                if (VEPsycastRandomAbilities != null) VEPsycastsReflectionHelper.GiveRandomAbilitiesField.Value?.SetValue(vePsycastExtension, VEPsycastRandomAbilities);
-            }
+            ApplyVFEAncientsEdits(def);
+            ApplyVEPsycastsEdits(def);
 
             globalEdit = null;
             return def;
+        }
+
+        public virtual void ApplyVEPsycastsEdits(PawnKindDef def)
+        {
+            if (ModLister.GetActiveModWithIdentifier("vanillaexpanded.vpsycastse") is null) return;
+            if (VEPsycastLevel == null && VEPsycastStatPoints == null && VEPsycastRandomAbilities == null) return;
+            def.modExtensions ??= new List<DefModExtension>();
+            DefModExtension vePsycastExtension = def.modExtensions.Find(me => me.GetType().FullName == VEPsycastsReflectionHelper.VpeExtensionClassName);
+            if (vePsycastExtension == null)
+            {
+                vePsycastExtension = AccessTools.CreateInstance(VEPsycastsReflectionHelper.VpeExtensionType.Value) as DefModExtension;
+                VEPsycastsReflectionHelper.ImplantDefField.Value?.SetValue(vePsycastExtension, DefDatabase<HediffDef>.GetNamed("VPE_PsycastAbilityImplant"));
+                VEPsycastsReflectionHelper.UnlockedPathsField.Value?.SetValue(vePsycastExtension,
+                    AccessTools.CreateInstance(VEPsycastsReflectionHelper.ClosedUnlockedPathsListGenericType.Value));
+                def.modExtensions.Add(vePsycastExtension);
+            }
+
+            // Set the field values
+            if (VEPsycastLevel != null) VEPsycastsReflectionHelper.LevelField.Value?.SetValue(vePsycastExtension, VEPsycastLevel);
+            if (VEPsycastStatPoints != null) VEPsycastsReflectionHelper.StatUpgradePointsField.Value?.SetValue(vePsycastExtension, VEPsycastStatPoints);
+            if (VEPsycastRandomAbilities != null) VEPsycastsReflectionHelper.GiveRandomAbilitiesField.Value?.SetValue(vePsycastExtension, VEPsycastRandomAbilities);
+        }
+
+        public virtual void ApplyVFEAncientsEdits(PawnKindDef def)
+        {
+            if (ModLister.GetActiveModWithIdentifier("vanillaexpanded.vfea") is null) return;
+            if (NumVFEAncientsSuperPowers == null && NumVFEAncientsSuperWeaknesses == null && ForcedVFEAncientsItems == null) return;
+            def.modExtensions ??= new List<DefModExtension>();
+            DefModExtension ancientsExtension = def.modExtensions.Find(me => me.GetType().FullName == VFEAncientsReflectionHelper.VfeAncientsExtensionClassName);
+            if (ancientsExtension == null)
+            {
+                ancientsExtension = AccessTools.CreateInstance(VFEAncientsReflectionHelper.VfeAncientsExtensionType.Value) as DefModExtension;
+                def.modExtensions.Add(ancientsExtension);
+            }
+
+            // Set the field values
+            if (NumVFEAncientsSuperPowers != null) VFEAncientsReflectionHelper.NumRandomSuperpowersField.Value?.SetValue(ancientsExtension, NumVFEAncientsSuperPowers);
+            if (NumVFEAncientsSuperWeaknesses != null) VFEAncientsReflectionHelper.NumRandomWeaknessesField.Value?.SetValue(ancientsExtension, NumVFEAncientsSuperWeaknesses);
+            if (ForcedVFEAncientsItems != null)
+            {
+                var powers = VFEAncientsReflectionHelper.ForcePowersField.Value?.GetValue(ancientsExtension);
+                if (powers == null)
+                {
+                    powers = AccessTools.CreateInstance(VFEAncientsReflectionHelper.ClosedPowerListGenericType.Value);
+                    VFEAncientsReflectionHelper.ForcePowersField.Value?.SetValue(ancientsExtension, powers);
+                }
+
+                if (powers is not IList powerList) return;
+                powerList.Clear();
+                ForcedVFEAncientsItems.Select(i => VFEAncientsReflectionHelper.GetPowerDefMethod.Value.Invoke(null, new object[] { i }))
+                    .Where(p => p != null)
+                    .DoIf(p => !powerList.Contains(p), p => powerList.Add(p));
+            }
         }
 
         public bool AppliesTo(PawnKindDef def)

@@ -1,6 +1,6 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
 using RimWorld;
-using System;
 using UnityEngine;
 using Verse;
 
@@ -21,7 +21,7 @@ namespace FactionLoadout
         public static void Error(string msg, Exception e = null)
         {
             Verse.Log.Error($"<color=#1c6beb>[FacLoadout]</color> {msg ?? "<null>"}");
-            if(e != null)
+            if (e != null)
                 Verse.Log.Error(e.ToString());
         }
 
@@ -42,16 +42,18 @@ namespace FactionLoadout
             ui.ColumnWidth = inRect.width * 0.5f;
             ui.maxOneColumn = false;
             ui.Begin(inRect);
-            ui.CheckboxLabeled("Enable vanilla restrictions:  ", ref MySettings.VanillaRestrictions, "If true, some vanilla restrictions are applied, such as only allowing materials that a faction has a high enough tech level for, or not giving forced weapons to non-violent pawns.");
+            ui.CheckboxLabeled("Enable vanilla restrictions:  ", ref MySettings.VanillaRestrictions,
+                "If true, some vanilla restrictions are applied, such as only allowing materials that a faction has a high enough tech level for, or not giving forced weapons to non-violent pawns.");
             ui.GapLine();
 
-            ui.Label("Here you can manage faction edit <b>presets</b>.\nEach preset contains a collection of faction edits. Only one preset can be active at a time.\n<i>Hold the SHIFT key to delete presets.</i>");
+            ui.Label(
+                "Here you can manage faction edit <b>presets</b>.\nEach preset contains a collection of faction edits. Only one preset can be active at a time.\n<i>Hold the SHIFT key to delete presets.</i>");
             ui.GapLine();
 
             bool deleteMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             Preset toDelete = null;
 
-            foreach(var preset in Preset.LoadedPresets)
+            foreach (var preset in Preset.LoadedPresets)
             {
                 var area = ui.GetRect(30);
                 area.width = 80;
@@ -80,8 +82,9 @@ namespace FactionLoadout
                     else
                     {
                         toDelete = preset;
-                    }                    
+                    }
                 }
+
                 GUI.color = Color.white;
 
                 area.x += 90;
@@ -89,16 +92,16 @@ namespace FactionLoadout
                 Widgets.Label(area, preset.Name);
             }
 
-            if(toDelete != null)            
-                Preset.DeletePreset(toDelete);            
+            if (toDelete != null)
+                Preset.DeletePreset(toDelete);
 
-            if (Preset.LoadedPresets.EnumerableNullOrEmpty())            
-                ui.Label("Huh, there's nothing here... Why not create a new preset by clicking the button below?");            
+            if (Preset.LoadedPresets.EnumerableNullOrEmpty())
+                ui.Label("Huh, there's nothing here... Why not create a new preset by clicking the button below?");
 
             ui.GapLine();
             if (ui.ButtonText("Create new preset..."))
             {
-                var preset = new Preset();
+                Preset preset = new();
                 Preset.AddNewPreset(preset);
                 preset.Save();
 
@@ -115,24 +118,37 @@ namespace FactionLoadout
 
         private void LoadLate()
         {
-            Preset.LoadAllPresets();            
+            Preset.LoadAllPresets();
 
             int count = 0;
             int edits = 0;
-            foreach (var preset in Preset.LoadedPresets)
+            foreach (Preset preset in Preset.LoadedPresets)
             {
-                if (MySettings.ActivePreset == preset.GUID)
-                {
-                    int changed = preset.TryApplyAll();
-                    edits += changed;
-                    count++;
+                if (MySettings.ActivePreset != preset.GUID) continue;
+                int changed = preset.TryApplyAll();
+                edits += changed;
+                count++;
 
-                    Messages.Message($"Applied faction edit '{preset.Name}': modified {changed} factions.", MessageTypeDefOf.PositiveEvent);
-                }
+                Messages.Message($"Applied faction edit '{preset.Name}': modified {changed} factions.", MessageTypeDefOf.PositiveEvent);
             }
 
-            var harmony = new Harmony("co.uk.epicguru.factionloadout");
-            harmony.PatchAll();
+            Harmony harmony = new Harmony("co.uk.epicguru.factionloadout");
+            harmony.Patch(AccessTools.Method(typeof(PawnApparelGenerator), "GenerateStartingApparelFor"),
+                postfix: new HarmonyMethod(typeof(ApparelGenPatch), "Postfix"));
+            harmony.Patch(AccessTools.Method(typeof(Faction), "TryGenerateNewLeader"),
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(FactionLeaderPatch),"Prefix"), priority: Priority.First));
+            harmony.Patch(AccessTools.Method(typeof(FactionUtility), "HostileTo"),
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(FactionUtilityPawnGenPatch),"Prefix"), priority: Priority.First));
+            harmony.Patch(AccessTools.Method(typeof(ThingIDMaker), "GiveIDTo"),
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(ThingIDPatch),"Prefix"), priority: Priority.First));
+            harmony.Patch(AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"),
+                postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch),"Postfix")));
+
+            if (ModLister.GetActiveModWithIdentifier("vanillaexpanded.vpsycastse") is not null)
+            {
+                harmony.Patch(AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
+                    postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatch),"Postfix"), after: new[] { "OskarPotocki.VanillaPsycastsExpanded" }));
+            }
 
             Log($"Game comp finalized init, applied {count} presets that affected {edits} factions.");
         }
@@ -140,7 +156,6 @@ namespace FactionLoadout
 
     public class HotSwappableAttribute : Attribute
     {
-
     }
 
     public class MySettings : ModSettings

@@ -1,42 +1,25 @@
-﻿using System.Collections;
-using HarmonyLib;
-using RimWorld;
-using Verse;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
+using RimWorld;
 using VanillaPsycastsExpanded;
+using Verse;
 using VFECore.Abilities;
-using AbilityDef = RimWorld.AbilityDef;
+using AbilityDef = VFECore.Abilities.AbilityDef;
 
 namespace FactionLoadout
 {
-    [HarmonyPatch(typeof(FactionUtility), "HostileTo")]
-    public static class PawnGenPatch
-    {
-        public static bool Active = false;
-
-        [HarmonyPriority(Priority.First)]
-        static bool Prefix(ref bool __result)
-        {
-            if (Active)
-            {
-                __result = false;
-                return false;
-            }
-
-            return true;
-        }
-    }
-
-
     [HarmonyPatch(typeof(PawnGenerator), "GenerateNewPawnInternal")]
     [HarmonyAfter("OskarPotocki.VanillaPsycastsExpanded")]
-    public class PawnGen_Patch
+    public class PawnGenPatch
     {
+        public static Lazy<bool> _VEPsycastsLoaded = new(() => ModLister.GetActiveModWithIdentifier("vanillaexpanded.vpsycastse") is not null);
+
         [HarmonyPostfix]
         public static void Postfix(Pawn __result, PawnGenerationRequest request)
         {
-            if (__result == null || request.AllowedDevelopmentalStages.Newborn()) return;
+            if (__result == null || request.AllowedDevelopmentalStages.Newborn() || !_VEPsycastsLoaded.Value) return;
 
             var psycastExtension = __result.kindDef.GetModExtension<PawnKindAbilityExtension_Psycasts>();
 
@@ -80,7 +63,7 @@ namespace FactionLoadout
                 }
 
                 if (implant.points <= 0) return;
-                var abilities = path?.abilities?.Except(comp.LearnedAbilities.Select(ab => ab.def)).ToList() ?? new List<VFECore.Abilities.AbilityDef>();
+                var abilities = path?.abilities?.Except(comp.LearnedAbilities.Select(ab => ab.def)).ToList() ?? new List<AbilityDef>();
 
                 do
                 {

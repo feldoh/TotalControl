@@ -122,8 +122,8 @@ public class FactionEditUI : Window
             {
                 Current.xenotypeChances = Current.Faction.Def?.xenotypeSet?.xenotypeChances
                     ?.ToDictionary(x => x.xenotype, x => x.chance) ?? new Dictionary<XenotypeDef, float>();
-                Current.xenotypeChances
-                    .TryAdd(XenotypeDefOf.Baseliner, Current.Faction.Def?.xenotypeSet?.BaselinerChance ?? 1f);
+                if (!Current.xenotypeChances.ContainsKey(XenotypeDefOf.Baseliner))
+                    Current.xenotypeChances.Add(XenotypeDefOf.Baseliner, Current.Faction.Def?.xenotypeSet?.BaselinerChance ?? 1f);
             }
 
             foreach (XenotypeDef key in Current.xenotypeChances.Keys.ToList())
@@ -324,7 +324,7 @@ public class FactionEditUI : Window
             faction.ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos;
             faction.Name = clonedFac.fixedName;
 
-            PawnGenPatch.Active = true;
+            FactionUtilityPawnGenPatch.Active = true;
             FactionLeaderPatch.Active = true;
             ThingIDPatch.Active = true;
 
@@ -350,7 +350,7 @@ public class FactionEditUI : Window
 
             ThingIDPatch.Active = false;
             FactionLeaderPatch.Active = false;
-            PawnGenPatch.Active = false;
+            FactionUtilityPawnGenPatch.Active = false;
         }
 
         GUI.enabled = true;

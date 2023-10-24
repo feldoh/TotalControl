@@ -72,15 +72,12 @@ public class FactionEdit : IExposable
             if (group == null)
                 return;
 
-            for (var i = 0; i < group.Count; i++)
+            foreach (PawnGenOption t in group)
             {
-                PawnKindDef replace = func(group[i].kind);
-                group[i].kind = replace;
+                PawnKindDef replace = func(t.kind);
                 if (replace != null)
                 {
-                    group.RemoveAt(i);
-                    // We've removed the item at the current index, so we need to rewind to process the new item at this index
-                    i--;
+                    t.kind = replace;
                 }
             }
         }
