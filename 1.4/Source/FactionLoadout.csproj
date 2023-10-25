@@ -169,6 +169,8 @@
         <Compile Include="SpecRequirementEdit.cs" />
         <Compile Include="StyleHelper.cs" />
         <Compile Include="ThingIDPatch.cs" />
+        <Compile Include="VEPsycastsReflectionHelper.cs" />
+        <Compile Include="VFEAncientsReflectionHelper.cs" />
         <Compile Include="WeaponGenPatch.cs" />
         <Compile Include="Window_ColorPicker.cs" />
     </ItemGroup>

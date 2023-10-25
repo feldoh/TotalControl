@@ -144,7 +144,7 @@ namespace FactionLoadout
             harmony.Patch(AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"),
                 postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch),"Postfix")));
 
-            if (ModLister.GetActiveModWithIdentifier("vanillaexpanded.vpsycastse") is not null)
+            if (VEPsycastsReflectionHelper.ModLoaded.Value)
             {
                 harmony.Patch(AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
                     postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatch),"Postfix"), after: new[] { "OskarPotocki.VanillaPsycastsExpanded" }));

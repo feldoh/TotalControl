@@ -77,7 +77,7 @@ public class FactionEditUI : Window
         Rect sliderRect = rect.RightPart(1f - labelPct);
         if (deleteAction != null) sliderRect.width -= 32;
 
-        var result = Widgets.HorizontalSlider_NewTemp(sliderRect, val, min, max, true);
+        float result = Widgets.HorizontalSlider_NewTemp(sliderRect, val, min, max, true);
         if (deleteAction != null)
         {
             Rect deleteButton = new Rect(sliderRect.xMax + 5, sliderRect.y, 24, 24);
@@ -98,7 +98,7 @@ public class FactionEditUI : Window
             return;
         }
 
-        Listing_Standard ui = new Listing_Standard();
+        Listing_Standard ui = new();
         ui.Begin(inRect);
 
         Rect r = ui.GetRect(50);
@@ -223,7 +223,7 @@ public class FactionEditUI : Window
                 }
                 else
                 {
-                    PawnKindDef kind = kinds.FirstOrDefault(k => k != null);
+                    PawnKindDef kind = kinds.FirstOrDefault(pawnKindDef => pawnKindDef != null);
                     ModCore.Log($"Using {kind} as global base.");
                     if (kind != null)
                         Current.KindEdits.Insert(0, new PawnKindEdit(kind) { IsGlobal = true });
@@ -254,12 +254,12 @@ public class FactionEditUI : Window
         {
             ui.Gap(20);
             Rect total = ui.GetRect(inRect.height - ui.CurHeight - 32);
-            var count = pawns.Count;
+            int count = pawns.Count;
 
             if (count != 0)
             {
-                var w = total.width / count;
-                for (var i = 0; i < count; i++)
+                float w = total.width / count;
+                for (int i = 0; i < count; i++)
                 {
                     Rect pawnArea = new(total.x + i * w, total.y, w, w);
 
@@ -302,7 +302,7 @@ public class FactionEditUI : Window
         }
 
         GUI.enabled = isInGame;
-        var f = Input.GetKeyDown(KeyCode.F);
+        bool f = Input.GetKeyDown(KeyCode.F);
         if ((ui.ButtonText("Regenerate previews [Hotkey: F]") || pawns.Count == 0 || (f && framesSinceF > 20)) && isInGame)
         {
             if (f)

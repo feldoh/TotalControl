@@ -2,11 +2,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using JetBrains.Annotations;
 using UnityEngine;
 using Verse;
 
@@ -184,7 +182,7 @@ namespace FactionLoadout
 
             if (tryAdd && field != null)
             {
-                foreach (var value in maybe)
+                foreach (object value in maybe)
                 {
                     if (!field.Contains(value))
                         field.Add(value);
@@ -193,7 +191,7 @@ namespace FactionLoadout
             else
             {
                 field = new T();
-                foreach (var value in maybe)
+                foreach (object value in maybe)
                     field.Add(value);
             }
         }
@@ -292,7 +290,7 @@ namespace FactionLoadout
 
         public virtual void ApplyVEPsycastsEdits(PawnKindDef def)
         {
-            if (ModLister.GetActiveModWithIdentifier("vanillaexpanded.vpsycastse") is null) return;
+            if (!VEPsycastsReflectionHelper.ModLoaded.Value) return;
             if (VEPsycastLevel == null && VEPsycastStatPoints == null && VEPsycastRandomAbilities == null) return;
             def.modExtensions ??= new List<DefModExtension>();
             DefModExtension vePsycastExtension = def.modExtensions.Find(me => me.GetType().FullName == VEPsycastsReflectionHelper.VpeExtensionClassName);
@@ -313,7 +311,7 @@ namespace FactionLoadout
 
         public virtual void ApplyVFEAncientsEdits(PawnKindDef def)
         {
-            if (ModLister.GetActiveModWithIdentifier("vanillaexpanded.vfea") is null) return;
+            if (!VFEAncientsReflectionHelper.ModLoaded.Value) return;
             if (NumVFEAncientsSuperPowers == null && NumVFEAncientsSuperWeaknesses == null && ForcedVFEAncientsItems == null) return;
             def.modExtensions ??= new List<DefModExtension>();
             DefModExtension ancientsExtension = def.modExtensions.Find(me => me.GetType().FullName == VFEAncientsReflectionHelper.VfeAncientsExtensionClassName);
@@ -355,74 +353,5 @@ namespace FactionLoadout
         public static Lazy<Type> ListGenericType = new(() => typeof(List<>));
 
         public static Lazy<MethodInfo> GetCompGenericMethod = new(() => AccessTools.Method(typeof(Pawn), "GetComp"));
-    }
-
-    public static class VEPsycastsReflectionHelper
-    {
-        public const string VpeExtensionClassName = "VanillaPsycastsExpanded.PawnKindAbilityExtension_Psycasts";
-        public const string VEAbilityExtensionClassName = "VanillaPsycastsExpanded.AbilityExtension_Psycast";
-        public static Lazy<Type> VpeExtensionType = new(() => AccessTools.TypeByName(VpeExtensionClassName));
-        public static Lazy<Type> PathUnlockDataType = new(() => AccessTools.TypeByName("VanillaPsycastsExpanded.PathUnlockData"));
-        public static Lazy<Type> ClosedUnlockedPathsListGenericType = new(() => ReflectionHelper.ListGenericType.Value?.MakeGenericType(PathUnlockDataType.Value));
-        public static Lazy<FieldInfo> StatUpgradePointsField = new(() => VpeExtensionType.Value?.GetField("statUpgradePoints"));
-        public static Lazy<FieldInfo> LevelField = new(() => VpeExtensionType.Value?.GetField("initialLevel"));
-        public static Lazy<FieldInfo> GiveRandomAbilitiesField = new(() => VpeExtensionType.Value?.GetField("giveRandomAbilities"));
-        public static Lazy<FieldInfo> ImplantDefField = new(() => VpeExtensionType.Value?.GetField("implantDef"));
-        public static Lazy<FieldInfo> UnlockedPathsField = new(() => VpeExtensionType.Value?.GetField("unlockedPaths"));
-        public static Lazy<Type> VpeHediff_PsycastAbilities = new(() => AccessTools.TypeByName("VanillaPsycastsExpanded.Hediff_PsycastAbilities"));
-        public static Lazy<Type> PsycasterPathDefType = new(() => AccessTools.TypeByName("VanillaPsycastsExpanded.PsycasterPathDef"));
-        public static Lazy<Type> AbilityExtension_PsycastType = new(() => AccessTools.TypeByName(VEAbilityExtensionClassName));
-        // public static Lazy<MethodInfo> VpeHediff_PsycastAbilities_UnlockPathMethod = new(() => VpeHediff_PsycastAbilities.Value?.GetMethod("UnlockPath"));
-        public static Lazy<Type> ClosedDefDatabasePsycasterPathType = new(() => ReflectionHelper.DefDatabaseGenericType.Value?.MakeGenericType(PsycasterPathDefType.Value));
-        // public static Lazy<PropertyInfo> GetPsycasterPathDefsMethod = new(() => ClosedDefDatabasePsycasterPathType.Value?.GetProperty("AllDefsListForReading"));
-        // public static Lazy<Type> ClosedPsycastPathListGenericType = new(() => ReflectionHelper.ListGenericType.Value?.MakeGenericType(PsycasterPathDefType.Value));
-        // public static Lazy<MethodInfo> VEAbilityExtension_PrereqsCompletedMethod = new(() => AbilityExtension_PsycastType.Value?.GetMethod("PrereqsCompleted"));
-
-        // Core
-        public static Lazy<Type> VpeAbilityType = new(() => AccessTools.TypeByName("VFECore.Abilities.Ability"));
-        // public static Lazy<Type> ClosedAbilityListGenericType = new(() => ReflectionHelper.ListGenericType.Value?.MakeGenericType(VpeAbilityType.Value));
-        public static Lazy<Type> VpeAbilitiesComp = new(() => AccessTools.TypeByName("VFECore.Abilities.CompAbilities"));
-        // public static Lazy<MethodInfo> ClosedAbilityGetCompGenericMethod = new(() => ReflectionHelper.GetCompGenericMethod.Value?.MakeGenericMethod(VpeAbilitiesComp.Value));
-
-        [CanBeNull] private static PawnKindDef _lastDef = null;
-        [CanBeNull] private static DefModExtension _lastExtension = null;
-
-        [CanBeNull]
-        public static DefModExtension FindVEPsycastsExtension(PawnKindDef currentDef)
-        {
-            if (_lastDef == currentDef) return _lastExtension;
-            _lastDef = currentDef;
-            _lastExtension = currentDef.modExtensions
-                ?.Find(me => me.GetType().FullName == VpeExtensionClassName);
-            return _lastExtension;
-        }
-    }
-
-    public static class VFEAncientsReflectionHelper
-    {
-        public const string VfeAncientsExtensionClassName = "VFEAncients.PawnKindExtension_Powers";
-        public static Lazy<Type> VfeAncientsExtensionType = new(() => AccessTools.TypeByName("VFEAncients.PawnKindExtension_Powers"));
-        public static Lazy<Type> PowerDefType = new(() => AccessTools.TypeByName("VFEAncients.PowerDef"));
-        public static Lazy<FieldInfo> NumRandomSuperpowersField = new(() => VfeAncientsExtensionType.Value?.GetField("numRandomSuperpowers"));
-        public static Lazy<FieldInfo> NumRandomWeaknessesField = new(() => VfeAncientsExtensionType.Value?.GetField("numRandomWeaknesses"));
-        public static Lazy<FieldInfo> ForcePowersField = new(() => VfeAncientsExtensionType.Value?.GetField("forcePowers"));
-        public static Lazy<Type> ClosedDefDatabaseType = new(() => ReflectionHelper.DefDatabaseGenericType.Value?.MakeGenericType(PowerDefType.Value));
-        public static Lazy<Type> ClosedPowerListGenericType = new(() => ReflectionHelper.ListGenericType.Value?.MakeGenericType(PowerDefType.Value));
-        public static Lazy<TypeConverter> PowerDefConverter = new(() => TypeDescriptor.GetConverter(PowerDefType));
-        public static Lazy<MethodInfo> GetPowerDefMethod = new(() => ClosedDefDatabaseType.Value?.GetMethod("GetNamedSilentFail"));
-        public static Lazy<PropertyInfo> GetPowerDefsMethod = new(() => ClosedDefDatabaseType.Value?.GetProperty("AllDefsListForReading"));
-
-        [CanBeNull] private static PawnKindDef _lastDef = null;
-        [CanBeNull] private static DefModExtension _lastExtension = null;
-
-        [CanBeNull]
-        public static DefModExtension FindVEPsycastsExtension(PawnKindDef currentDef)
-        {
-            if (_lastDef == currentDef) return _lastExtension;
-            _lastDef = currentDef;
-            _lastExtension = currentDef.modExtensions
-                ?.Find(me => me.GetType().FullName == VfeAncientsExtensionClassName);
-            return _lastExtension;
-        }
     }
 }
