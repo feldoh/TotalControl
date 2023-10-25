@@ -85,7 +85,7 @@ public class FactionEdit : IExposable
 
     public static IReadOnlyList<PawnKindDef> GetAllPawnKinds(FactionDef def)
     {
-        var kinds = (def.pawnGroupMakers ?? Enumerable.Empty<PawnGroupMaker>())
+        HashSet<PawnKindDef> kinds = (def.pawnGroupMakers ?? Enumerable.Empty<PawnGroupMaker>())
             .SelectMany(group => Enumerable.Empty<PawnGenOption>()
                 .ConcatIfNotNull(group.options)
                 .ConcatIfNotNull(group.traders)
@@ -152,33 +152,21 @@ public class FactionEdit : IExposable
         //    def.apparelStuffFilter = ApparelStuffFilter;
 
         def = EnsureOriginal(def);
-        var kinds = GetAllPawnKinds(def)
-            .Select(d => Tuple.Create(d, CloningUtility.Clone(d)))
-            .Select(t =>
-            {
-                ReplaceKind(def, t.Item1, t.Item2);
-                return t.Item2;
-            });
-
         PawnKindEdit global = GetGlobalEditor();
-        if (global != null)
-            foreach (PawnKindDef kind in kinds)
-                global.Apply(kind, null);
+        IReadOnlyList<PawnKindDef> kinds = GetAllPawnKinds(def);
 
         foreach (PawnKindDef kind in kinds)
         {
             PawnKindEdit editor = GetEditFor(kind);
-            if (editor == null)
-                continue;
-
-            PawnKindDef replaceWith = editor.Apply(kind, global);
-            if (replaceWith != kind)
-                ReplaceKind(def, kind, replaceWith);
+            PawnKindDef safeKind = global != null || editor != null ? CloningUtility.Clone(kind) : kind;
+            global?.Apply(safeKind, null);
+            if (editor?.Apply(safeKind, global) is {} newKind && newKind != safeKind) safeKind = newKind;
+            if (kind != safeKind) ReplaceKind(def, kind, safeKind);
         }
 
         if (!ModsConfig.BiotechActive || xenotypeChances == null) return;
         def.xenotypeSet?.xenotypeChances?.Clear();
-        foreach (var rate in xenotypeChances)
+        foreach (KeyValuePair<XenotypeDef, float> rate in xenotypeChances)
             def.xenotypeSet?.xenotypeChances?.Add(new XenotypeChance(rate.Key, rate.Value));
     }
 
