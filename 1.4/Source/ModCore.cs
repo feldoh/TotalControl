@@ -1,4 +1,5 @@
 ﻿using System;
+using FactionLoadoutPatches;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
