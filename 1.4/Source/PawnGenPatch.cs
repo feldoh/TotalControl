@@ -7,11 +7,11 @@ using Verse;
 using VFECore.Abilities;
 using AbilityDef = VFECore.Abilities.AbilityDef;
 
-namespace FactionLoadout;
+namespace FactionLoadoutPatches;
 
 [HarmonyPatch(typeof(PawnGenerator), "GenerateNewPawnInternal")]
 [HarmonyAfter("OskarPotocki.VanillaPsycastsExpanded")]
-public class PawnGenPatch
+internal static class PawnGenPatch
 {
     [HarmonyPostfix]
     public static void Postfix(Pawn __result, PawnGenerationRequest request)
