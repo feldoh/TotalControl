@@ -7,11 +7,11 @@ using Verse;
 using VFECore.Abilities;
 using AbilityDef = VFECore.Abilities.AbilityDef;
 
-namespace FactionLoadoutPatches;
+namespace TotalControlVEPsycastsCompat;
 
 [HarmonyPatch(typeof(PawnGenerator), "GenerateNewPawnInternal")]
 [HarmonyAfter("OskarPotocki.VanillaPsycastsExpanded")]
-internal static class PawnGenPatch
+public static class PawnGenPatch
 {
     [HarmonyPostfix]
     public static void Postfix(Pawn __result, PawnGenerationRequest request)
@@ -59,7 +59,7 @@ internal static class PawnGenPatch
         }
 
         if (implant.points <= 0) return;
-        var abilities = path?.abilities?.Except(comp.LearnedAbilities.Select(ab => ab.def)).ToList() ?? new List<AbilityDef>();
+        List<AbilityDef> abilities = path?.abilities?.Except(comp.LearnedAbilities.Select(ab => ab.def)).ToList() ?? new List<AbilityDef>();
 
         do
         {

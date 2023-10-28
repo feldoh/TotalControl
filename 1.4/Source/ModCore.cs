@@ -1,5 +1,4 @@
 ﻿using System;
-using FactionLoadoutPatches;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -144,12 +143,6 @@ namespace FactionLoadout
                 prefix: new HarmonyMethod(AccessTools.Method(typeof(ThingIDPatch),"Prefix"), priority: Priority.First));
             harmony.Patch(AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"),
                 postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch),"Postfix")));
-
-            if (VEPsycastsReflectionHelper.ModLoaded.Value)
-            {
-                harmony.Patch(AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
-                    postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatch),"Postfix"), after: new[] { "OskarPotocki.VanillaPsycastsExpanded" }));
-            }
 
             Log($"Game comp finalized init, applied {count} presets that affected {edits} factions.");
         }

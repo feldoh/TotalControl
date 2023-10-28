@@ -62,7 +62,7 @@
         <CommonFiles Include="../../Common/**">
             <Link>Files/Common/%(RecursiveDir)%(Filename)%(Extension)</Link>
         </CommonFiles>
-        <ReleaseAssemblies Include="../../1.*/Assemblies/*.dll" Exclude="../../1.*/Assemblies/0Harmony.dll">
+        <ReleaseAssemblies Include="../../1.*/Assemblies/*.dll;../../Compatibilit*/**" Exclude="../../1.*/Assemblies/0Harmony.dll">
             <Link>Files/Assemblies/%(RecursiveDir)%(Filename)%(Extension)</Link>
         </ReleaseAssemblies>
         <GitMeta Include="../../.git*">
@@ -79,14 +79,6 @@
         <Reference Include="System.Data" />
         <Reference Include="System.Net.Http" />
         <Reference Include="System.Xml" />
-        <Reference Include="VanillaPsycastsExpanded">
-            <HintPath>../../../2842502659/1.4/Assemblies/VanillaPsycastsExpanded.dll</HintPath>
-            <Private>false</Private>
-        </Reference>
-        <Reference Include="VFECore">
-            <HintPath>../../../2023507013/1.4/Assemblies/VFECore.dll</HintPath>
-            <Private>false</Private>
-        </Reference>
     </ItemGroup>
     <Choose>
         <When Condition="Exists('../../../../RimWorldWin64_Data/Managed/Assembly-CSharp.dll')">
@@ -173,7 +165,6 @@
         <Compile Include="InventoryOptionEdit.cs" />
         <Compile Include="IO.cs" />
         <Compile Include="ModCore.cs" />
-        <Compile Include="PawnGenPatch.cs" />
         <Compile Include="PawnKindEdit.cs" />
         <Compile Include="PawnKindEditUI.cs" />
         <Compile Include="Preset.cs" />
