@@ -143,6 +143,8 @@ namespace FactionLoadout
                 prefix: new HarmonyMethod(AccessTools.Method(typeof(ThingIDPatch),"Prefix"), priority: Priority.First));
             harmony.Patch(AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"),
                 postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch),"Postfix")));
+            harmony.Patch(AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
+                postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchCore),"Postfix")));
 
             Log($"Game comp finalized init, applied {count} presets that affected {edits} factions.");
         }

@@ -80,6 +80,27 @@ namespace FactionLoadout
         public List<Color> CustomHairColors = null;
         public bool DeletedOrClosed;
 
+        public class ForcedHediffModExtension : DefModExtension
+        {
+            public List<ForcedHediff> forcedHediffs = new ();
+        }
+
+        public class ForcedHediff : IExposable
+        {
+            public HediffDef hediffDef;
+            public List<BodyPartDef> parts;
+            public int maxParts = 1;
+            public float chance = 1f;
+            public void ExposeData()
+            {
+                Scribe_Defs.Look(ref hediffDef, "hediffDef");
+                Scribe_Collections.Look(ref parts, "parts", LookMode.Def);
+                Scribe_Values.Look(ref maxParts, "maxParts", 1);
+                Scribe_Values.Look(ref chance, "chance", 1f);
+            }
+        }
+        public List<ForcedHediff> ForcedHediffs = null;
+
         // VFE Ancients
         public int? NumVFEAncientsSuperPowers = null;
         public int? NumVFEAncientsSuperWeaknesses = null;
@@ -139,6 +160,7 @@ namespace FactionLoadout
             Scribe_Defs.Look(ref Race, "race");
             Scribe_Collections.Look(ref CustomHair, "customHair", LookMode.Def);
             Scribe_Collections.Look(ref CustomHairColors, "customHairColors");
+            Scribe_Collections.Look(ref ForcedHediffs, "forcedHediffs", LookMode.Deep);
 
             // VFEAncients Compatibility
             Scribe_Values.Look(ref NumVFEAncientsSuperPowers, "numVFEAncientsSuperPowers");
@@ -279,6 +301,20 @@ namespace FactionLoadout
             if (color != null && color == Color.white)
                 color = new Color(0.995f, 0.995f, 0.995f, 1f);
             ReplaceMaybe(ref def.apparelColor, color);
+
+            def.modExtensions ??= new List<DefModExtension>();
+
+            if (ForcedHediffs is { Count: > 0 })
+            {
+                ForcedHediffModExtension hediffExtension = def.GetModExtension<ForcedHediffModExtension>();
+                if (hediffExtension == null)
+                {
+                    hediffExtension = new ForcedHediffModExtension();
+                    def.modExtensions.Add(hediffExtension);
+                }
+                hediffExtension.forcedHediffs.AddRange(ForcedHediffs);
+                Log.Message($"Adding forced hediffs {hediffExtension.forcedHediffs?.Select(h => h.hediffDef?.defName)?.ToCommaList() ?? "None"} to {def.defName}");
+            }
 
             if (def.RaceProps.Animal) return def; // Animals can't have powers
             ApplyVFEAncientsEdits(def);

@@ -165,6 +165,7 @@
         <Compile Include="InventoryOptionEdit.cs" />
         <Compile Include="IO.cs" />
         <Compile Include="ModCore.cs" />
+        <Compile Include="PawnGenPatch.cs" />
         <Compile Include="PawnKindEdit.cs" />
         <Compile Include="PawnKindEditUI.cs" />
         <Compile Include="Preset.cs" />
