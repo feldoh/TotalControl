@@ -16,6 +16,7 @@ public static class PawnGenPatchCore
 
         foreach (PawnKindEdit.ForcedHediff forcedHediff in ext.forcedHediffs)
         {
+            if (forcedHediff.HediffDef == null) continue;
             Stack<BodyPartRecord> validParts = forcedHediff.parts == null || forcedHediff.parts.Count == 0
                 ? null
                 : new Stack<BodyPartRecord>(__result.health.hediffSet.GetNotMissingParts().Where(p => forcedHediff.parts.Contains(p.def)).InRandomOrder());
@@ -24,9 +25,9 @@ public static class PawnGenPatchCore
             for (int i = 0; i < maxToApply; i++)
             {
                 if (!Rand.Chance(forcedHediff.chance)) continue;
-                if (__result.health.hediffSet.GetHediffCount(forcedHediff.hediffDef) >= forcedHediff.maxParts) break;
+                if (__result.health.hediffSet.GetHediffCount(forcedHediff.HediffDef) >= forcedHediff.maxParts) break;
                 {
-                    Hediff hediff = HediffMaker.MakeHediff(forcedHediff.hediffDef, __result, validParts?.Pop());
+                    Hediff hediff = HediffMaker.MakeHediff(forcedHediff.HediffDef, __result, validParts?.Pop());
                     __result.health.AddHediff(hediff);
                 }
             }

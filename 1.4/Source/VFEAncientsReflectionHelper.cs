@@ -11,7 +11,7 @@ public static class VFEAncientsReflectionHelper
     public const string VfeAncientsExtensionClassName = "VFEAncients.PawnKindExtension_Powers";
 
     public static Lazy<bool> ModLoaded = new(() => ModLister.GetActiveModWithIdentifier("VanillaExpanded.VFEA") is not null);
-    public static Lazy<Type> VfeAncientsExtensionType = new(() => AccessTools.TypeByName("VFEAncients.PawnKindExtension_Powers"));
+    public static Lazy<Type> VfeAncientsExtensionType = new(() => AccessTools.TypeByName(VfeAncientsExtensionClassName));
     public static Lazy<Type> PowerDefType = new(() => AccessTools.TypeByName("VFEAncients.PowerDef"));
     public static Lazy<FieldInfo> NumRandomSuperpowersField = new(() => VfeAncientsExtensionType.Value?.GetField("numRandomSuperpowers"));
     public static Lazy<FieldInfo> NumRandomWeaknessesField = new(() => VfeAncientsExtensionType.Value?.GetField("numRandomWeaknesses"));
@@ -25,7 +25,7 @@ public static class VFEAncientsReflectionHelper
     [CanBeNull] private static DefModExtension _lastExtension = null;
 
     [CanBeNull]
-    public static DefModExtension FindVEPsycastsExtension(PawnKindDef currentDef)
+    public static DefModExtension FindVEAncientsExtension(PawnKindDef currentDef)
     {
         if (_lastDef == currentDef) return _lastExtension;
         _lastDef = currentDef;

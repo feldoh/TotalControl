@@ -87,13 +87,29 @@ namespace FactionLoadout
 
         public class ForcedHediff : IExposable
         {
-            public HediffDef hediffDef;
+            private Lazy<HediffDef> resolvedHediffDef;
+            public string hediffDef;
             public List<BodyPartDef> parts;
             public int maxParts = 1;
             public float chance = 1f;
+
+            public HediffDef HediffDef
+            {
+                get
+                {
+                    resolvedHediffDef ??= new Lazy<HediffDef>(() => DefDatabase<HediffDef>.GetNamedSilentFail(hediffDef));
+                    return resolvedHediffDef.Value;
+                }
+                set
+                {
+                    hediffDef = value.defName;
+                    resolvedHediffDef = new Lazy<HediffDef>(() => value);
+                }
+            }
+
             public void ExposeData()
             {
-                Scribe_Defs.Look(ref hediffDef, "hediffDef");
+                Scribe_Values.Look(ref hediffDef, "hediffDef");
                 Scribe_Collections.Look(ref parts, "parts", LookMode.Def);
                 Scribe_Values.Look(ref maxParts, "maxParts", 1);
                 Scribe_Values.Look(ref chance, "chance", 1f);
@@ -313,7 +329,7 @@ namespace FactionLoadout
                     def.modExtensions.Add(hediffExtension);
                 }
                 hediffExtension.forcedHediffs.AddRange(ForcedHediffs);
-                Log.Message($"Adding forced hediffs {hediffExtension.forcedHediffs?.Select(h => h.hediffDef?.defName)?.ToCommaList() ?? "None"} to {def.defName}");
+                Log.Message($"Adding forced hediffs {hediffExtension.forcedHediffs?.Select(h => h.HediffDef?.defName)?.ToCommaList() ?? "None"} to {def.defName}");
             }
 
             if (def.RaceProps.Animal) return def; // Animals can't have powers
@@ -329,7 +345,7 @@ namespace FactionLoadout
             if (!VEPsycastsReflectionHelper.ModLoaded.Value) return;
             if (VEPsycastLevel == null && VEPsycastStatPoints == null && VEPsycastRandomAbilities == null) return;
             def.modExtensions ??= new List<DefModExtension>();
-            DefModExtension vePsycastExtension = def.modExtensions.Find(me => me.GetType().FullName == VEPsycastsReflectionHelper.VpeExtensionClassName);
+            DefModExtension vePsycastExtension = VEPsycastsReflectionHelper.FindVEPsycastsExtension(def);
             if (vePsycastExtension == null)
             {
                 vePsycastExtension = AccessTools.CreateInstance(VEPsycastsReflectionHelper.VpeExtensionType.Value) as DefModExtension;
@@ -349,8 +365,8 @@ namespace FactionLoadout
         {
             if (!VFEAncientsReflectionHelper.ModLoaded.Value) return;
             if (NumVFEAncientsSuperPowers == null && NumVFEAncientsSuperWeaknesses == null && ForcedVFEAncientsItems == null) return;
-            def.modExtensions ??= new List<DefModExtension>();
-            DefModExtension ancientsExtension = def.modExtensions.Find(me => me.GetType().FullName == VFEAncientsReflectionHelper.VfeAncientsExtensionClassName);
+            def.modExtensions ??= [];
+            DefModExtension ancientsExtension = VFEAncientsReflectionHelper.FindVEAncientsExtension(def);
             if (ancientsExtension == null)
             {
                 ancientsExtension = AccessTools.CreateInstance(VFEAncientsReflectionHelper.VfeAncientsExtensionType.Value) as DefModExtension;
