@@ -4,7 +4,7 @@
     <Import Project="$(MSBuildExtensionsPath)/$(MSBuildToolsVersion)/Microsoft.Common.props"
             Condition="Exists('$(MSBuildExtensionsPath)/$(MSBuildToolsVersion)/Microsoft.Common.props')" />
     <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">DevRelease</Configuration>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
         <ProjectGuid>{97FA1308-3ED7-41D8-827D-0CC3A3291EE8}</ProjectGuid>
         <OutputType>Library</OutputType>
@@ -36,29 +36,15 @@
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DevRelease|AnyCPU' ">
-        <DebugSymbols>false</DebugSymbols>
-        <DebugType>none</DebugType>
-        <Optimize>true</Optimize>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
 
     <ItemGroup>
         <ReleaseFiles Include="../../*.xml;../../*.md;../../LICENSE;../../1.*/**"
                       Exclude="../../1.*/Source/**;../../1.*/Assemblies/**">
             <Link>Files/%(RecursiveDir)%(Filename)%(Extension)</Link>
         </ReleaseFiles>
-        <AboutFiles Include="../../About/**;" Exclude="../../About/DevRelease/**">
+        <AboutFiles Include="../../About/**;">
             <Link>Files/About/%(RecursiveDir)%(Filename)%(Extension)</Link>
         </AboutFiles>
-        <AboutDevFiles Include="../../About/DevRelease/**;">
-            <Link>Files/About/%(RecursiveDir)%(Filename)%(Extension)</Link>
-        </AboutDevFiles>
-        <AboutReleaseFiles Include="../../About/PublishedFileId.txt;../../About/About.xml">
-            <Link>Files/About/%(RecursiveDir)%(Filename)%(Extension)</Link>
-        </AboutReleaseFiles>
         <CommonFiles Include="../../Common/**">
             <Link>Files/Common/%(RecursiveDir)%(Filename)%(Extension)</Link>
         </CommonFiles>
@@ -191,14 +177,13 @@
         <Delete Files="$(ZipFilePath)" Condition="Exists('$(ZipFilePath)')" />
     </Target>
 
-    <Target Name="PostBuild" AfterTargets="Build" Condition=" '$(Configuration)' == 'Release' Or '$(Configuration)' == 'DevRelease' " DependsOnTargets="CleanRelease">
+    <Target Name="PostBuild" AfterTargets="Build" Condition=" '$(Configuration)' == 'Release' " DependsOnTargets="CleanRelease">
         <MakeDir Directories="$(ReleasePath)" />
         <Copy SourceFiles="@(ReleaseFiles)" DestinationFiles="@(ReleaseFiles->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
         <Copy SourceFiles="@(ReleaseAssemblies)" DestinationFiles="@(ReleaseAssemblies->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
         <Copy SourceFiles="@(AboutFiles)" DestinationFolder="$(ReleasePath)/About" />
         <Copy SourceFiles="@(CommonFiles)" DestinationFiles="@(CommonFiles->'$(ReleasePath)/Common/%(RecursiveDir)%(Filename)%(Extension)')" />
         <Copy SourceFiles="@(AboutReleaseFiles)" Condition=" '$(Configuration)' == 'Release' " DestinationFolder="$(ReleasePath)/About" />
-        <Copy SourceFiles="@(AboutDevFiles)" Condition=" '$(Configuration)' == 'DevRelease' " DestinationFolder="$(ReleasePath)/About" />
         <ZipDirectory DestinationFile="$(ZipFilePath)" SourceDirectory="$(ReleasePath)" Overwrite="true" />
     </Target>
 </Project>

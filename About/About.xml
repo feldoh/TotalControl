@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
   <packageId>co.uk.epicguru.factionloadout</packageId>
-  <name>Total Control</name>
-  <author>TRM</author>
+  <name>Rimsential - Total Control: Continued</name>
+  <author>TRM,Feldoh,EpicGuru,Orpheusly</author>
   <supportedVersions>
     <li>1.4</li>
   </supportedVersions>
-  <description>Enables the complete customization of faction pawn's appearance</description>
+  <description>Enables the deep customization of faction pawns</description>
   <modDependencies>
     <li>
       <packageId>brrainz.harmony</packageId>
@@ -17,5 +17,7 @@
   </modDependencies>
   <loadAfter>
     <li>brrainz.harmony</li>
+    <li>vanillaexpanded.vpsycastse</li>
+    <li>vanillaexpanded.vfea</li>
   </loadAfter>
 </ModMetaData>
