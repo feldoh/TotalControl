@@ -11,7 +11,6 @@ namespace FactionLoadout
         public Action<Color> selectAction;
 
         private Color color;
-
         private Color oldColor;
 
         private bool hsvColorWheelDragging;
@@ -27,7 +26,7 @@ namespace FactionLoadout
         public static Widgets.ColorComponents visibleColorTextfields = Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat;
 
         public static Widgets.ColorComponents editableColorTextfields = Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat;
-        public override Vector2 InitialSize => new Vector2(600f, 450f);
+        public override Vector2 InitialSize => new Vector2(600f, 480f);
 
         public Window_ColorPicker(Color currentColor, Action<Color> selectAction)
         {
@@ -71,11 +70,6 @@ namespace FactionLoadout
             RectAggregator aggregator = new RectAggregator(new Rect(layout.Rect.position, new Vector2(125f, 0f)), 195906069);
             bool num = Widgets.ColorTextfields(ref aggregator, ref color, ref textfieldBuffers, ref textfieldColorBuffer, previousFocusedControlName, "colorTextfields", editableColorTextfields, visibleColorTextfields);
             size = aggregator.Rect.size;
-            if (num)
-            {
-                Color.RGBToHSV(color, out var H, out var S, out var _);
-                color = Color.HSVToRGB(H, S, 1f);
-            }
         }
 
         private static void ColorReadback(Rect rect, Color color, Color oldColor)
@@ -136,29 +130,39 @@ namespace FactionLoadout
         {
             using (TextBlock.Default())
             {
+                Color.RGBToHSV(color, out var _, out var _, out var value);
+
                 RectDivider layout = new RectDivider(inRect, 195906069);
                 HeaderRow(ref layout);
                 layout.NewRow(0f);
                 BottomButtons(ref layout);
                 layout.NewRow(0f, VerticalJustification.Bottom);
-                Color.RGBToHSV(color, out var H, out var S, out var _);
-                Color defaultColor = Color.HSVToRGB(H, S, 1f);
+                Color.RGBToHSV(color, out var H, out var S, out var V);
+                Color defaultColor = Color.HSVToRGB(H, S, V);
                 defaultColor.a = 1f;
                 Dialog_GlowerColorPicker.ColorPalette(ref layout, ref color, defaultColor, false, out var paletteHeight);
                 ColorTextfields(ref layout, out var size);
-                float height = Mathf.Max(paletteHeight, 128f, size.y);
+                float height = Mathf.Max(paletteHeight, 170f, size.y);
                 RectDivider rectDivider = layout.NewRow(height);
                 rectDivider.NewCol(size.x);
                 rectDivider.NewCol(250f, HorizontalJustification.Right);
                 Widgets.HSVColorWheel(rectDivider.Rect.ContractedBy((rectDivider.Rect.width - 128f) / 2f, (rectDivider.Rect.height - 128f) / 2f), ref color, ref hsvColorWheelDragging, 1f);
                 Widgets.ColorTemperatureBar(layout.NewRow(34f), ref color, ref colorTemperatureDragging, 1f);
-                layout.NewRow(26f);
+                layout.NewRow(5f);
+                RectDivider valueRow = layout.NewRow(30f);
+                Widgets.Label(valueRow.NewCol(100f), "FactionLoadout_Value".Translate(Math.Round(value * 255)).CapitalizeFirst());
+                Widgets.HorizontalSlider(valueRow.NewCol(400f), ref value, new FloatRange(0f, 1f), "FactionLoadout_ColorValue".Translate().CapitalizeFirst());
                 ColorReadback(layout, color, oldColor);
                 TabControl();
                 if (Event.current.type == EventType.Layout)
                 {
                     previousFocusedControlName = GUI.GetNameOfFocusedControl();
                 }
+
+                Color.RGBToHSV(color, out var h, out var s, out var _);
+
+                color = Color.HSVToRGB(h, s, value);
+
             }
         }
     }
