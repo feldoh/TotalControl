@@ -70,11 +70,6 @@ namespace FactionLoadout
             RectAggregator aggregator = new RectAggregator(new Rect(layout.Rect.position, new Vector2(125f, 0f)), 195906069);
             bool num = Widgets.ColorTextfields(ref aggregator, ref color, ref textfieldBuffers, ref textfieldColorBuffer, previousFocusedControlName, "colorTextfields", editableColorTextfields, visibleColorTextfields);
             size = aggregator.Rect.size;
-            //if (num)
-            //{
-            //    Color.RGBToHSV(color, out var H, out var S, out var _);
-            //    color = Color.HSVToRGB(H, S, 1f);
-            //}
         }
 
         private static void ColorReadback(Rect rect, Color color, Color oldColor)
