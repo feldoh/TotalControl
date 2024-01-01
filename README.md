@@ -41,7 +41,8 @@ Recommended Additions:
 * Orpheusly
 * Taranchuk
 * EpicGuru
-* Feldoh
+* [Feldoh](https://github.com/feldoh)
+* [keyz182](https://github.com/keyz182)
 
 ## Building and Releasing
 You do not need to build the project to use it however building the release configuration will create a zip file for nice distribution.
