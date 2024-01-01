@@ -1070,7 +1070,7 @@ public class PawnKindEditUI : Window
         }
         else
         {
-            DefModExtension ancientsExtension = Current.Def.modExtensions?.Find(me => me.GetType().FullName == VFEAncientsReflectionHelper.VfeAncientsExtensionClassName);
+            DefModExtension ancientsExtension = VFEAncientsReflectionHelper.FindVEAncientsExtension(Current.Def);
             string defaultValue = "NA";
             if (ancientsExtension != null)
                 defaultValue = VFEAncientsReflectionHelper.NumRandomSuperpowersField.Value
@@ -1095,10 +1095,10 @@ public class PawnKindEditUI : Window
         }
         else
         {
-            DefModExtension ancientsExtension = Current.Def.modExtensions?.Find(me => me.GetType().FullName == VFEAncientsReflectionHelper.VfeAncientsExtensionClassName);
+            DefModExtension ancientsExtension = VFEAncientsReflectionHelper.FindVEAncientsExtension(Current.Def);
             string defaultValue = "NA";
             if (ancientsExtension != null)
-                defaultValue = AccessTools.TypeByName(VFEAncientsReflectionHelper.VfeAncientsExtensionClassName)
+                defaultValue = VFEAncientsReflectionHelper.VfeAncientsExtensionType.Value
                     ?.GetField("numRandomWeaknesses")
                     ?.GetValue(ancientsExtension)
                     ?.ToString();
@@ -1374,6 +1374,7 @@ public class PawnKindEditUI : Window
             for (int i = 0; i < current.Count; i++)
             {
                 Color color = current[i];
+                int currentPosition = i;
 
                 GUI.color = Color.red;
                 if (Widgets.ButtonText(currButton, " X"))
@@ -1393,7 +1394,7 @@ public class PawnKindEditUI : Window
                     Find.WindowStack.Add(new Window_ColorPicker(color, selected =>
                     {
                         selected.a = 1f;
-                        current[i] = selected;
+                        current[currentPosition] = selected;
                     }));
 
                 curr.y += 38;
