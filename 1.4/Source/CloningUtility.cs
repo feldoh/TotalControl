@@ -179,7 +179,7 @@ namespace FactionLoadout
             return info.GetValue(def);
         }
 
-        private static PawnKindDef Clone(PawnKindDef def)
+        public static PawnKindDef Clone(PawnKindDef def)
         {
             if (def == null)
                 return null;
