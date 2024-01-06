@@ -164,10 +164,20 @@ public class FactionEdit : IExposable
             if (kind != safeKind) ReplaceKind(def, kind, safeKind);
         }
 
-        if (!ModsConfig.BiotechActive || xenotypeChances == null) return;
+        if (!ModsConfig.BiotechActive || xenotypeChances == null || xenotypeChances.Count < 1) return;
+        def.xenotypeSet ??= new XenotypeSet();
         def.xenotypeSet?.xenotypeChances?.Clear();
         foreach (KeyValuePair<XenotypeDef, float> rate in xenotypeChances)
+        {
             def.xenotypeSet?.xenotypeChances?.Add(new XenotypeChance(rate.Key, rate.Value));
+            foreach (PawnKindDef pawnKindDef in def.GetKindDefs())
+            {
+                if (!pawnKindDef.RaceProps.Humanlike) continue;
+                pawnKindDef.xenotypeSet ??= new XenotypeSet();
+                pawnKindDef.xenotypeSet?.xenotypeChances?.Clear();
+                pawnKindDef.xenotypeSet?.xenotypeChances?.Add(new XenotypeChance(rate.Key, rate.Value));
+            }
+        }
     }
 
     private void ReplaceKind(FactionDef faction, PawnKindDef original, PawnKindDef replacement)
