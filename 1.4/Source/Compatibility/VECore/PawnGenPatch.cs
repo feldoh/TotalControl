@@ -59,7 +59,7 @@ public static class PawnGenPatch
         }
 
         if (implant.points <= 0) return;
-        List<AbilityDef> abilities = path?.abilities?.Except(comp.LearnedAbilities.Select(ab => ab.def)).ToList() ?? new List<AbilityDef>();
+        List<AbilityDef> abilities = path?.abilities?.Except(comp.LearnedAbilities.Select(ab => ab.def)).ToList() ?? [];
 
         do
         {

@@ -22,7 +22,7 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' != 'Release|AnyCPU' ">
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <DebugType>none</DebugType>
         <Optimize>true</Optimize>
         <OutputPath>../../../../Compatibility/VEPsycasts/1.4/Assemblies</OutputPath>
