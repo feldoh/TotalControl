@@ -8,7 +8,7 @@
         <TargetFramework>net48</TargetFramework>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>preview</LangVersion>
         <PackageId>TotalControlVEPsycastsCompat</PackageId>
     </PropertyGroup>
 
