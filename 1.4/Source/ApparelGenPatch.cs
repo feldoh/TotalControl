@@ -169,7 +169,7 @@ namespace FactionLoadout
             if(app == null)
             {
                 ModCore.Error($"Generated a {thing.LabelCap} but it is not apparel?!?");
-                app.Destroy(DestroyMode.Vanish);
+                thing.Destroy(DestroyMode.Vanish);
                 return null;
             }
 
