@@ -224,10 +224,7 @@ public class PawnKindEditUI : Window
 
         if (tabs == null)
         {
-            tabs = new List<Tab>()
-            {
-                new("General", DrawGeneralTab)
-            };
+            tabs = [new Tab("General", DrawGeneralTab)];
 
             bool isAnimal = DefaultKind.RaceProps.Animal;
             if (!isAnimal)
@@ -299,6 +296,7 @@ public class PawnKindEditUI : Window
 
         if (!Current.IsGlobal && isAnimal) DrawOverride(ui, DefaultKind, ref Current.ReplaceWith, "Replace with...", DrawReplaceWith);
 
+        DrawOverride(ui, Gender.None, ref Current.ForcedGender, "Forced Gender", DrawGender);
         DrawOverride(ui, DefaultKind.label, ref Current.Label, "Custom name", DrawCustomName);
         if (!Current.IsGlobal && !isAnimal)
         {
@@ -1011,6 +1009,11 @@ public class PawnKindEditUI : Window
     private void DrawItemQuality(Rect rect, bool active, QualityCategory _)
     {
         DrawEnumSelector(rect, active, Current.ItemQuality, Current.Def.itemQuality, q => Current.ItemQuality = q);
+    }
+
+    private void DrawGender(Rect rect, bool active, Gender defaultValue)
+    {
+        DrawEnumSelector(rect, active, Current.ForcedGender, Current.Def.fixedGender ?? defaultValue, q => Current.ForcedGender = q);
     }
 
     private void DrawWeaponQuality(Rect rect, bool active, QualityCategory _)

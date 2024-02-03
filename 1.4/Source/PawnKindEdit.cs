@@ -84,6 +84,7 @@ public class PawnKindEdit : IExposable
     public bool DeletedOrClosed;
     public List<ForcedHediff> ForcedHediffs = null;
     public Dictionary<XenotypeDef, float> ForcedXenotypeChances = new();
+    public Gender? ForcedGender = null;
 
     // VFE Ancients
     public int? NumVFEAncientsSuperPowers = null;
@@ -144,6 +145,7 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref ApparelColor, "apparelColor");
         Scribe_Values.Look(ref Label, "label");
         Scribe_Defs.Look(ref Race, "race");
+        Scribe_Values.Look(ref ForcedGender, "forcedGender");
         Scribe_Collections.Look(ref CustomHair, "customHair", LookMode.Def);
         Scribe_Collections.Look(ref CustomHairColors, "customHairColors");
         Scribe_Collections.Look(ref ForcedHediffs, "forcedHediffs", LookMode.Deep);
@@ -257,6 +259,7 @@ public class PawnKindEdit : IExposable
         ReplaceMaybe(ref def.forceWeaponQuality, ForcedWeaponQuality);
         ReplaceMaybe(ref def.label, Label);
         ReplaceMaybe(ref def.race, Race);
+        ReplaceMaybe(ref def.fixedGender, ForcedGender);
 
         ReplaceMaybeList(ref def.techHediffsTags, TechHediffTags, global?.TechHediffTags != null);
         ReplaceMaybeList(ref def.techHediffsDisallowTags, TechHediffDisallowedTags, global?.TechHediffDisallowedTags != null);
