@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -57,15 +56,15 @@ public class PawnKindEditUI : Window
         if (AllTechHediffTags != null)
             return;
 
-        var techTags = new HashSet<string>(128);
-        var apparelTags = new HashSet<string>(128);
-        var weaponTags = new HashSet<string>(128);
-        var apparel = new HashSet<ThingDef>(256);
-        var allHumanlikeRaces = new HashSet<ThingDef>(256);
-        var weapons = new HashSet<ThingDef>(256);
-        var allTech = new HashSet<ThingDef>(128);
-        var allInv = new HashSet<ThingDef>(1024);
-        var allAnimalKindDefs = new HashSet<PawnKindDef>(1024);
+        HashSet<string> techTags = new(128);
+        HashSet<string> apparelTags = new(128);
+        HashSet<string> weaponTags = new(128);
+        HashSet<ThingDef> apparel = new(256);
+        HashSet<ThingDef> allHumanlikeRaces = new(256);
+        HashSet<ThingDef> weapons = new(256);
+        HashSet<ThingDef> allTech = new(128);
+        HashSet<ThingDef> allInv = new(1024);
+        HashSet<PawnKindDef> allAnimalKindDefs = new(1024);
 
         foreach (PawnKindDef def in DefDatabase<PawnKindDef>.AllDefsListForReading)
             if (def.RaceProps.Animal && def.RaceProps.packAnimal)
@@ -110,31 +109,31 @@ public class PawnKindEditUI : Window
                 allInv.Add(def);
         }
 
-        AllTechHediffTags = new List<string>(techTags);
+        AllTechHediffTags = [..techTags];
         AllTechHediffTags.Sort();
 
-        AllApparelTags = new List<string>(apparelTags);
+        AllApparelTags = [..apparelTags];
         AllApparelTags.Sort();
 
-        AllWeaponsTags = new List<string>(weaponTags);
+        AllWeaponsTags = [..weaponTags];
         AllWeaponsTags.Sort();
 
-        AllApparel = new List<ThingDef>(apparel);
+        AllApparel = [..apparel];
         AllApparel.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
-        AllWeapons = new List<ThingDef>(weapons);
+        AllWeapons = [..weapons];
         AllWeapons.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
-        AllTech = new List<ThingDef>(allTech);
+        AllTech = [..allTech];
         AllTech.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
-        AllInvItems = new List<ThingDef>(allInv);
+        AllInvItems = [..allInv];
         AllInvItems.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
-        AllHumanlikeRaces = new List<ThingDef>(allHumanlikeRaces);
+        AllHumanlikeRaces = [..allHumanlikeRaces];
         AllHumanlikeRaces.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
-        AllAnimalKindDefs = new List<PawnKindDef>(allAnimalKindDefs);
+        AllAnimalKindDefs = [..allAnimalKindDefs];
         AllAnimalKindDefs.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
         PopulateVFEAncientsObjects();
@@ -243,6 +242,7 @@ public class PawnKindEditUI : Window
                 });
                 if (VFEAncientsReflectionHelper.ModLoaded.Value) tabs.Add(new Tab("VFE Ancients", DrawAncientsTab));
                 if (VEPsycastsReflectionHelper.ModLoaded.Value) tabs.Add(new Tab("VE Psycasts", DrawPsycastsTab));
+                if (ModsConfig.BiotechActive) tabs.Add(new Tab("Xenotypes", DrawXenotypeTab));
             }
         }
 
@@ -252,17 +252,18 @@ public class PawnKindEditUI : Window
         Widgets.Label(titleArea, title);
 
         Rect tabRect = inRect;
-        float tabRows = (float) Math.Ceiling(tabs.Count/5f);
+        float tabRows = (float)Math.Ceiling(tabs.Count / 5f);
         tabRect.height = tabRows * 50 + 50;
         tabRect.y += 50;
         for (int i = 0; i < tabs.Count; i++)
         {
-            float row = (float) Math.Floor(i/5f);
+            float row = (float)Math.Floor(i / 5f);
             if (row > 0 && i % 5 == 0)
             {
                 tabRect.ExpandedBy(0, 50f);
                 tabRect.yMin += 50;
             }
+
             Rect button = tabRect;
             button.height = 40;
             button.width = 140;
@@ -484,8 +485,8 @@ public class PawnKindEditUI : Window
             Widgets.DrawHighlightIfMouseover(defSel);
             if (Widgets.ButtonInvisible(defSel))
             {
-                var defs = DefDatabase<ThingDef>.AllDefsListForReading.Where(thingFilter);
-                var items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
+                IEnumerable<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading.Where(thingFilter);
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
                 CustomFloatMenu.Open(items, raw =>
                 {
                     ThingDef a = raw.GetPayload<ThingDef>();
@@ -532,8 +533,9 @@ public class PawnKindEditUI : Window
                 {
                     FactionDef faction = Find.WindowStack.WindowOfType<FactionEditUI>()?.Current?.Faction?.Def;
                     TechLevel techLevel = MySettings.VanillaRestrictions ? faction?.techLevel ?? TechLevel.Undefined : TechLevel.Undefined;
-                    var defs = GenStuff.AllowedStuffsFor(item.Thing, techLevel);
-                    var items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelAsStuff.CapitalizeFirst(), TryGetIcon(d, out Color c), c, d.description));
+                    IEnumerable<ThingDef> defs = GenStuff.AllowedStuffsFor(item.Thing, techLevel);
+                    List<MenuItemBase> items =
+                        CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelAsStuff.CapitalizeFirst(), TryGetIcon(d, out Color c), c, d.description));
                     CustomFloatMenu.Open(items, raw =>
                     {
                         ThingDef s = raw.GetPayload<ThingDef>();
@@ -562,7 +564,7 @@ public class PawnKindEditUI : Window
             Widgets.DrawHighlightIfMouseover(style);
             if (Widgets.ButtonInvisible(style) && canHaveStyle)
             {
-                var items = CustomFloatMenu.MakeItems(StyleHelper.GetValidStyles(item.Thing), s => new MenuItemText(s.style, s.name, s.exampleIcon));
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(StyleHelper.GetValidStyles(item.Thing), s => new MenuItemText(s.style, s.name, s.exampleIcon));
                 items.Add(new MenuItemText(null, "_ No Style _", null, default, "This item will have no style at all."));
                 CustomFloatMenu.Open(items, raw => { item.Style = raw.Payload == null ? null : raw.GetPayload<ThingStyleDef>(); });
             }
@@ -600,7 +602,7 @@ public class PawnKindEditUI : Window
             quality.y += 34;
             if (canDoQuality && item.Quality != null && Widgets.ButtonText(quality, item.Quality.ToString()))
             {
-                var enums = Enum.GetValues(typeof(QualityCategory)).Cast<QualityCategory>();
+                IEnumerable<QualityCategory> enums = Enum.GetValues(typeof(QualityCategory)).Cast<QualityCategory>();
                 FloatMenuUtility.MakeMenu(enums, e => e.ToString(), e => () => { item.Quality = e; });
             }
 
@@ -678,36 +680,29 @@ public class PawnKindEditUI : Window
             {
                 IEnumerable<ApparelSelectionMode> MakeEnumerable(Array normal)
                 {
-                    foreach (object item in normal)
-                        yield return (ApparelSelectionMode)item;
+                    foreach (object o in normal)
+                        yield return (ApparelSelectionMode)o;
                 }
 
                 string Name(ApparelSelectionMode mode)
                 {
-                    switch (mode)
+                    return mode switch
                     {
-                        case ApparelSelectionMode.AlwaysTake:
-                            return "Always picked";
-                        case ApparelSelectionMode.RandomChance:
-                            return "Random chance to be picked";
-                        case ApparelSelectionMode.FromPool1:
-                            return "Part of pool 1";
-                        case ApparelSelectionMode.FromPool2:
-                            return "Part of pool 2";
-                        case ApparelSelectionMode.FromPool3:
-                            return "Part of pool 3";
-                        case ApparelSelectionMode.FromPool4:
-                            return "Part of pool 4";
-                        default:
-                            return mode.ToString();
-                    }
+                        ApparelSelectionMode.AlwaysTake => "Always picked",
+                        ApparelSelectionMode.RandomChance => "Random chance to be picked",
+                        ApparelSelectionMode.FromPool1 => "Part of pool 1",
+                        ApparelSelectionMode.FromPool2 => "Part of pool 2",
+                        ApparelSelectionMode.FromPool3 => "Part of pool 3",
+                        ApparelSelectionMode.FromPool4 => "Part of pool 4",
+                        _ => mode.ToString()
+                    };
                 }
 
-                var values = MakeEnumerable(Enum.GetValues(typeof(ApparelSelectionMode)));
-                FloatMenuUtility.MakeMenu(values, e => Name(e), e => () => { item.SelectionMode = e; });
+                IEnumerable<ApparelSelectionMode> values = MakeEnumerable(Enum.GetValues(typeof(ApparelSelectionMode)));
+                FloatMenuUtility.MakeMenu(values, Name, e => () => { item.SelectionMode = e; });
             }
 
-            Rect chanceRect = modeBox;
+            Rect chanceRect;
             chanceRect = modeButton.ExpandedBy(-5);
             chanceRect.y += 34;
             chanceRect.height = 30;
@@ -747,12 +742,51 @@ public class PawnKindEditUI : Window
         DrawOverride(ui, new List<string>(), ref Current.ForcedVFEAncientsItems, "Forced Powers and Weaknesses", DrawVFEAncientsPowers,
             GetHeightFor(Current.ForcedVFEAncientsItems), true);
     }
+
     private void DrawPsycastsTab(Listing_Standard ui)
     {
         if (!VEPsycastsReflectionHelper.ModLoaded.Value) return;
         DrawOverride(ui, false, ref Current.VEPsycastRandomAbilities, "Give Random Abilities", DrawVPERandomAbilities);
         DrawOverride(ui, 1, ref Current.VEPsycastLevel, "Psycaster Level", DrawVPELevel);
         DrawOverride(ui, IntRange.zero, ref Current.VEPsycastStatPoints, "Psycaster Stat Points", DrawVPEStats);
+    }
+
+    private void DrawXenotypeTab(Listing_Standard ui)
+    {
+        DrawForceSpecificXenos(ui);
+        if (!Current.ForceSpecificXenos)
+            return;
+
+        ui.Label("<b>Xenotype spawn rates:</b>");
+        List<XenotypeDef> toDelete = [];
+        if (Current.ForcedXenotypeChances is null)
+        {
+            Current.ForcedXenotypeChances = Current.Def?.xenotypeSet?.xenotypeChances
+                ?.ToDictionary(x => x.xenotype, x => x.chance) ?? new Dictionary<XenotypeDef, float>();
+            if (!Current.ForcedXenotypeChances.ContainsKey(XenotypeDefOf.Baseliner))
+                Current.ForcedXenotypeChances.Add(XenotypeDefOf.Baseliner, Current.Def?.xenotypeSet?.BaselinerChance ?? 1f);
+        }
+
+        foreach (XenotypeDef key in Current.ForcedXenotypeChances.Keys.ToList())
+            Current.ForcedXenotypeChances[key] = UIHelpers.SliderLabeledWithDelete(ui, $"{key.LabelCap}: {Current.ForcedXenotypeChances[key].ToStringPercent()}",
+                Current.ForcedXenotypeChances[key], 0f, 1f, deleteAction: delegate { toDelete.Add(key); });
+
+        foreach (XenotypeDef delete in toDelete) Current.ForcedXenotypeChances.Remove(delete);
+
+        if (!ui.ButtonText("Add new...")) return;
+        List<FloatMenuOption> floatMenuList = [];
+        foreach (XenotypeDef def in DefDatabase<XenotypeDef>.AllDefs)
+            if (!Current.ForcedXenotypeChances.ContainsKey(def))
+                floatMenuList.Add(new FloatMenuOption(def.LabelCap, delegate { Current.ForcedXenotypeChances[def] = 0.1f; }));
+
+        Find.WindowStack.Add(new FloatMenu(floatMenuList));
+    }
+
+    private void DrawForceSpecificXenos(Listing_Standard ui)
+    {
+        Rect xenoBox = ui.GetRect(32);
+        Widgets.CheckboxLabeled(xenoBox, "Force Specific Xenotypes: ", ref Current.ForceSpecificXenos, placeCheckboxNearText: true);
+        ui.Gap();
     }
 
     private void DrawVFEAncientsPowers(Rect rect, bool active, List<string> defaultPowers)
@@ -840,7 +874,7 @@ public class PawnKindEditUI : Window
             Widgets.DefLabelWithIcon(defRect, part.Thing);
             if (Widgets.ButtonInvisible(defRect))
             {
-                var items = CustomFloatMenu.MakeItems(AllInvItems, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(AllInvItems, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
                 CustomFloatMenu.Open(items, raw => { part.Thing = raw.GetPayload<ThingDef>(); });
             }
 
@@ -908,14 +942,14 @@ public class PawnKindEditUI : Window
 
         if (Widgets.ButtonText(addRect, "+ Take all"))
         {
-            part.SubOptionsTakeAll ??= new List<InventoryOptionEdit>();
+            part.SubOptionsTakeAll ??= [];
             part.SubOptionsTakeAll.Add(new InventoryOptionEdit());
         }
 
         addRect.x += 90;
         if (Widgets.ButtonText(addRect, "+ Take one"))
         {
-            part.SubOptionsChooseOne ??= new List<InventoryOptionEdit>();
+            part.SubOptionsChooseOne ??= [];
             part.SubOptionsChooseOne.Add(new InventoryOptionEdit());
         }
 
@@ -952,28 +986,25 @@ public class PawnKindEditUI : Window
                 yield return item;
         }
 
-        if (Widgets.ButtonText(rect, active ? Name(field.Value) : Current.IsGlobal ? "---" : $"[Default] {Name(defaultValue)}"))
-        {
-            var values = MakeEnumerable(Enum.GetValues(typeof(T)));
-            FloatMenuUtility.MakeMenu(values, e => Name((T)e), e => () => apply((T)e));
-        }
+        if (!Widgets.ButtonText(rect, active ? Name(field.Value) : Current.IsGlobal ? "---" : $"[Default] {Name(defaultValue)}")) return;
+        IEnumerable<object> values = MakeEnumerable(Enum.GetValues(typeof(T)));
+        FloatMenuUtility.MakeMenu(values, e => Name((T)e), e => () => apply((T)e));
     }
 
     private void DrawDefSelector<T>(Rect rect, bool active, IEnumerable<T> defs, T field, T defaultValue, Action<T> apply, Func<T, string> makeName = null) where T : Def
     {
+        if (!Widgets.ButtonText(rect, active ? Name(field) : Current.IsGlobal ? "---" : $"[Default] {Name(defaultValue)}")) return;
+        List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
+        CustomFloatMenu.Open(items, raw =>
+        {
+            T real = raw.GetPayload<T>();
+            apply(real);
+        });
+        return;
+
         string Name(T t)
         {
-            return makeName == null ? (string)t.LabelCap : makeName(t);
-        }
-
-        if (Widgets.ButtonText(rect, active ? Name(field) : Current.IsGlobal ? "---" : $"[Default] {Name(defaultValue)}"))
-        {
-            var items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
-            CustomFloatMenu.Open(items, raw =>
-            {
-                T real = raw.GetPayload<T>();
-                apply(real);
-            });
+            return makeName == null ? t.LabelCap : makeName(t);
         }
     }
 
@@ -1172,7 +1203,7 @@ public class PawnKindEditUI : Window
             CustomFloatMenu toReturn = null;
             if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "Add new..."))
             {
-                var items = CustomFloatMenu.MakeItems(allThings, makeItems ?? (d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description)));
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(allThings, makeItems ?? (d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description)));
                 toReturn = CustomFloatMenu.Open(items, raw =>
                 {
                     T t = raw.GetPayload<T>();
@@ -1435,7 +1466,7 @@ public class PawnKindEditUI : Window
         {
             if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "Add new..."))
             {
-                var items = CustomFloatMenu.MakeItems(allTags, t => new MenuItemText(t, t));
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(allTags, t => new MenuItemText(t, t));
                 CustomFloatMenu.Open(items, raw =>
                 {
                     string t = raw.GetPayload<string>();

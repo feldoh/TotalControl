@@ -12,9 +12,9 @@ public static class PawnGenPatchCore
     [HarmonyPostfix]
     public static void Postfix(Pawn __result, PawnGenerationRequest request)
     {
-        if (__result?.kindDef?.GetModExtension<PawnKindEdit.ForcedHediffModExtension>() is not { } ext) return;
+        if (__result?.kindDef?.GetModExtension<ForcedHediffModExtension>() is not { } ext) return;
 
-        foreach (PawnKindEdit.ForcedHediff forcedHediff in ext.forcedHediffs)
+        foreach (ForcedHediff forcedHediff in ext.forcedHediffs)
         {
             if (forcedHediff.HediffDef == null) continue;
             Stack<BodyPartRecord> validParts = forcedHediff.parts == null || forcedHediff.parts.Count == 0
