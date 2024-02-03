@@ -54,6 +54,7 @@ namespace FactionLoadout
 
         public PawnKindDef ReplaceWith = null;
         public bool ForceNaked = false;
+        public bool ForceOnlySelected = false;
         public QualityCategory? ItemQuality = null;
         public float? BiocodeWeaponChance = null;
         public float? TechHediffChance = null;
@@ -151,6 +152,7 @@ namespace FactionLoadout
             Scribe_Defs.Look(ref Def, "def");
             Scribe_Defs.Look(ref ReplaceWith, "replaceWith");
             Scribe_Values.Look(ref ForceNaked, "forceNaked");
+            Scribe_Values.Look(ref ForceOnlySelected, "forceOnlySelected");
             Scribe_Values.Look(ref ItemQuality, "itemQuality");
             Scribe_Values.Look(ref TechHediffChance, "techHediffChance");
             Scribe_Values.Look(ref TechHediffsMaxAmount, "techHediffsMaxAmount");

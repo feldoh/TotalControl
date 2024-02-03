@@ -369,6 +369,7 @@ public class PawnKindEditUI : Window
         DrawForceNaked(ui);
         if (Current.ForceNaked)
             return;
+        DrawForceOnlySelected(ui);
 
         DrawOverride(ui, DefaultKind.apparelMoney, ref Current.ApparelMoney, "Apparel Value", DrawApparelMoney);
         DrawOverride(ui, DefaultKind.apparelTags, ref Current.ApparelTags, "Allowed Apparel Types", DrawApparelTags, GetHeightFor(Current.ApparelTags), true);
@@ -378,6 +379,13 @@ public class PawnKindEditUI : Window
         DrawOverride(ui, DefaultKind.apparelRequired, ref Current.ApparelRequired, "Required Apparel (simple)", DrawRequiredApparel, GetHeightFor(Current.ApparelRequired),
             true);
         DrawSpecificGear(ui, ref Current.SpecificApparel, "Required Apparel (advanced)", t => t.IsApparel, ThingDefOf.Apparel_Parka);
+    }
+
+    private void DrawForceOnlySelected(Listing_Standard ui)
+    {
+        Rect onlySelectedBox = ui.GetRect(32);
+        Widgets.CheckboxLabeled(onlySelectedBox, "Force only selected: ", ref Current.ForceOnlySelected, placeCheckboxNearText: true);
+        ui.Gap();
     }
 
     private void DrawForceNaked(Listing_Standard ui)
