@@ -28,7 +28,7 @@ namespace FactionLoadout
         public ModCore(ModContentPack content) : base(content)
         {
             GetSettings<MySettings>();
-            LongEventHandler.QueueLongEvent(LoadLate, "Apply Faction Overrides", false, null);
+            LongEventHandler.QueueLongEvent(LoadLate, "FactionLoadout_LoadingScreenText", false, null);
         }
 
         public override string SettingsCategory()
