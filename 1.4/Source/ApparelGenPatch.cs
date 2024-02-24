@@ -55,7 +55,8 @@ public static class ApparelGenPatch
             List<Apparel> enumerable = pawn.apparel?.WornApparel?.Where(a => !apparelRequired.Contains(a.def)).ToList() ?? [];
             foreach (Apparel a in enumerable)
             {
-                Log.Message(a.def.LabelCap + "Destroyed");
+                if (MySettings.VerboseLogging)
+                    Log.Message(a.def.LabelCap + "Destroyed");
                 a.Destroy();
             }
         }

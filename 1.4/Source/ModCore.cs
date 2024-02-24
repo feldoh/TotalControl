@@ -45,6 +45,9 @@ namespace FactionLoadout
             ui.CheckboxLabeled("Enable vanilla restrictions:  ", ref MySettings.VanillaRestrictions,
                 "If true, some vanilla restrictions are applied, such as only allowing materials that a faction has a high enough tech level for, or not giving forced weapons to non-violent pawns.");
             ui.GapLine();
+            ui.CheckboxLabeled("Verbose Logging:  ", ref MySettings.VerboseLogging,
+                "Adds more logs to track down what's being replaced where.");
+            ui.GapLine();
 
             ui.Label(
                 "Here you can manage faction edit <b>presets</b>.\nEach preset contains a collection of faction edits. Only one preset can be active at a time.\n<i>Hold the SHIFT key to delete presets.</i>");
@@ -136,15 +139,15 @@ namespace FactionLoadout
             harmony.Patch(AccessTools.Method(typeof(PawnApparelGenerator), "GenerateStartingApparelFor"),
                 postfix: new HarmonyMethod(typeof(ApparelGenPatch), "Postfix"));
             harmony.Patch(AccessTools.Method(typeof(Faction), "TryGenerateNewLeader"),
-                prefix: new HarmonyMethod(AccessTools.Method(typeof(FactionLeaderPatch),"Prefix"), priority: Priority.First));
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(FactionLeaderPatch), "Prefix"), priority: Priority.First));
             harmony.Patch(AccessTools.Method(typeof(FactionUtility), "HostileTo"),
-                prefix: new HarmonyMethod(AccessTools.Method(typeof(FactionUtilityPawnGenPatch),"Prefix"), priority: Priority.First));
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(FactionUtilityPawnGenPatch), "Prefix"), priority: Priority.First));
             harmony.Patch(AccessTools.Method(typeof(ThingIDMaker), "GiveIDTo"),
-                prefix: new HarmonyMethod(AccessTools.Method(typeof(ThingIDPatch),"Prefix"), priority: Priority.First));
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(ThingIDPatch), "Prefix"), priority: Priority.First));
             harmony.Patch(AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"),
-                postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch),"Postfix")));
+                postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch), "Postfix")));
             harmony.Patch(AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
-                postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchCore),"Postfix")));
+                postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchCore), "Postfix")));
 
             Log($"Game comp finalized init, applied {count} presets that affected {edits} factions.");
         }
@@ -158,6 +161,7 @@ namespace FactionLoadout
     {
         public static string ActivePreset = null;
         public static bool VanillaRestrictions = true;
+        public static bool VerboseLogging = false;
 
         public override void ExposeData()
         {
@@ -165,6 +169,7 @@ namespace FactionLoadout
 
             Scribe_Values.Look(ref ActivePreset, "activePreset", null);
             Scribe_Values.Look(ref VanillaRestrictions, "vanillaRestrictions", true);
+            Scribe_Values.Look(ref VerboseLogging, "verboseLogging", false);
         }
     }
 }

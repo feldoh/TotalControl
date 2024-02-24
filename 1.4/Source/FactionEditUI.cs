@@ -19,6 +19,7 @@ public class FactionEditUI : Window
     private int framesSinceF;
     private readonly List<Pawn> pawns = new();
     private readonly HashSet<PawnKindDef> tempKinds = new();
+    private bool _ThingIDPatch = true;
 
     public FactionEditUI(FactionEdit fac)
     {
@@ -229,6 +230,7 @@ public class FactionEditUI : Window
         }
         else
         {
+            ui.CheckboxLabeled("Thing ID Patch", ref _ThingIDPatch);
             ui.Gap(20);
             Rect total = ui.GetRect(inRect.height - ui.CurHeight - 32);
             int count = pawns.Count;
@@ -302,9 +304,7 @@ public class FactionEditUI : Window
             faction.ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos;
             faction.Name = clonedFac.fixedName;
 
-            FactionUtilityPawnGenPatch.Active = true;
-            FactionLeaderPatch.Active = true;
-            ThingIDPatch.Active = true;
+            ThingIDPatch.Active = _ThingIDPatch;
 
             foreach (PawnKindDef item in FactionEdit.GetAllPawnKinds(clonedFac))
                 try

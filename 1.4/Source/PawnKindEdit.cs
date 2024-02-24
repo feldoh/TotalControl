@@ -302,7 +302,8 @@ public class PawnKindEdit : IExposable
             }
 
             hediffExtension.forcedHediffs.AddRange(ForcedHediffs);
-            Log.Message($"Adding forced hediffs {hediffExtension.forcedHediffs?.Select(h => h.HediffDef?.defName).ToCommaList() ?? "None"} to {def.defName}");
+            if (MySettings.VerboseLogging)
+                Log.Message($"Adding forced hediffs {hediffExtension.forcedHediffs?.Select(h => h.HediffDef?.defName).ToCommaList() ?? "None"} to {def.defName}");
         }
 
         if (ModsConfig.BiotechActive && def.RaceProps.Humanlike && ForceSpecificXenos && (ForcedXenotypeChances?.Count ?? 0) >= 1)

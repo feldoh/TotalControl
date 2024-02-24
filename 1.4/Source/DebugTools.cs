@@ -7,6 +7,30 @@ namespace FactionLoadout;
 
 public class DebugTools
 {
+    private static void DoTableInternalWeapons(string tag)
+    {
+        DebugTables.MakeTablesDialog(DefDatabase<ThingDef>.AllDefs.Where(td => td.weaponTags?.Contains(tag) ?? false)
+                .OrderBy(d => d.modContentPack?.Name ?? "Core"),
+            new TableDataGetter<ThingDef>("defName", d => d.defName),
+            new TableDataGetter<ThingDef>("name", d => d.LabelCap),
+            new TableDataGetter<ThingDef>("source", d => d.modContentPack?.Name ?? "Core"),
+            new TableDataGetter<ThingDef>("tags",
+                d => GenText.ToSpaceList(d.weaponTags.Select(t => t.ToString())))
+        );
+    }
+
+    [DebugOutput("Weapons", name = "Weapons for tag")]
+    public static void WeaponsByTag()
+    {
+        Find.WindowStack.Add(new FloatMenu(DefDatabase<ThingDef>.AllDefs.Where(td => td.weaponTags != null)
+            .SelectMany(t => t.weaponTags)
+            .Distinct()
+            .OrderBy(tagName => tagName)
+            .Select(tag => new FloatMenuOption(tag, () => DoTableInternalWeapons(tag)))
+            .ToList()));
+    }
+
+
     [DebugAction("Spawning", "Spawn Faction Pawn", false, false, false, 0, false, allowedGameStates = AllowedGameStates.PlayingOnMap, displayPriority = 1000)]
     private static List<DebugActionNode> SpawnFactionPawn()
     {

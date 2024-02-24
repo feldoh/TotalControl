@@ -10,7 +10,13 @@ public class ForcedHediff : IExposable
     public string hediffDef;
     public List<BodyPartDef> parts;
     public int maxParts = 1;
+    public IntRange maxPartsRange = IntRange.one;
     public float chance = 1f;
+
+    public int PartsToHit()
+    {
+        return maxPartsRange.max > 1 ? maxPartsRange.RandomInRange : maxParts;
+    }
 
     public HediffDef HediffDef
     {
@@ -31,6 +37,7 @@ public class ForcedHediff : IExposable
         Scribe_Values.Look(ref hediffDef, "hediffDef");
         Scribe_Collections.Look(ref parts, "parts", LookMode.Def);
         Scribe_Values.Look(ref maxParts, "maxParts", 1);
+        Scribe_Values.Look(ref maxPartsRange, "maxPartsRange", IntRange.one);
         Scribe_Values.Look(ref chance, "chance", 1f);
     }
 }

@@ -160,7 +160,7 @@ public class FactionEdit : IExposable
             PawnKindEdit editor = GetEditFor(kind);
             PawnKindDef safeKind = global != null || editor != null ? CloningUtility.Clone(kind) : kind;
             global?.Apply(safeKind, null);
-            if (editor?.Apply(safeKind, global) is {} newKind && newKind != safeKind) safeKind = newKind;
+            if (editor?.Apply(safeKind, global) is { } newKind && newKind != safeKind) safeKind = newKind;
 
             if (ModsConfig.BiotechActive && (xenotypeChances?.Count ?? 0) >= 1 && (!editor?.ForceSpecificXenos ?? false) && safeKind.RaceProps.Humanlike)
             {
@@ -181,7 +181,8 @@ public class FactionEdit : IExposable
 
     private void ReplaceKind(FactionDef faction, PawnKindDef original, PawnKindDef replacement)
     {
-        ModCore.Log($"Replacing PawnKind '{original?.defName ?? "<null>"}' with '{replacement?.defName ?? "<null>"}' in faction {faction.defName}");
+        if (MySettings.VerboseLogging)
+            ModCore.Log($"Replacing PawnKind '{original?.defName ?? "<null>"}' with '{replacement?.defName ?? "<null>"}' in faction {faction.defName}");
         TweakAllPawnKinds(faction, current => current == original ? replacement : current);
     }
 
