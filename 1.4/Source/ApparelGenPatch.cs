@@ -202,7 +202,7 @@ public static class ApparelGenPatch
         if (code is not { Biocodable: true }) return app;
         if (code.Biocoded)
             code.UnCode();
-        code.CodeFor(pawn);
+        if (spec.Biocode) code.CodeFor(pawn);
 
         return app;
     }
