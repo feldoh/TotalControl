@@ -2,4 +2,5 @@
 <LanguageData>
   <FactionLoadout_Value>Value: {0}</FactionLoadout_Value>
   <FactionLoadout_ColorValue>Color Value</FactionLoadout_ColorValue>
+  <FactionLoadout_LoadingScreenText>Apply Faction Overrides</FactionLoadout_LoadingScreenText>
 </LanguageData>

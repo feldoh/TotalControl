@@ -19,6 +19,7 @@ public class FactionEditUI : Window
     private int framesSinceF;
     private readonly List<Pawn> pawns = new();
     private readonly HashSet<PawnKindDef> tempKinds = new();
+    private bool _ThingIDPatch = true;
 
     public FactionEditUI(FactionEdit fac)
     {
@@ -65,29 +66,6 @@ public class FactionEditUI : Window
         pawns.Clear();
     }
 
-    public static float SliderLabeledWithDelete(Listing_Standard ls, string label, float val, float min, float max,
-        float labelPct = 0.5f, string tooltip = null, Action deleteAction = null)
-    {
-        Rect rect = ls.GetRect(30f);
-        Text.Anchor = TextAnchor.MiddleLeft;
-        Widgets.Label(rect.LeftPart(labelPct), label);
-        if (tooltip != null) TooltipHandler.TipRegion(rect.LeftPart(labelPct), tooltip);
-
-        Text.Anchor = TextAnchor.UpperLeft;
-        Rect sliderRect = rect.RightPart(1f - labelPct);
-        if (deleteAction != null) sliderRect.width -= 32;
-
-        float result = Widgets.HorizontalSlider_NewTemp(sliderRect, val, min, max, true);
-        if (deleteAction != null)
-        {
-            Rect deleteButton = new Rect(sliderRect.xMax + 5, sliderRect.y, 24, 24);
-            if (Widgets.ButtonImage(deleteButton, TexButton.DeleteX)) deleteAction();
-        }
-
-        ls.Gap(ls.verticalSpacing);
-        return result;
-    }
-
     public override void DoWindowContents(Rect inRect)
     {
         framesSinceF++;
@@ -127,7 +105,7 @@ public class FactionEditUI : Window
             }
 
             foreach (XenotypeDef key in Current.xenotypeChances.Keys.ToList())
-                Current.xenotypeChances[key] = SliderLabeledWithDelete(ui, $"{key.LabelCap}: {Current.xenotypeChances[key].ToStringPercent()}",
+                Current.xenotypeChances[key] = UIHelpers.SliderLabeledWithDelete(ui, $"{key.LabelCap}: {Current.xenotypeChances[key].ToStringPercent()}",
                     Current.xenotypeChances[key], 0f, 1f, deleteAction: delegate { toDelete.Add(key); });
 
             foreach (XenotypeDef delete in toDelete) Current.xenotypeChances.Remove(delete);
@@ -252,6 +230,7 @@ public class FactionEditUI : Window
         }
         else
         {
+            ui.CheckboxLabeled("Thing ID Patch", ref _ThingIDPatch);
             ui.Gap(20);
             Rect total = ui.GetRect(inRect.height - ui.CurHeight - 32);
             int count = pawns.Count;
@@ -324,10 +303,9 @@ public class FactionEditUI : Window
             faction.hidden = true;
             faction.ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos;
             faction.Name = clonedFac.fixedName;
+            faction.TryMakeInitialRelationsWith(Faction.OfPlayer);
 
-            FactionUtilityPawnGenPatch.Active = true;
-            FactionLeaderPatch.Active = true;
-            ThingIDPatch.Active = true;
+            ThingIDPatch.Active = _ThingIDPatch;
 
             foreach (PawnKindDef item in FactionEdit.GetAllPawnKinds(clonedFac))
                 try
