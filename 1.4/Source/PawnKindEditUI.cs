@@ -938,10 +938,14 @@ public class PawnKindEditUI : Window
         Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
         content = content.ExpandedBy(-2);
         GUI.enabled = active;
+        ui.CheckboxLabeled($"Remove fixed inventory [Fixed Inventory Size: {Current.Def.fixedInventory?.Count ?? 0}]:", ref Current.RemoveFixedInventory);
 
         if (Current.Inventory != null)
         {
+            // Make the top level just a passthrough for the suboptions
             Current.Inventory.Thing = null;
+            Current.Inventory.SkipChance = 0f;
+            Current.Inventory.ChoiceChance = 1f;
             DrawInvPart(ui, Current.Inventory, false, false);
         }
         else

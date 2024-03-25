@@ -303,6 +303,7 @@ public class FactionEditUI : Window
             faction.hidden = true;
             faction.ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos;
             faction.Name = clonedFac.fixedName;
+            faction.TryMakeInitialRelationsWith(Faction.OfPlayer);
 
             ThingIDPatch.Active = _ThingIDPatch;
 

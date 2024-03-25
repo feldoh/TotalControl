@@ -75,6 +75,7 @@ public class PawnKindEdit : IExposable
     public FloatRange? WeaponMoney = null;
     public InventoryOptionEdit Inventory = null;
     public bool ReplaceDefaultInventory = true;
+    public bool RemoveFixedInventory;
     public QualityCategory? ForcedWeaponQuality = null;
     public Color? ApparelColor = null;
     public string Label = null;
@@ -119,6 +120,7 @@ public class PawnKindEdit : IExposable
     {
         Scribe_Defs.Look(ref Def, "def");
         Scribe_Defs.Look(ref ReplaceWith, "replaceWith");
+        Scribe_Values.Look(ref RemoveFixedInventory, "removeFixedInventory");
         Scribe_Values.Look(ref ForceNaked, "forceNaked");
         Scribe_Values.Look(ref ForceOnlySelected, "forceOnlySelected");
         Scribe_Values.Look(ref ForceSpecificXenos, "forceSpecificXenos");
@@ -268,6 +270,9 @@ public class PawnKindEdit : IExposable
         ReplaceMaybeList(ref def.apparelDisallowTags, ApparelDisallowedTags, global?.ApparelDisallowedTags != null);
         ReplaceMaybeList(ref def.apparelRequired, ApparelRequired, global?.ApparelRequired != null);
         ReplaceMaybeList(ref def.techHediffsRequired, TechRequired, global?.TechRequired != null);
+
+        bool removeFixedInventory = RemoveFixedInventory || global?.RemoveFixedInventory == true;
+        if (removeFixedInventory) def.fixedInventory = [];
 
         bool removeSpecific = ApparelRequired != null || SpecificApparel != null;
         if (removeSpecific)
