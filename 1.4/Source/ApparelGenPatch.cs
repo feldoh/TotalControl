@@ -12,6 +12,7 @@ namespace FactionLoadout;
 public static class ApparelGenPatch
 {
     private static HashSet<ThingDef> apparelRequired = [];
+    private static HashSet<string> apparelTagsAllowed = [];
     private static List<SpecRequirementEdit> always = [];
     private static List<SpecRequirementEdit> chance = [];
     private static List<SpecRequirementEdit> pool1 = [];
@@ -52,7 +53,9 @@ public static class ApparelGenPatch
 
         if (anyForceOnlySelected)
         {
-            List<Apparel> enumerable = pawn.apparel?.WornApparel?.Where(a => !apparelRequired.Contains(a.def)).ToList() ?? [];
+            List<Apparel> enumerable = pawn.apparel?.WornApparel
+                ?.Where(a => !apparelRequired.Contains(a.def) &&
+                             !(a.def?.apparel?.tags ?? []).Any(t => apparelTagsAllowed.Contains(t))).ToList() ?? [];
             foreach (Apparel a in enumerable)
             {
                 if (MySettings.VerboseLogging)
@@ -77,7 +80,7 @@ public static class ApparelGenPatch
         if (pawn.apparel == null)
             return;
 
-        foreach (SpecRequirementEdit item in GetWhatToGive())
+        foreach (SpecRequirementEdit item in GetWhatToGive(pawn))
         {
             if (item.Thing == null)
                 continue;
@@ -115,7 +118,8 @@ public static class ApparelGenPatch
 
         if (edit.ForceOnlySelected) anyForceOnlySelected = true;
 
-        foreach (ThingDef def in edit.ApparelRequired ?? []) apparelRequired.Add(def);
+        apparelRequired.AddRange(edit.ApparelRequired ?? []);
+        apparelTagsAllowed.AddRange(edit.ApparelTags ?? []);
 
         if (edit.SpecificApparel == null)
             return;
@@ -147,7 +151,7 @@ public static class ApparelGenPatch
             }
     }
 
-    private static IEnumerable<SpecRequirementEdit> GetWhatToGive()
+    private static IEnumerable<SpecRequirementEdit> GetWhatToGive(Pawn pawn)
     {
         foreach (SpecRequirementEdit item in always)
             yield return item;
@@ -156,19 +160,19 @@ public static class ApparelGenPatch
             if (Rand.Chance(item.SelectionChance))
                 yield return item;
 
-        SpecRequirementEdit selected = pool1.RandomElementByWeightWithFallback(i => i.SelectionChance);
+        SpecRequirementEdit selected = pool1.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool2.RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = pool2.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool3.RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = pool3.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool4.RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = pool4.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
     }
