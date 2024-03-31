@@ -1,0 +1,147 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <LangVersion>preview</LangVersion>
+    <RootNamespace>FactionLoadout</RootNamespace>
+    <AssemblyName>FactionLoadout</AssemblyName>
+    <OutputPath>../Assemblies/</OutputPath>
+    <ZipFilePath>../../$(AssemblyName).zip</ZipFilePath>
+    <ReleasePath>../../Release</ReleasePath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <Optimize>false</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <ReleaseFiles Include="../../*.xml;../../*.md;../../LICENSE;../../1.*/**" Exclude="../../1.*/Source/**;../../1.*/Assemblies/**">
+      <Link>Files/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </ReleaseFiles>
+    <AboutFiles Include="../../About/**;">
+      <Link>Files/About/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </AboutFiles>
+    <CommonFiles Include="../../Common/**">
+      <Link>Files/Common/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </CommonFiles>
+    <ReleaseAssemblies Include="../../1.*/Assemblies/*.dll;../../Compatibilit*/**" Exclude="../../1.*/Assemblies/0Harmony.dll">
+      <Link>Files/Assemblies/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </ReleaseAssemblies>
+    <GitMeta Include="../../.git*">
+      <Link>Files/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </GitMeta>
+  </ItemGroup>
+  <Choose>
+    <When Condition="Exists('../../../../RimWorldWin64_Data/Managed/Assembly-CSharp.dll')">
+      <ItemGroup>
+        <Reference Include="Assembly-CSharp-firstpass">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/Assembly-CSharp-firstpass.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/Assembly-CSharp-firstpass.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Assembly-CSharp">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.InputModule">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.InputModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.InputModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.TextCoreModule">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.TextCoreModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.TextCoreModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.TextRenderingModule">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UIModule">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.UIModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.UIModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UI">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.UI.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.UI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UIElementsModule">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.UIElementsModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.UIElementsModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.IMGUIModule">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.InputLegacyModule">
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.InputLegacyModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.InputLegacyModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="Krafs.Rimworld.Ref">
+          <Version>1.5-*</Version>
+        </PackageReference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+  <ItemGroup>
+    <PackageReference Include="Krafs.Publicizer" Version="2.2.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Lib.Harmony" Version="2.2.2">
+      <ExcludeAssets>runtime</ExcludeAssets>
+      <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <Publicize Include="Assembly-CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Compatibility/**" />
+  </ItemGroup>
+  <Target Name="CleanAssemblies" AfterTargets="Clean">
+    <RemoveDir Directories="$(OutputPath)" Condition="Exists('$(OutputPath)')" />
+  </Target>
+  <Target Name="CleanRelease" AfterTargets="Clean">
+    <RemoveDir Directories="$(ReleasePath)" Condition="Exists('$(ReleasePath)')" />
+    <Delete Files="$(ZipFilePath)" Condition="Exists('$(ZipFilePath)')" />
+  </Target>
+  <Target Name="PostBuild" AfterTargets="Build" Condition=" '$(Configuration)' == 'Release' " DependsOnTargets="CleanRelease">
+    <MakeDir Directories="$(ReleasePath)" />
+    <Copy SourceFiles="@(ReleaseFiles)" DestinationFiles="@(ReleaseFiles->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(ReleaseAssemblies)" DestinationFiles="@(ReleaseAssemblies->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(AboutFiles)" DestinationFolder="$(ReleasePath)/About" />
+    <Copy SourceFiles="@(CommonFiles)" DestinationFiles="@(CommonFiles->'$(ReleasePath)/Common/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <ZipDirectory DestinationFile="$(ZipFilePath)" SourceDirectory="$(ReleasePath)" Overwrite="true" />
+  </Target>
+</Project>
