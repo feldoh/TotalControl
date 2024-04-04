@@ -170,7 +170,9 @@ public class FactionEdit : IExposable
                 foreach (KeyValuePair<XenotypeDef, float> rate in xenotypeChances ?? []) safeKind.xenotypeSet.xenotypeChances.Add(new XenotypeChance(rate.Key, rate.Value));
             }
 
+            safeKind.defName = $"{kind.defName}_TCCln_{def.defName}";
             if (kind != safeKind) ReplaceKind(def, kind, safeKind);
+            DefDatabase<PawnKindDef>.Add(safeKind);
         }
 
         if (!ModsConfig.BiotechActive || xenotypeChances == null || xenotypeChances.Count < 1) return;
