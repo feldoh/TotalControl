@@ -13,7 +13,23 @@ namespace FactionLoadout;
 
 public class PawnKindEdit : IExposable
 {
-    private static Dictionary<PawnKindDef, List<PawnKindEdit>> activeEdits = new();
+    public static Dictionary<PawnKindDef, List<PawnKindEdit>> activeEdits = new();
+    public static Dictionary<PawnKindDef, PawnKindDef> replacementToOriginal = new();
+
+    public static void RecordReplacement(PawnKindDef original, PawnKindDef replacement) => replacementToOriginal.SetOrAdd(replacement, original);
+    public static List<PawnKindEdit> RemoveActiveEdits(PawnKindDef pawnKindDef)
+    {
+        List<PawnKindEdit> currentEdits = activeEdits.TryGetValue(pawnKindDef, null);
+        activeEdits.Remove(pawnKindDef);
+        return currentEdits;
+    }
+
+    public static void SetActiveEdits(PawnKindDef pawnKindDef, List<PawnKindEdit> edits)
+    {
+        activeEdits.SetOrAdd(pawnKindDef, edits);
+    }
+
+    public static PawnKindDef NormaliseDef(PawnKindDef def) => replacementToOriginal.TryGetValue(def, def);
 
     public static IEnumerable<PawnKindEdit> GetEditsFor(PawnKindDef def)
     {
@@ -54,6 +70,7 @@ public class PawnKindEdit : IExposable
     }
 
     public PawnKindDef ReplaceWith = null;
+    public bool RenameDef = false;
     public bool ForceNaked = false;
     public bool ForceOnlySelected = false;
     public bool ForceSpecificXenos = false;
@@ -122,6 +139,7 @@ public class PawnKindEdit : IExposable
         Scribe_Defs.Look(ref ReplaceWith, "replaceWith");
         Scribe_Values.Look(ref RemoveFixedInventory, "removeFixedInventory");
         Scribe_Values.Look(ref ForceNaked, "forceNaked");
+        Scribe_Values.Look(ref RenameDef, "renameDef");
         Scribe_Values.Look(ref ForceOnlySelected, "forceOnlySelected");
         Scribe_Values.Look(ref ForceSpecificXenos, "forceSpecificXenos");
         Scribe_Values.Look(ref ItemQuality, "itemQuality");
@@ -381,7 +399,15 @@ public class PawnKindEdit : IExposable
 
     public bool AppliesTo(PawnKindDef def)
     {
-        return def != null && Def.defName == def.defName;
+        try
+        {
+            return def != null && (Def.defName == def.defName || def.defName == NormaliseDef(Def).defName);
+        }
+        catch (Exception e)
+        {
+            Log.Message($"Something was null ig {def?.defName ?? "a"} {Def?.defName ?? "b"}");
+            throw;
+        }
     }
 }
 

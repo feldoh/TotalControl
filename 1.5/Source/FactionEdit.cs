@@ -142,7 +142,7 @@ public class FactionEdit : IExposable
         return Enumerable.FirstOrDefault(KindEdits, edit => edit.IsGlobal);
     }
 
-    public void Apply(FactionDef def)
+    public void Apply(FactionDef def, bool updateDefDatabase = true)
     {
         if (!Active)
             ModCore.Warn($"Applying faction edit to {def.label}, but this edit is not active!");
@@ -155,8 +155,9 @@ public class FactionEdit : IExposable
         PawnKindEdit global = GetGlobalEditor();
         IReadOnlyList<PawnKindDef> kinds = GetAllPawnKinds(def);
 
-        foreach (PawnKindDef kind in kinds)
+        foreach (PawnKindDef fkind in kinds)
         {
+            PawnKindDef kind = PawnKindEdit.NormaliseDef(fkind);
             PawnKindEdit editor = GetEditFor(kind);
             PawnKindDef safeKind = global != null || editor != null ? CloningUtility.Clone(kind) : kind;
             global?.Apply(safeKind, null);
@@ -170,9 +171,15 @@ public class FactionEdit : IExposable
                 foreach (KeyValuePair<XenotypeDef, float> rate in xenotypeChances ?? []) safeKind.xenotypeSet.xenotypeChances.Add(new XenotypeChance(rate.Key, rate.Value));
             }
 
-            safeKind.defName = $"{kind.defName}_TCCln_{def.defName}";
+            if ((global?.RenameDef ?? false) || (editor?.RenameDef ?? false))
+            {
+                List<PawnKindEdit> stashedEdits = PawnKindEdit.RemoveActiveEdits(safeKind);
+                safeKind.defName = GetNewNameForPawnKind(kind, def);
+                if (stashedEdits != null) PawnKindEdit.SetActiveEdits(safeKind, stashedEdits);
+                PawnKindEdit.RecordReplacement(kind, safeKind);
+                if (updateDefDatabase) DefDatabase<PawnKindDef>.Add(safeKind);
+            }
             if (kind != safeKind) ReplaceKind(def, kind, safeKind);
-            DefDatabase<PawnKindDef>.Add(safeKind);
         }
 
         if (!ModsConfig.BiotechActive || xenotypeChances == null || xenotypeChances.Count < 1) return;
@@ -180,6 +187,8 @@ public class FactionEdit : IExposable
         def.xenotypeSet?.xenotypeChances?.Clear();
         foreach (KeyValuePair<XenotypeDef, float> rate in xenotypeChances) def.xenotypeSet?.xenotypeChances?.Add(new XenotypeChance(rate.Key, rate.Value));
     }
+
+    public static string GetNewNameForPawnKind(PawnKindDef pawnKindDef, FactionDef factionDef) => $"{pawnKindDef.defName}_TCCln_{factionDef.defName}";
 
     private void ReplaceKind(FactionDef faction, PawnKindDef original, PawnKindDef replacement)
     {

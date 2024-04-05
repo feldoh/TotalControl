@@ -292,6 +292,7 @@ public class PawnKindEditUI : Window
 
     private void DrawGeneralTab(Listing_Standard ui)
     {
+        DrawRename(ui);
         bool isAnimal = DefaultKind.RaceProps.Animal;
 
         if (!Current.IsGlobal && isAnimal) DrawOverride(ui, DefaultKind, ref Current.ReplaceWith, "Replace with...", DrawReplaceWith);
@@ -391,6 +392,27 @@ public class PawnKindEditUI : Window
     {
         Rect nakedBox = ui.GetRect(32);
         Widgets.CheckboxLabeled(nakedBox, "Force naked: ", ref Current.ForceNaked, placeCheckboxNearText: true);
+        ui.Gap();
+    }
+
+    private void DrawRename(Listing_Standard ui)
+    {
+        Rect renameBox = ui.GetRect(32);
+        bool forcedByGlobal = !Current.IsGlobal && (Current.ParentEdit.GetGlobalEditor()?.RenameDef ?? false);
+        string label = Current.IsGlobal
+            ? "Rename All Pawnkind Defs in this Faction"
+            : $"Rename Def [{Current.Def.defName} => {FactionEdit.GetNewNameForPawnKind(Current.Def, Current.ParentEdit.Faction.Def)}]{(
+                forcedByGlobal ? " - Forced By Global" : "")}";
+        if (forcedByGlobal)
+        {
+            Widgets.Label(renameBox, label);
+        }
+        else
+        {
+            Widgets.CheckboxLabeled(renameBox, label, ref Current.RenameDef, placeCheckboxNearText: true);
+        }
+        TooltipHandler.TipRegion(renameBox,
+            "This will give the cloned pawn kind a new name\nThis may have unintended consequences and may break existing pawns spawned for this faction.");
         ui.Gap();
     }
 
