@@ -98,6 +98,7 @@ public class PawnKindEdit : IExposable
     public string Label = null;
     public ThingDef Race = null;
     public List<HairDef> CustomHair = null;
+    public List<BodyTypeDef> BodyTypes = null;
     public List<Color> CustomHairColors = null;
     public bool DeletedOrClosed;
     public List<ForcedHediff> ForcedHediffs = null;
@@ -166,6 +167,7 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref Label, "label");
         Scribe_Defs.Look(ref Race, "race");
         Scribe_Values.Look(ref ForcedGender, "forcedGender");
+        Scribe_Collections.Look(ref BodyTypes, "bodyTypes", LookMode.Def);
         Scribe_Collections.Look(ref CustomHair, "customHair", LookMode.Def);
         Scribe_Collections.Look(ref CustomHairColors, "customHairColors");
         Scribe_Collections.Look(ref ForcedHediffs, "forcedHediffs", LookMode.Deep);
