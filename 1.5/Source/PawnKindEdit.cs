@@ -78,6 +78,8 @@ public class PawnKindEdit : IExposable
     public float? BiocodeWeaponChance = null;
     public float? TechHediffChance = null;
     public int? TechHediffsMaxAmount = null;
+    public int? MinGenerationAge = null;
+    public int? MaxGenerationAge = null;
     public List<string> TechHediffTags = null;
     public List<string> TechHediffDisallowedTags = null;
     public List<string> WeaponTags = null;
@@ -152,6 +154,8 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref ApparelMoney, "apparelMoney");
         Scribe_Values.Look(ref TechMoney, "techMoney");
         Scribe_Values.Look(ref WeaponMoney, "weaponMoney");
+        Scribe_Values.Look(ref MinGenerationAge, "minGenerationAge");
+        Scribe_Values.Look(ref MaxGenerationAge, "maxGenerationAge");
         Scribe_Collections.Look(ref WeaponTags, "weaponTags");
         Scribe_Collections.Look(ref ApparelTags, "apparelTags");
         Scribe_Collections.Look(ref ApparelDisallowedTags, "apparelDisallowedTags");
@@ -277,6 +281,8 @@ public class PawnKindEdit : IExposable
         ReplaceMaybe(ref def.apparelMoney, ApparelMoney);
         ReplaceMaybe(ref def.techHediffsMoney, TechMoney);
         ReplaceMaybe(ref def.weaponMoney, WeaponMoney);
+        ReplaceMaybe(ref def.minGenerationAge, MinGenerationAge);
+        ReplaceMaybe(ref def.maxGenerationAge, MaxGenerationAge);
         ReplaceMaybe(ref def.inventoryOptions, Inventory);
         ReplaceMaybe(ref def.forceWeaponQuality, ForcedWeaponQuality);
         ReplaceMaybe(ref def.label, Label);
