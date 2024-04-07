@@ -33,3 +33,32 @@ public static class PawnGenPatchCore
         }
     }
 }
+
+[HarmonyPatch(typeof(PawnGenerator), nameof(PawnGenerator.GenerateRandomAge))]
+public static class PawnGenAgePatchCore
+{
+    [HarmonyPrefix]
+    public static bool Prefix(Pawn pawn, ref PawnGenerationRequest request)
+    {
+        if (!pawn.RaceProps.Humanlike || request.AllowedDevelopmentalStages.Newborn()) return true;
+        int? minAge = null;
+        int? maxAge = null;
+        foreach (PawnKindEdit pawnKindEdit in PawnKindEdit.GetEditsFor(pawn.kindDef))
+        {
+            if (!pawnKindEdit.IsGlobal || minAge == null) minAge = pawnKindEdit.MinGenerationAge;
+            if (!pawnKindEdit.IsGlobal || maxAge == null) maxAge = pawnKindEdit.MaxGenerationAge;
+        }
+
+        if (minAge == null && maxAge == null) return true;
+        FloatRange allowedAges = new(minAge ?? pawn.kindDef.minGenerationAge, maxAge ?? pawn.kindDef.maxGenerationAge);
+        request.FixedBiologicalAge = allowedAges.RandomInRange;
+        request.AllowedDevelopmentalStages = LifeStageUtility.CalculateDevelopmentalStage(pawn, (float)request.FixedBiologicalAge);
+        if (request.FixedChronologicalAge.HasValue &&
+            request.FixedBiologicalAge.GetValueOrDefault() > (double)request.FixedChronologicalAge.GetValueOrDefault())
+        {
+            request.FixedChronologicalAge = request.FixedBiologicalAge;
+        }
+
+        return true;
+    }
+}

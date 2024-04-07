@@ -304,6 +304,8 @@ public class PawnKindEditUI : Window
             DrawOverride(ui, DefaultKind.race, ref Current.Race, "Species", DrawRace);
             return;
         }
+        DrawOverride(ui, DefaultKind.minGenerationAge, ref Current.MinGenerationAge, "Min Generation Age", DrawMinAge);
+        DrawOverride(ui, DefaultKind.maxGenerationAge, ref Current.MaxGenerationAge, "Max Generation Age", DrawMaxAge);
 
         DrawOverride(ui, DefaultKind.itemQuality, ref Current.ItemQuality, "Average Gear Quality", DrawItemQuality);
     }
@@ -1202,6 +1204,40 @@ public class PawnKindEditUI : Window
         else
         {
             string txt = Current.IsGlobal ? "---" : $"[Default] {Current.Def.techHediffsMaxAmount}";
+            Widgets.Label(rect.GetCentered(txt), txt);
+        }
+    }
+
+    private void DrawMinAge(Rect rect, bool active, int _)
+    {
+        if (active)
+        {
+            ref string minAgeBuffer = ref buffers[bufferIndex++];
+            int minGenerationAge = Current.MinGenerationAge.GetValueOrDefault(Current.Def.minGenerationAge);
+            minAgeBuffer ??= minGenerationAge.ToString();
+            Widgets.IntEntry(rect, ref minGenerationAge, ref minAgeBuffer);
+            Current.MinGenerationAge = minGenerationAge;
+        }
+        else
+        {
+            string txt = Current.IsGlobal ? "---" : $"[Default] {Current.Def.minGenerationAge}";
+            Widgets.Label(rect.GetCentered(txt), txt);
+        }
+    }
+
+    private void DrawMaxAge(Rect rect, bool active, int _)
+    {
+        if (active)
+        {
+            ref string maxAgeBuffer = ref buffers[bufferIndex++];
+            int maxGenerationAge = Current.MinGenerationAge.GetValueOrDefault(Current.Def.maxGenerationAge);
+            maxAgeBuffer ??= maxGenerationAge.ToString();
+            Widgets.IntEntry(rect, ref maxGenerationAge, ref maxAgeBuffer);
+            Current.MaxGenerationAge = maxGenerationAge;
+        }
+        else
+        {
+            string txt = Current.IsGlobal ? "---" : $"[Default] {Current.Def.maxGenerationAge}";
             Widgets.Label(rect.GetCentered(txt), txt);
         }
     }
