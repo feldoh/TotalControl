@@ -45,8 +45,8 @@ public static class PawnGenAgePatchCore
         int? maxAge = null;
         foreach (PawnKindEdit pawnKindEdit in PawnKindEdit.GetEditsFor(pawn.kindDef))
         {
-            if (!pawnKindEdit.IsGlobal || minAge == null) minAge = pawnKindEdit.MinGenerationAge;
-            if (!pawnKindEdit.IsGlobal || maxAge == null) maxAge = pawnKindEdit.MaxGenerationAge;
+            if (pawnKindEdit.MinGenerationAge != null && (!pawnKindEdit.IsGlobal || minAge == null)) minAge = pawnKindEdit.MinGenerationAge;
+            if (pawnKindEdit.MaxGenerationAge != null && (!pawnKindEdit.IsGlobal || maxAge == null)) maxAge = pawnKindEdit.MaxGenerationAge;
         }
 
         if (minAge == null && maxAge == null) return true;
