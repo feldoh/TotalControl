@@ -14,6 +14,7 @@ public class PawnKindEditUI : Window
     private static List<string> AllTechHediffTags;
     private static List<string> AllApparelTags;
     private static List<string> AllWeaponsTags;
+    private static List<BodyTypeDef> AllBodyTypes;
     private static List<ThingDef> AllApparel;
     private static List<ThingDef> AllWeapons;
     private static List<ThingDef> AllTech;
@@ -65,6 +66,7 @@ public class PawnKindEditUI : Window
         HashSet<ThingDef> allTech = new(128);
         HashSet<ThingDef> allInv = new(1024);
         HashSet<PawnKindDef> allAnimalKindDefs = new(1024);
+        HashSet<BodyTypeDef> allBodyTypeDefs = new(32);
 
         foreach (PawnKindDef def in DefDatabase<PawnKindDef>.AllDefsListForReading)
             if (def.RaceProps.Animal && def.RaceProps.packAnimal)
@@ -109,6 +111,8 @@ public class PawnKindEditUI : Window
                 allInv.Add(def);
         }
 
+        allBodyTypeDefs.AddRange(DefDatabase<BodyTypeDef>.AllDefsListForReading);
+
         AllTechHediffTags = [..techTags];
         AllTechHediffTags.Sort();
 
@@ -136,6 +140,8 @@ public class PawnKindEditUI : Window
         AllAnimalKindDefs = [..allAnimalKindDefs];
         AllAnimalKindDefs.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
+        AllBodyTypes = [..allBodyTypeDefs];
+        AllBodyTypes.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string) b.LabelCap ?? b.defName, StringComparison.Ordinal));
         PopulateVFEAncientsObjects();
     }
 
@@ -292,6 +298,7 @@ public class PawnKindEditUI : Window
 
     private void DrawGeneralTab(Listing_Standard ui)
     {
+        DrawRename(ui);
         bool isAnimal = DefaultKind.RaceProps.Animal;
 
         if (!Current.IsGlobal && isAnimal) DrawOverride(ui, DefaultKind, ref Current.ReplaceWith, "Replace with...", DrawReplaceWith);
@@ -314,6 +321,7 @@ public class PawnKindEditUI : Window
     {
         DrawOverride(ui, null, ref Current.CustomHair, "Forced Hair Styles", DrawHairStyles, GetHeightFor(Current.CustomHair), false);
         DrawOverride(ui, null, ref Current.CustomHairColors, "Forced Hair Colors", DrawHairColors, GetHeightFor(Current.CustomHairColors, 36), false);
+        DrawOverride(ui, null, ref Current.BodyTypes, "Allowed Body Types", DrawBodyTypes, GetHeightFor(Current.BodyTypes), false);
     }
 
     private void DrawHairStyles(Rect rect, bool active, List<HairDef> nullList)
@@ -393,6 +401,27 @@ public class PawnKindEditUI : Window
     {
         Rect nakedBox = ui.GetRect(32);
         Widgets.CheckboxLabeled(nakedBox, "Force naked: ", ref Current.ForceNaked, placeCheckboxNearText: true);
+        ui.Gap();
+    }
+
+    private void DrawRename(Listing_Standard ui)
+    {
+        Rect renameBox = ui.GetRect(32);
+        bool forcedByGlobal = !Current.IsGlobal && (Current.ParentEdit.GetGlobalEditor()?.RenameDef ?? false);
+        string label = Current.IsGlobal
+            ? "Rename All Pawnkind Defs in this Faction"
+            : $"Rename Def [{Current.Def.defName} => {FactionEdit.GetNewNameForPawnKind(Current.Def, Current.ParentEdit.Faction.Def)}]{(
+                forcedByGlobal ? " - Forced By Global" : "")}";
+        if (forcedByGlobal)
+        {
+            Widgets.Label(renameBox, label);
+        }
+        else
+        {
+            Widgets.CheckboxLabeled(renameBox, label, ref Current.RenameDef, placeCheckboxNearText: true);
+        }
+        TooltipHandler.TipRegion(renameBox,
+            "This will give the cloned pawn kind a new name\nThis may have unintended consequences and may break existing pawns spawned for this faction.");
         ui.Gap();
     }
 
@@ -1324,6 +1353,12 @@ public class PawnKindEditUI : Window
         DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.WeaponTags, Current.Def.weaponTags, AllWeaponsTags);
     }
 
+    private void DrawBodyTypes(Rect rect, bool active, List<BodyTypeDef> defaultBodyTypes)
+    {
+        DrawDefList(rect, active, ref scrolls[scrollIndex++], Current.BodyTypes, defaultBodyTypes, AllBodyTypes, false,
+            d => new MenuItemText(d, (string)d.LabelCap ?? d.defName, TryGetIcon(d, out Color c), c, d.description));
+    }
+
     private void DrawRequiredTech(Rect rect, bool active, List<ThingDef> defaultReq)
     {
         DrawDefList(rect, active, ref scrolls[scrollIndex++], Current.TechRequired, Current.Def.techHediffsRequired, AllTech, true);
@@ -1369,7 +1404,12 @@ public class PawnKindEditUI : Window
                 if (Widgets.ButtonText(currButton, " X"))
                     thingBin.Add(thing);
                 GUI.color = Color.white;
-                if (thing != null && thing is not StyleItemDef)
+                if (thing is BodyTypeDef)
+                {
+                    GUI.color = Color.white;
+                    Widgets.Label(curr, (string)thing.LabelCap ?? thing.defName);
+                }
+                else if (thing != null && thing is not StyleItemDef)
                 {
                     Widgets.DefLabelWithIcon(curr, thing);
                 }

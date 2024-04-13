@@ -290,10 +290,10 @@ public class FactionEditUI : Window
             FactionDef toClone = FactionEdit.TryGetOriginal(Current.Faction.Def.defName) ?? Current.Faction.Def;
             clonedFac = CloningUtility.Clone(toClone);
             clonedFac.defName = Current.Faction.Def.defName;
-            clonedFac.humanlikeFaction = false;
+            clonedFac.humanlikeFaction = Current.Faction.Def.humanlikeFaction;
             clonedFac.fixedName = $"TEMP FACTION CLONE ({clonedFac.defName})";
 
-            Current.Apply(clonedFac);
+            Current.Apply(clonedFac, false);
             DestroyPawns();
 
             Faction faction = new();

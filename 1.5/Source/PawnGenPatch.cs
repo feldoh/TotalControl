@@ -2,9 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
+using RimWorld;
 using Verse;
 
 namespace FactionLoadout;
+
+[HarmonyPatch(typeof(PawnGenerator), "GetBodyTypeFor")]
+public static class PawnGenPatchBodyTypeDef
+{
+    [HarmonyPostfix]
+    public static void Postfix(ref BodyTypeDef __result, Pawn pawn)
+    {
+        PawnKindEdit.GetEditsFor(pawn.kindDef).SelectMany(e => e.BodyTypes ?? []).TryRandomElement(out BodyTypeDef bodyTypeDef);
+        if (bodyTypeDef != null)
+        {
+            __result = bodyTypeDef;
+        }
+    }
+}
 
 [HarmonyPatch(typeof(PawnGenerator), "GenerateNewPawnInternal")]
 public static class PawnGenPatchCore
@@ -33,6 +48,7 @@ public static class PawnGenPatchCore
         }
     }
 }
+
 
 [HarmonyPatch(typeof(PawnGenerator), nameof(PawnGenerator.GenerateRandomAge))]
 public static class PawnGenAgePatchCore

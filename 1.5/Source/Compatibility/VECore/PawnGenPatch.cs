@@ -37,7 +37,7 @@ public static class PawnGenPatch
         Hediff_PsycastAbilities implant =
             __result.health.hediffSet.GetFirstHediffOfDef(VPE_DefOf.VPE_PsycastAbilityImplant) as Hediff_PsycastAbilities ??
             HediffMaker.MakeHediff(VPE_DefOf.VPE_PsycastAbilityImplant, __result,
-                __result.RaceProps.body.GetPartsWithDef(BodyPartDefOf.Brain).FirstOrFallback()) as Hediff_PsycastAbilities;
+                __result.RaceProps.body.GetPartsWithDef(VPE_DefOf.Brain).FirstOrFallback()) as Hediff_PsycastAbilities;
 
         if (implant == null) return;
         if (implant.psylink == null || (psycastExtension.giveRandomAbilities && implant.unlockedPaths?.Count == 0))

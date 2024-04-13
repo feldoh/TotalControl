@@ -13,7 +13,23 @@ namespace FactionLoadout;
 
 public class PawnKindEdit : IExposable
 {
-    private static Dictionary<PawnKindDef, List<PawnKindEdit>> activeEdits = new();
+    public static Dictionary<PawnKindDef, List<PawnKindEdit>> activeEdits = new();
+    public static Dictionary<PawnKindDef, PawnKindDef> replacementToOriginal = new();
+
+    public static void RecordReplacement(PawnKindDef original, PawnKindDef replacement) => replacementToOriginal.SetOrAdd(replacement, original);
+    public static List<PawnKindEdit> RemoveActiveEdits(PawnKindDef pawnKindDef)
+    {
+        List<PawnKindEdit> currentEdits = activeEdits.TryGetValue(pawnKindDef, null);
+        activeEdits.Remove(pawnKindDef);
+        return currentEdits;
+    }
+
+    public static void SetActiveEdits(PawnKindDef pawnKindDef, List<PawnKindEdit> edits)
+    {
+        activeEdits.SetOrAdd(pawnKindDef, edits);
+    }
+
+    public static PawnKindDef NormaliseDef(PawnKindDef def) => replacementToOriginal.TryGetValue(def, def);
 
     public static IEnumerable<PawnKindEdit> GetEditsFor(PawnKindDef def)
     {
@@ -54,6 +70,7 @@ public class PawnKindEdit : IExposable
     }
 
     public PawnKindDef ReplaceWith = null;
+    public bool RenameDef = false;
     public bool ForceNaked = false;
     public bool ForceOnlySelected = false;
     public bool ForceSpecificXenos = false;
@@ -83,6 +100,7 @@ public class PawnKindEdit : IExposable
     public string Label = null;
     public ThingDef Race = null;
     public List<HairDef> CustomHair = null;
+    public List<BodyTypeDef> BodyTypes = null;
     public List<Color> CustomHairColors = null;
     public bool DeletedOrClosed;
     public List<ForcedHediff> ForcedHediffs = null;
@@ -124,6 +142,7 @@ public class PawnKindEdit : IExposable
         Scribe_Defs.Look(ref ReplaceWith, "replaceWith");
         Scribe_Values.Look(ref RemoveFixedInventory, "removeFixedInventory");
         Scribe_Values.Look(ref ForceNaked, "forceNaked");
+        Scribe_Values.Look(ref RenameDef, "renameDef");
         Scribe_Values.Look(ref ForceOnlySelected, "forceOnlySelected");
         Scribe_Values.Look(ref ForceSpecificXenos, "forceSpecificXenos");
         Scribe_Values.Look(ref ItemQuality, "itemQuality");
@@ -152,6 +171,7 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref Label, "label");
         Scribe_Defs.Look(ref Race, "race");
         Scribe_Values.Look(ref ForcedGender, "forcedGender");
+        Scribe_Collections.Look(ref BodyTypes, "bodyTypes", LookMode.Def);
         Scribe_Collections.Look(ref CustomHair, "customHair", LookMode.Def);
         Scribe_Collections.Look(ref CustomHairColors, "customHairColors");
         Scribe_Collections.Look(ref ForcedHediffs, "forcedHediffs", LookMode.Deep);
@@ -258,11 +278,11 @@ public class PawnKindEdit : IExposable
         ReplaceMaybe(ref def.biocodeWeaponChance, BiocodeWeaponChance);
         ReplaceMaybe(ref def.techHediffsChance, TechHediffChance);
         ReplaceMaybe(ref def.techHediffsMaxAmount, TechHediffsMaxAmount);
-        ReplaceMaybe(ref def.minGenerationAge, MinGenerationAge);
-        ReplaceMaybe(ref def.maxGenerationAge, MaxGenerationAge);
         ReplaceMaybe(ref def.apparelMoney, ApparelMoney);
         ReplaceMaybe(ref def.techHediffsMoney, TechMoney);
         ReplaceMaybe(ref def.weaponMoney, WeaponMoney);
+        ReplaceMaybe(ref def.minGenerationAge, MinGenerationAge);
+        ReplaceMaybe(ref def.maxGenerationAge, MaxGenerationAge);
         ReplaceMaybe(ref def.inventoryOptions, Inventory);
         ReplaceMaybe(ref def.forceWeaponQuality, ForcedWeaponQuality);
         ReplaceMaybe(ref def.label, Label);
@@ -387,7 +407,15 @@ public class PawnKindEdit : IExposable
 
     public bool AppliesTo(PawnKindDef def)
     {
-        return def != null && Def.defName == def.defName;
+        try
+        {
+            return def != null && (Def.defName == def.defName || def.defName == NormaliseDef(Def).defName);
+        }
+        catch (Exception e)
+        {
+            Log.Message($"Something was null ig {def?.defName ?? "a"} {Def?.defName ?? "b"}");
+            throw;
+        }
     }
 }
 

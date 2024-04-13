@@ -72,7 +72,8 @@ public static class ApparelGenPatch
         if (hair != null)
             pawn.story.hairDef = hair;
         if (color != null)
-            pawn.story.hairColor = color.Value;
+            pawn.story.HairColor = color.Value;
+        pawn.Drawer?.renderer?.SetAllGraphicsDirty();
     }
 
     private static void ForceGiveClothes(Pawn pawn)

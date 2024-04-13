@@ -150,6 +150,8 @@ namespace FactionLoadout
                 postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchCore), nameof(PawnGenPatchCore.Postfix))));
             harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GenerateRandomAge)),
                 prefix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenAgePatchCore), nameof(PawnGenAgePatchCore.Prefix))));
+            harmony.Patch(AccessTools.Method(typeof(PawnGenerator), "GetBodyTypeFor"),
+                postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchBodyTypeDef), nameof(PawnGenPatchBodyTypeDef.Postfix))));
 
             Log($"Game comp finalized init, applied {count} presets that affected {edits} factions.");
         }

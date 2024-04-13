@@ -42,51 +42,63 @@
     <When Condition="Exists('../../../../RimWorldWin64_Data/Managed/Assembly-CSharp.dll')">
       <ItemGroup>
         <Reference Include="Assembly-CSharp-firstpass">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/Assembly-CSharp-firstpass.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/Assembly-CSharp-firstpass.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/Assembly-CSharp-firstpass.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="Assembly-CSharp">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/UnityEngine.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.CoreModule">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.InputModule">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/UnityEngine.InputModule.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.InputModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.InputModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.TextCoreModule">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/UnityEngine.TextCoreModule.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.TextCoreModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.TextCoreModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.TextRenderingModule">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UIModule">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/UnityEngine.UIModule.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.UIModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.UIModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UI">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/UnityEngine.UI.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.UI.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.UI.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UIElementsModule">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/UnityEngine.UIElementsModule.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.UIElementsModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.UIElementsModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.IMGUIModule">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.InputLegacyModule">
-          <HintPath>../../../../RimWorldWin64_Data/Managed/UnityEngine.InputLegacyModule.dll</HintPath>
+          <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.InputLegacyModule.dll</HintPath>
+          <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../RimWorldWin64_Data/Managed/UnityEngine.InputLegacyModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
       </ItemGroup>
@@ -94,7 +106,7 @@
     <Otherwise>
       <ItemGroup>
         <PackageReference Include="Krafs.Rimworld.Ref">
-          <Version>1.4.3704</Version>
+          <Version>1.5-*</Version>
         </PackageReference>
       </ItemGroup>
     </Otherwise>
