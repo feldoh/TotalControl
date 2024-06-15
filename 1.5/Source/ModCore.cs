@@ -64,12 +64,9 @@ namespace FactionLoadout
                 bool active = MySettings.ActivePreset == preset.GUID;
 
                 GUI.color = active ? Color.green : Color.red;
-                if (Widgets.ButtonText(area, active ? "ACTIVE" : "DISABLED"))
-                {
-                    MySettings.ActivePreset = null;
-                    if (!active)
-                        MySettings.ActivePreset = preset.GUID;
-                }
+                bool currentActive = active;
+                Widgets.CheckboxLabeled(area, "Active", ref active, placeCheckboxNearText: true);
+                if (currentActive != active) MySettings.ActivePreset = active ? preset.GUID : null;
 
                 GUI.color = Color.white;
                 area.x += 90;

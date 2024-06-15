@@ -97,9 +97,6 @@ public class PresetUI : Window
             ui.Label("<b>Missing factions</b>");
             ui.GapLine();
             foreach (string str in Current.GetMissingFactionAndModNames()) ui.Label($" - {str}");
-
-            ui.End();
-            return;
         }
 
         Rect nameArea = ui.GetRect(28);
@@ -112,7 +109,7 @@ public class PresetUI : Window
         ui.Label($"<b>This preset edits {Current.factionChanges.Count} factions:</b>");
         ui.Gap();
 
-        Widgets.BeginScrollView(ui.GetRect(260), ref scroll, new Rect(0, 0, inRect.width - 20, Current.factionChanges.Count * (28 * 2 + 10)));
+        Widgets.BeginScrollView(ui.GetRect(200), ref scroll, new Rect(0, 0, inRect.width - 20, Current.factionChanges.Count * (28 * 2 + 10)));
 
         Listing_Standard oldUI = ui;
         ui = new Listing_Standard();
@@ -139,10 +136,16 @@ public class PresetUI : Window
             GUI.color = Color.white;
 
             area.x += 90;
-            if (Widgets.ButtonText(area, "EDIT")) FactionEditUI.OpenEditor(item);
-
-            area.x += 90;
-            Widgets.CheckboxLabeled(area, "Enabled", ref item.Active, placeCheckboxNearText: true);
+            if (item.Faction.IsMissing)
+            {
+                item.Active = false;
+            }
+            else
+            {
+                if (Widgets.ButtonText(area, "EDIT")) FactionEditUI.OpenEditor(item);
+                area.x += 90;
+                Widgets.CheckboxLabeled(area, "Enabled", ref item.Active, placeCheckboxNearText: true);
+            }
 
             ui.GapLine(10);
         }

@@ -409,11 +409,12 @@ public class PawnKindEdit : IExposable
     {
         try
         {
+            if (Def == null) return false;
             return def != null && (Def.defName == def.defName || def.defName == NormaliseDef(Def).defName);
         }
         catch (Exception e)
         {
-            Log.Message($"Something was null ig {def?.defName ?? "a"} {Def?.defName ?? "b"}");
+            Log.Message($"Something was null when checking if edit for {Def?.defName ?? "UNKNOWN"} applies to {def?.defName ?? "UNKNOWN"}");
             throw;
         }
     }
