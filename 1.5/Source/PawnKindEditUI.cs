@@ -193,8 +193,10 @@ public class PawnKindEditUI : Window
     private List<Def> thingBin = new();
     private Vector2[] scrolls = new Vector2[64];
     private string[] buffers = new string[64];
+    private List<Pair<string, string>>[] curvePointBuffers = new List<Pair<string, string>>[64];
     private int scrollIndex;
     private int bufferIndex;
+    private int curveIndex;
     private float lastHeight;
     private Vector2 globalScroll;
     private int selectedTab;
@@ -250,6 +252,7 @@ public class PawnKindEditUI : Window
 
         scrollIndex = 0;
         bufferIndex = 0;
+        curveIndex = 0;
 
         if (tabs == null)
         {
@@ -318,7 +321,12 @@ public class PawnKindEditUI : Window
                     Color.white
                 )
             )
+            {
                 selectedTab = i;
+                buffers = new string[64];
+                scrolls = new Vector2[64];
+                curvePointBuffers = new List<Pair<string, string>>[64];
+            }
 
             if (selectedTab != i)
                 continue;
@@ -1478,7 +1486,7 @@ public class PawnKindEditUI : Window
             );
         }
         ui.GapLine();
-        DrawCurve(ui, ref Current.RaidCommonalityFromPointsCurve);
+        DrawCurve(ui, ref Current.RaidCommonalityFromPointsCurve, ref curvePointBuffers[curveIndex++]);
     }
 
     private void DrawRaidLootTab(Listing_Standard ui)
@@ -1502,14 +1510,19 @@ public class PawnKindEditUI : Window
         }
         Current.RaidLootValueFromPointsCurve ??= [];
         ui.GapLine();
-        DrawCurve(ui, ref Current.RaidLootValueFromPointsCurve);
+        DrawCurve(ui, ref Current.RaidLootValueFromPointsCurve, ref curvePointBuffers[curveIndex++]);
     }
 
-    public void DrawCurve(Listing_Standard listing, ref SimpleCurve curve)
+    public void DrawCurve(Listing_Standard listing, ref SimpleCurve curve, ref List<Pair<string, string>> curvePointBuffer)
     {
+        curvePointBuffer ??= [];
         for (int i = 0; i < curve.PointsCount; i++)
         {
             CurvePoint point = curve[i];
+            if (curvePointBuffer.Count <= i)
+            {
+                curvePointBuffer.Add(new Pair<string, string>(point.x.ToString(CultureInfo.InvariantCulture), point.y.ToString(CultureInfo.InvariantCulture)));
+            }
 
             Rect pointRect = listing.GetRect(Text.LineHeight + 3);
 
@@ -1518,11 +1531,11 @@ public class PawnKindEditUI : Window
                 "FactionLoadout_CurvePoint".Translate(i + 1, point.x, point.y)
             );
 
-            string xBuffer = point.x.ToString(CultureInfo.InvariantCulture);
+            string xBuffer = curvePointBuffer[i].First;
             float x = point.x;
             Widgets.TextFieldNumeric(pointRect.LeftHalf().RightHalf(), ref x, ref xBuffer);
 
-            string yBuffer = point.y.ToString(CultureInfo.InvariantCulture);
+            string yBuffer = curvePointBuffer[i].Second;
             float y = point.y;
             Widgets.TextFieldNumeric(pointRect.RightHalf().LeftHalf(), ref y, ref yBuffer);
             curve[i] = new CurvePoint(x, y);
@@ -1530,6 +1543,7 @@ public class PawnKindEditUI : Window
             if (Widgets.ButtonText(pointRect.RightHalf().RightHalf(), "Remove".Translate()))
             {
                 curve.Points.Remove(point);
+                curvePointBuffer.RemoveAt(i);
             }
 
             listing.GapLine();
@@ -1538,8 +1552,11 @@ public class PawnKindEditUI : Window
         if (listing.ButtonText("Add".Translate()))
         {
             CurvePoint p = curve.MaxBy(e => e.x);
-            ModCore.Debug($"Adding point {p.x + 1}, {p.y + 1}");
-            curve.Add(p.x + 1, p.y + 1);
+            float px = p.x + 1;
+            float py = p.y + 1;
+            ModCore.Debug($"Adding point {px}, {py}");
+            curve.Add(px, py);
+            curvePointBuffer.Add(new Pair<string, string>(px.ToString(CultureInfo.InvariantCulture), py.ToString(CultureInfo.InvariantCulture)));
         }
     }
 
