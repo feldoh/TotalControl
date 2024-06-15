@@ -71,7 +71,8 @@ namespace FactionLoadout
             ui.GapLine();
 
             ui.Label(
-                "Here you can manage faction edit <b>presets</b>.\nEach preset contains a collection of faction edits. Only one preset can be active at a time.\n<i>Hold the SHIFT key to delete presets.</i>");
+                "Here you can manage faction edit <b>presets</b>.\nEach preset contains a collection of faction edits. Only one preset can be active at a time.\n<i>Hold the SHIFT key to delete presets.</i>"
+            );
             ui.GapLine();
 
             bool deleteMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);

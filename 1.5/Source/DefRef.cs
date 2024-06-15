@@ -42,7 +42,8 @@ namespace FactionLoadout
             Scribe_Values.Look(ref modName, "modName", null, true);
             Scribe_Defs.Look(ref def, "def");
 
-            if (def != null || defName == null) return;
+            if (def != null || defName == null)
+                return;
             def = DefDatabase<T>.GetNamed(defName, false);
             ModCore.Log(
                 $"Trying to restore missing def: {defName}... {(def == null ? "Failed!" : "Success!")}"
