@@ -3,4 +3,19 @@
   <FactionLoadout_Value>Value: {0}</FactionLoadout_Value>
   <FactionLoadout_ColorValue>Color Value</FactionLoadout_ColorValue>
   <FactionLoadout_LoadingScreenText>Apply Faction Overrides</FactionLoadout_LoadingScreenText>
+
+  <FactionLoadout_GlobalOnly>Can only be edited via the global edit.</FactionLoadout_GlobalOnly>
+  <FactionLoadout_CurvePoint>Point {0}: ({1}, {2})</FactionLoadout_CurvePoint>
+  <FactionLoadout_Desc_RaidPoints>Commonality this faction will attack by raid points.\nEach point is like points on a graph. Consider (300, 0) and (500, 1):\nThey'll never attack until 300 then gradually become more common between 300 and 500, then remain the same.\nIf you use the same left number twice, last one wins.</FactionLoadout_Desc_RaidPoints>
+  <FactionLoadout_Desc_RaidLoot>Amount of loot this faction will drop by raid points.\nEach point is like points on a graph. Consider (300, 0) and (500, 150):\nThey'll bring nothing until 300 then gradually become more lucrative between 300 and 500, then remain the same.\nIf you use the same left number twice, last one wins.</FactionLoadout_Desc_RaidLoot>
+  <FactionLoadout_FactionDefault>Set to faction default</FactionLoadout_FactionDefault>
+  <FactionLoadout_Clear>Clear</FactionLoadout_Clear>
+
+  <FactionLoadout_Tab_Appearance>Appearance</FactionLoadout_Tab_Appearance>
+  <FactionLoadout_Tab_Apparel>Apparel</FactionLoadout_Tab_Apparel>
+  <FactionLoadout_Tab_Weapon>Weapon</FactionLoadout_Tab_Weapon>
+  <FactionLoadout_Tab_ImplantsAndBionics>Implants &amp; Bionics</FactionLoadout_Tab_ImplantsAndBionics>
+  <FactionLoadout_Tab_Inventory>Inventory</FactionLoadout_Tab_Inventory>
+  <FactionLoadout_Tab_RaidPoints>Raid Points</FactionLoadout_Tab_RaidPoints>
+  <FactionLoadout_Tab_RaidLoot>Raid Loot</FactionLoadout_Tab_RaidLoot>
 </LanguageData>

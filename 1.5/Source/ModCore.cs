@@ -8,6 +8,13 @@ namespace FactionLoadout
 {
     public class ModCore : Mod
     {
+        public static void Debug(string msg)
+        {
+            if (!MySettings.VerboseLogging)
+                return;
+            Verse.Log.Message($"<color=#1c6beb>[FacLoadout] [DEBUG]</color> {msg ?? "<null>"}");
+        }
+
         public static void Log(string msg)
         {
             Verse.Log.Message($"<color=#1c6beb>[FacLoadout]</color> {msg ?? "<null>"}");
@@ -25,10 +32,16 @@ namespace FactionLoadout
                 Verse.Log.Error(e.ToString());
         }
 
-        public ModCore(ModContentPack content) : base(content)
+        public ModCore(ModContentPack content)
+            : base(content)
         {
             GetSettings<MySettings>();
-            LongEventHandler.QueueLongEvent(LoadLate, "FactionLoadout_LoadingScreenText", false, null);
+            LongEventHandler.QueueLongEvent(
+                LoadLate,
+                "FactionLoadout_LoadingScreenText",
+                false,
+                null
+            );
         }
 
         public override string SettingsCategory()
@@ -38,15 +51,23 @@ namespace FactionLoadout
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
-            var ui = new Listing_Standard();
-            ui.ColumnWidth = inRect.width * 0.5f;
-            ui.maxOneColumn = false;
+            Listing_Standard ui = new Listing_Standard
+            {
+                ColumnWidth = inRect.width * 0.5f,
+                maxOneColumn = false
+            };
             ui.Begin(inRect);
-            ui.CheckboxLabeled("Enable vanilla restrictions:  ", ref MySettings.VanillaRestrictions,
-                "If true, some vanilla restrictions are applied, such as only allowing materials that a faction has a high enough tech level for, or not giving forced weapons to non-violent pawns.");
+            ui.CheckboxLabeled(
+                "Enable vanilla restrictions:  ",
+                ref MySettings.VanillaRestrictions,
+                "If true, some vanilla restrictions are applied, such as only allowing materials that a faction has a high enough tech level for, or not giving forced weapons to non-violent pawns."
+            );
             ui.GapLine();
-            ui.CheckboxLabeled("Verbose Logging:  ", ref MySettings.VerboseLogging,
-                "Adds more logs to track down what's being replaced where.");
+            ui.CheckboxLabeled(
+                "Verbose Logging:  ",
+                ref MySettings.VerboseLogging,
+                "Adds more logs to track down what's being replaced where."
+            );
             ui.GapLine();
 
             ui.Label(
@@ -56,20 +77,18 @@ namespace FactionLoadout
             bool deleteMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             Preset toDelete = null;
 
-            foreach (var preset in Preset.LoadedPresets)
+            foreach (Preset preset in Preset.LoadedPresets)
             {
-                var area = ui.GetRect(30);
+                Rect area = ui.GetRect(30);
                 area.width = 80;
 
                 bool active = MySettings.ActivePreset == preset.GUID;
 
                 GUI.color = active ? Color.green : Color.red;
-                if (Widgets.ButtonText(area, active ? "ACTIVE" : "DISABLED"))
-                {
-                    MySettings.ActivePreset = null;
-                    if (!active)
-                        MySettings.ActivePreset = preset.GUID;
-                }
+                bool currentActive = active;
+                Widgets.CheckboxLabeled(area, "Active", ref active, placeCheckboxNearText: true);
+                if (currentActive != active)
+                    MySettings.ActivePreset = active ? preset.GUID : null;
 
                 GUI.color = Color.white;
                 area.x += 90;
@@ -99,7 +118,9 @@ namespace FactionLoadout
                 Preset.DeletePreset(toDelete);
 
             if (Preset.LoadedPresets.EnumerableNullOrEmpty())
-                ui.Label("Huh, there's nothing here... Why not create a new preset by clicking the button below?");
+                ui.Label(
+                    "Huh, there's nothing here... Why not create a new preset by clicking the button below?"
+                );
 
             ui.GapLine();
             if (ui.ButtonText("Create new preset..."))
@@ -127,39 +148,80 @@ namespace FactionLoadout
             int edits = 0;
             foreach (Preset preset in Preset.LoadedPresets)
             {
-                if (MySettings.ActivePreset != preset.GUID) continue;
+                if (MySettings.ActivePreset != preset.GUID)
+                    continue;
                 int changed = preset.TryApplyAll();
                 edits += changed;
                 count++;
 
-                Messages.Message($"Applied faction edit '{preset.Name}': modified {changed} factions.", MessageTypeDefOf.PositiveEvent);
+                Messages.Message(
+                    $"Applied faction edit '{preset.Name}': modified {changed} factions.",
+                    MessageTypeDefOf.PositiveEvent
+                );
             }
 
             Harmony harmony = new Harmony("co.uk.epicguru.factionloadout");
-            harmony.Patch(AccessTools.Method(typeof(PawnApparelGenerator), "GenerateStartingApparelFor"),
-                postfix: new HarmonyMethod(typeof(ApparelGenPatch), "Postfix"));
-            harmony.Patch(AccessTools.Method(typeof(Faction), "TryGenerateNewLeader"),
-                prefix: new HarmonyMethod(AccessTools.Method(typeof(FactionLeaderPatch), "Prefix"), priority: Priority.First));
-            harmony.Patch(AccessTools.Method(typeof(FactionUtility), "HostileTo"),
-                prefix: new HarmonyMethod(AccessTools.Method(typeof(FactionUtilityPawnGenPatch), "Prefix"), priority: Priority.First));
-            harmony.Patch(AccessTools.Method(typeof(ThingIDMaker), "GiveIDTo"),
-                prefix: new HarmonyMethod(AccessTools.Method(typeof(ThingIDPatch), "Prefix"), priority: Priority.First));
-            harmony.Patch(AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"),
-                postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch), "Postfix")));
-            harmony.Patch(AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
-                postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchCore), nameof(PawnGenPatchCore.Postfix))));
-            harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GenerateRandomAge)),
-                prefix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenAgePatchCore), nameof(PawnGenAgePatchCore.Prefix))));
-            harmony.Patch(AccessTools.Method(typeof(PawnGenerator), "GetBodyTypeFor"),
-                postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchBodyTypeDef), nameof(PawnGenPatchBodyTypeDef.Postfix))));
+            harmony.Patch(
+                AccessTools.Method(typeof(PawnApparelGenerator), "GenerateStartingApparelFor"),
+                postfix: new HarmonyMethod(typeof(ApparelGenPatch), "Postfix")
+            );
+            harmony.Patch(
+                AccessTools.Method(typeof(Faction), "TryGenerateNewLeader"),
+                prefix: new HarmonyMethod(
+                    AccessTools.Method(typeof(FactionLeaderPatch), "Prefix"),
+                    priority: Priority.First
+                )
+            );
+            harmony.Patch(
+                AccessTools.Method(typeof(FactionUtility), "HostileTo"),
+                prefix: new HarmonyMethod(
+                    AccessTools.Method(typeof(FactionUtilityPawnGenPatch), "Prefix"),
+                    priority: Priority.First
+                )
+            );
+            harmony.Patch(
+                AccessTools.Method(typeof(ThingIDMaker), "GiveIDTo"),
+                prefix: new HarmonyMethod(
+                    AccessTools.Method(typeof(ThingIDPatch), "Prefix"),
+                    priority: Priority.First
+                )
+            );
+            harmony.Patch(
+                AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"),
+                postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch), "Postfix"))
+            );
+            harmony.Patch(
+                AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
+                postfix: new HarmonyMethod(
+                    AccessTools.Method(typeof(PawnGenPatchCore), nameof(PawnGenPatchCore.Postfix))
+                )
+            );
+            harmony.Patch(
+                AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GenerateRandomAge)),
+                prefix: new HarmonyMethod(
+                    AccessTools.Method(
+                        typeof(PawnGenAgePatchCore),
+                        nameof(PawnGenAgePatchCore.Prefix)
+                    )
+                )
+            );
+            harmony.Patch(
+                AccessTools.Method(typeof(PawnGenerator), "GetBodyTypeFor"),
+                postfix: new HarmonyMethod(
+                    AccessTools.Method(
+                        typeof(PawnGenPatchBodyTypeDef),
+                        nameof(PawnGenPatchBodyTypeDef.Postfix)
+                    )
+                )
+            );
 
-            Log($"Game comp finalized init, applied {count} presets that affected {edits} factions.");
+            Log(
+                $"Game comp finalized init, applied {count} presets that affected {edits} factions."
+            );
         }
     }
 
-    public class HotSwappableAttribute : Attribute
-    {
-    }
+    public class HotSwappableAttribute : Attribute { }
 
     public class MySettings : ModSettings
     {

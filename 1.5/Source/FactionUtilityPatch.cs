@@ -11,9 +11,9 @@ public static class FactionUtilityPawnGenPatch
     [HarmonyPriority(Priority.First)]
     static bool Prefix(ref bool __result)
     {
-        if (!Active) return true;
+        if (!Active)
+            return true;
         __result = false;
         return false;
-
     }
 }

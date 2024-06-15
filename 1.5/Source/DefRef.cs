@@ -3,7 +3,8 @@ using Verse;
 
 namespace FactionLoadout
 {
-    public class DefRef<T> : IExposable where T : Def, new()
+    public class DefRef<T> : IExposable
+        where T : Def, new()
     {
         public bool HasValue => def != null;
         public bool IsMissing => def == null && defName != null;
@@ -13,10 +14,7 @@ namespace FactionLoadout
 
         public T Def
         {
-            get
-            {
-                return def;
-            }
+            get { return def; }
             set
             {
                 def = value;
@@ -29,8 +27,8 @@ namespace FactionLoadout
 
         private string defName = null;
         private string modName = null;
-        private T def = null;  
-        
+        private T def = null;
+
         public DefRef() { }
 
         public DefRef(T def)
@@ -44,11 +42,11 @@ namespace FactionLoadout
             Scribe_Values.Look(ref modName, "modName", null, true);
             Scribe_Defs.Look(ref def, "def");
 
-            if(def == null && defName != null)
-            {
-                def = DefDatabase<T>.GetNamed(defName, false);
-                ModCore.Log($"Trying to restore missing def: {defName}... {(def == null ? "Failed!" : "Success!")}");
-            }
+            if (def != null || defName == null) return;
+            def = DefDatabase<T>.GetNamed(defName, false);
+            ModCore.Log(
+                $"Trying to restore missing def: {defName}... {(def == null ? "Failed!" : "Success!")}"
+            );
         }
 
         public override string ToString()

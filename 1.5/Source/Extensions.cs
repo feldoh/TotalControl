@@ -1,5 +1,5 @@
-﻿using RimWorld;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -9,8 +9,9 @@ namespace FactionLoadout
     {
         private static HashSet<PawnKindDef> tempKinds = new HashSet<PawnKindDef>();
 
-        public static Rect GetCentered(this Rect area, float width, float height) => new Rect(area.center.x - width * 0.5f, area.center.y - height * 0.5f, width, height);  
-        
+        public static Rect GetCentered(this Rect area, float width, float height) =>
+            new Rect(area.center.x - width * 0.5f, area.center.y - height * 0.5f, width, height);
+
         public static Rect GetCentered(this Rect area, string text)
         {
             var size = Text.CalcSize(text);

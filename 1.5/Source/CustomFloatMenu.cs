@@ -5,10 +5,12 @@ using Verse;
 
 namespace FactionLoadout
 {
-
     public class CustomFloatMenu : Window
     {
-        public static CustomFloatMenu Open(List<MenuItemBase> items, Action<MenuItemBase> onSelected)
+        public static CustomFloatMenu Open(
+            List<MenuItemBase> items,
+            Action<MenuItemBase> onSelected
+        )
         {
             var created = new CustomFloatMenu();
             created.Items = items;
@@ -30,10 +32,13 @@ namespace FactionLoadout
             if (!highlight)
                 return label;
 
-            return label.Insert(index+search.Length, "</color>").Insert(index, "<color=#57ff57>");
+            return label.Insert(index + search.Length, "</color>").Insert(index, "<color=#57ff57>");
         }
 
-        public static List<MenuItemBase> MakeItems<T>(IEnumerable<T> rawItems, Func<T, MenuItemBase> makeItem)
+        public static List<MenuItemBase> MakeItems<T>(
+            IEnumerable<T> rawItems,
+            Func<T, MenuItemBase> makeItem
+        )
         {
             var list = new List<MenuItemBase>();
             foreach (var item in rawItems)
@@ -50,19 +55,22 @@ namespace FactionLoadout
         public Action<MenuItemBase> OnSelected;
         public bool CloseOnSelected = true;
         public int Columns = 2;
-        public string SearchString= "";
+        public string SearchString = "";
         public Color Tint = Color.white;
         public bool AllowChangeTint;
 
         private readonly List<MenuItemBase> preRenderItems = new List<MenuItemBase>();
-        private float lastHeight, lastWidth;
+        private float lastHeight,
+            lastWidth;
         private Vector2 scroll;
 
         public override void DoWindowContents(Rect inRect)
         {
             if (Items == null || Items.Count == 0)
             {
-                ModCore.Error("CustomFloatMenu tried to draw with no items! Window has been closed.");
+                ModCore.Error(
+                    "CustomFloatMenu tried to draw with no items! Window has been closed."
+                );
                 Close();
                 return;
             }
@@ -81,10 +89,9 @@ namespace FactionLoadout
             Widgets.DrawHighlightIfMouseover(colArea);
             if (Widgets.ButtonInvisible(colArea))
             {
-                Find.WindowStack.Add(new Window_ColorPicker(Tint, t => Tint = t)
-                {
-                    layer = WindowLayer.Super
-                });
+                Find.WindowStack.Add(
+                    new Window_ColorPicker(Tint, t => Tint = t) { layer = WindowLayer.Super }
+                );
             }
 
             // Goal: evenly split items into columns.
@@ -181,7 +188,13 @@ namespace FactionLoadout
 
         public MenuItemText() { }
 
-        public MenuItemText(object payload, string text, Texture2D icon = null, Color iconColor = default, string tooltip = null)
+        public MenuItemText(
+            object payload,
+            string text,
+            Texture2D icon = null,
+            Color iconColor = default,
+            string tooltip = null
+        )
         {
             this.Payload = payload;
             this.Label = text;
@@ -233,7 +246,7 @@ namespace FactionLoadout
                 labelArea.xMin += area.height + 2;
             else
                 labelArea.xMin += 4;
-            
+
             Widgets.LabelFit(labelArea, label);
 
             if (Tooltip != null)
@@ -284,7 +297,7 @@ namespace FactionLoadout
             }
 
             var old = GUI.color;
-            if(Color != Color.white)
+            if (Color != Color.white)
                 GUI.color = Color;
             Widgets.DrawTextureFitted(area, Icon, 1f);
             GUI.color = old;

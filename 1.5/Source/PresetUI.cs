@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using RimWorld;
 using System.Linq;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -56,7 +56,10 @@ public class PresetUI : Window
         ui.Begin(inRect);
 
         Rect rect = ui.GetRect(50);
-        Widgets.Label(rect, $"<size=34><b>Preset: <color=#cf9af5>{Current.Name}</color></b></size>");
+        Widgets.Label(
+            rect,
+            $"<size=34><b>Preset: <color=#cf9af5>{Current.Name}</color></b></size>"
+        );
 
         Rect buttonsRect = ui.GetRect(32);
 
@@ -66,7 +69,8 @@ public class PresetUI : Window
         button.width *= 0.3f;
         button = button.ExpandedBy(-2f, -5f);
         GUI.color = Color.green;
-        if (Widgets.ButtonText(button, "<color=white>SAVE</color>")) Current.Save();
+        if (Widgets.ButtonText(button, "<color=white>SAVE</color>"))
+            Current.Save();
 
         // Save & exit
         button = buttonsRect;
@@ -85,7 +89,8 @@ public class PresetUI : Window
         button.x = Mathf.Lerp(button.x, button.xMax, 2f / 3f);
         button.width *= 0.3f;
         button = button.ExpandedBy(-2f, -5f);
-        if (Widgets.ButtonText(button, "<color=yellow>EXIT</color>")) Close();
+        if (Widgets.ButtonText(button, "<color=yellow>EXIT</color>"))
+            Close();
 
         GUI.color = Color.white;
         ui.GapLine();
@@ -93,13 +98,13 @@ public class PresetUI : Window
         // Missing faction handling.
         if (Current.HasMissingFactions())
         {
-            ui.Label("<color=red><b>WARNING:</b> This preset has missing factions, probably because they are added by a mod that is not loaded:</color>");
+            ui.Label(
+                "<color=red><b>WARNING:</b> This preset has missing factions, probably because they are added by a mod that is not loaded:</color>"
+            );
             ui.Label("<b>Missing factions</b>");
             ui.GapLine();
-            foreach (string str in Current.GetMissingFactionAndModNames()) ui.Label($" - {str}");
-
-            ui.End();
-            return;
+            foreach (string str in Current.GetMissingFactionAndModNames())
+                ui.Label($" - {str}");
         }
 
         Rect nameArea = ui.GetRect(28);
@@ -112,7 +117,11 @@ public class PresetUI : Window
         ui.Label($"<b>This preset edits {Current.factionChanges.Count} factions:</b>");
         ui.Gap();
 
-        Widgets.BeginScrollView(ui.GetRect(260), ref scroll, new Rect(0, 0, inRect.width - 20, Current.factionChanges.Count * (28 * 2 + 10)));
+        Widgets.BeginScrollView(
+            ui.GetRect(200),
+            ref scroll,
+            new Rect(0, 0, inRect.width - 20, Current.factionChanges.Count * (28 * 2 + 10))
+        );
 
         Listing_Standard oldUI = ui;
         ui = new Listing_Standard();
@@ -139,10 +148,22 @@ public class PresetUI : Window
             GUI.color = Color.white;
 
             area.x += 90;
-            if (Widgets.ButtonText(area, "EDIT")) FactionEditUI.OpenEditor(item);
-
-            area.x += 90;
-            Widgets.CheckboxLabeled(area, "Enabled", ref item.Active, placeCheckboxNearText: true);
+            if (item.Faction.IsMissing)
+            {
+                item.Active = false;
+            }
+            else
+            {
+                if (Widgets.ButtonText(area, "EDIT"))
+                    FactionEditUI.OpenEditor(item);
+                area.x += 90;
+                Widgets.CheckboxLabeled(
+                    area,
+                    "Enabled",
+                    ref item.Active,
+                    placeCheckboxNearText: true
+                );
+            }
 
             ui.GapLine(10);
         }
@@ -154,20 +175,30 @@ public class PresetUI : Window
         ui.Gap();
         if (ui.ButtonText("Add new faction edit..."))
         {
-            IEnumerable<FactionDef> raw = DefDatabase<FactionDef>.AllDefsListForReading.Where(f => !Current.HasEditFor(f) && !f.isPlayer);
-            List<MenuItemBase> items = CustomFloatMenu.MakeItems(raw,
-                f => new MenuItemText(f, $"{f.LabelCap} ({f.defName})", PawnKindEditUI.TryGetIcon(f, out Color c), c, f.description));
+            IEnumerable<FactionDef> raw = DefDatabase<FactionDef>.AllDefsListForReading.Where(f =>
+                !Current.HasEditFor(f) && !f.isPlayer
+            );
+            List<MenuItemBase> items = CustomFloatMenu.MakeItems(
+                raw,
+                f => new MenuItemText(
+                    f,
+                    $"{f.LabelCap} ({f.defName})",
+                    PawnKindEditUI.TryGetIcon(f, out Color c),
+                    c,
+                    f.description
+                )
+            );
 
-            CustomFloatMenu.Open(items, menuItemBase =>
-            {
-                FactionDef e = menuItemBase.GetPayload<FactionDef>();
-
-                FactionEdit edit = new()
+            CustomFloatMenu.Open(
+                items,
+                menuItemBase =>
                 {
-                    Faction = e
-                };
-                Current.factionChanges.Add(edit);
-            });
+                    FactionDef e = menuItemBase.GetPayload<FactionDef>();
+
+                    FactionEdit edit = new() { Faction = e };
+                    Current.factionChanges.Add(edit);
+                }
+            );
         }
 
         ui.End();

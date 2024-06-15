@@ -1,8 +1,8 @@
-﻿using HarmonyLib;
-using RimWorld;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -53,22 +53,26 @@ public static class ApparelGenPatch
 
         if (anyForceOnlySelected)
         {
-            List<Apparel> enumerable = pawn.apparel?.WornApparel
-                ?.Where(a => !apparelRequired.Contains(a.def) &&
-                             !(a.def?.apparel?.tags ?? []).Any(t => apparelTagsAllowed.Contains(t))).ToList() ?? [];
+            List<Apparel> enumerable =
+                pawn.apparel?.WornApparel?.Where(a =>
+                        !apparelRequired.Contains(a.def)
+                        && !(a.def?.apparel?.tags ?? []).Any(t => apparelTagsAllowed.Contains(t))
+                    )
+                    .ToList() ?? [];
             foreach (Apparel a in enumerable)
             {
-                if (MySettings.VerboseLogging)
-                    Log.Message(a.def.LabelCap + "Destroyed");
+                ModCore.Debug(a.def.LabelCap + "Destroyed");
                 a.Destroy();
             }
         }
 
-        if (edits > 0 && pawn.RaceProps.ToolUser) ForceGiveClothes(pawn);
+        if (edits > 0 && pawn.RaceProps.ToolUser)
+            ForceGiveClothes(pawn);
 
         HairDef hair = GetForcedHair();
         Color? color = GetForcedHairColor();
-        if (pawn.story == null) return;
+        if (pawn.story == null)
+            return;
         if (hair != null)
             pawn.story.hairDef = hair;
         if (color != null)
@@ -117,7 +121,8 @@ public static class ApparelGenPatch
             return;
         }
 
-        if (edit.ForceOnlySelected) anyForceOnlySelected = true;
+        if (edit.ForceOnlySelected)
+            anyForceOnlySelected = true;
 
         apparelRequired.AddRange(edit.ApparelRequired ?? []);
         apparelTagsAllowed.AddRange(edit.ApparelTags ?? []);
@@ -147,7 +152,9 @@ public static class ApparelGenPatch
                     pool4.Add(item);
                     break;
                 default:
-                    Log.Warning($"Unknown selection mode '{item.SelectionMode} for '{item.Thing.LabelCap}'");
+                    Log.Warning(
+                        $"Unknown selection mode '{item.SelectionMode} for '{item.Thing.LabelCap}'"
+                    );
                     break;
             }
     }
@@ -161,19 +168,27 @@ public static class ApparelGenPatch
             if (Rand.Chance(item.SelectionChance))
                 yield return item;
 
-        SpecRequirementEdit selected = pool1.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
+        SpecRequirementEdit selected = pool1
+            .Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true)
+            .RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool2.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = pool2
+            .Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true)
+            .RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool3.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = pool3
+            .Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true)
+            .RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool4.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = pool4
+            .Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true)
+            .RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
     }
@@ -183,7 +198,9 @@ public static class ApparelGenPatch
         Thing thing = ThingMaker.MakeThing(spec.Thing, spec.Material);
         if (thing == null)
         {
-            ModCore.Error($"Failed to generate a '{spec.Thing.LabelCap}' made out of '{spec.Material?.LabelCap ?? "<nothing>"}'.");
+            ModCore.Error(
+                $"Failed to generate a '{spec.Thing.LabelCap}' made out of '{spec.Material?.LabelCap ?? "<nothing>"}'."
+            );
             return null;
         }
 
@@ -198,16 +215,20 @@ public static class ApparelGenPatch
             thing.SetStyleDef(spec.Style);
 
         if (spec.Quality != null)
-            thing.TryGetComp<CompQuality>()?.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
+            thing
+                .TryGetComp<CompQuality>()
+                ?.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
 
         if (spec.Color != default)
             thing.SetColor(spec.Color, false);
 
         CompBiocodable code = thing.TryGetComp<CompBiocodable>();
-        if (code is not { Biocodable: true }) return app;
+        if (code is not { Biocodable: true })
+            return app;
         if (code.Biocoded)
             code.UnCode();
-        if (spec.Biocode) code.CodeFor(pawn);
+        if (spec.Biocode)
+            code.CodeFor(pawn);
 
         return app;
     }

@@ -1,7 +1,7 @@
-﻿using HarmonyLib;
-using RimWorld;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using HarmonyLib;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -50,7 +50,7 @@ namespace FactionLoadout
                 edits++;
             }
 
-            if(edits > 0 && pawn.RaceProps.ToolUser)
+            if (edits > 0 && pawn.RaceProps.ToolUser)
                 ForceGiveClothes(pawn);
         }
 
@@ -59,7 +59,7 @@ namespace FactionLoadout
             if (pawn.apparel == null)
                 return;
 
-            foreach(var item in GetWhatToGive())
+            foreach (var item in GetWhatToGive())
             {
                 if (item.Thing == null)
                     continue;
@@ -73,11 +73,17 @@ namespace FactionLoadout
                 }
                 catch (Exception e)
                 {
-                    ModCore.Error($"Exception generating required apparel '{item.Thing.LabelCap}'", e);
+                    ModCore.Error(
+                        $"Exception generating required apparel '{item.Thing.LabelCap}'",
+                        e
+                    );
                     continue;
                 }
 
-                if (created.def.equipmentType == EquipmentType.Primary && pawn.equipment.Primary != null)
+                if (
+                    created.def.equipmentType == EquipmentType.Primary
+                    && pawn.equipment.Primary != null
+                )
                     pawn.equipment.Remove(pawn.equipment.Primary);
                 pawn.equipment.AddEquipment(created);
             }
@@ -88,7 +94,7 @@ namespace FactionLoadout
             if (edit?.SpecificWeapons == null)
                 return;
 
-            foreach(var item in edit.SpecificWeapons)
+            foreach (var item in edit.SpecificWeapons)
             {
                 switch (item.SelectionMode)
                 {
@@ -139,32 +145,36 @@ namespace FactionLoadout
             if (selected != null)
                 yield return selected;
         }
-    
+
         static ThingWithComps GenerateNewWeapon(Pawn pawn, SpecRequirementEdit spec)
         {
             var thing = ThingMaker.MakeThing(spec.Thing, spec.Material) as ThingWithComps;
-            if(thing == null)
+            if (thing == null)
             {
-                ModCore.Error($"Failed to generate a '{spec.Thing.LabelCap}' made out of '{spec.Material?.LabelCap ?? "<nothing>"}'.");
+                ModCore.Error(
+                    $"Failed to generate a '{spec.Thing.LabelCap}' made out of '{spec.Material?.LabelCap ?? "<nothing>"}'."
+                );
                 return null;
             }
 
-            if(spec.Style != null)
+            if (spec.Style != null)
                 thing.SetStyleDef(spec.Style);
 
             if (spec.Quality != null)
-                thing.TryGetComp<CompQuality>()?.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
+                thing
+                    .TryGetComp<CompQuality>()
+                    ?.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
 
             if (spec.Color != default)
                 thing.SetColor(spec.Color, false);
 
             var code = thing.TryGetComp<CompBiocodable>();
-            if(code != null && code.Biocodable)
+            if (code != null && code.Biocodable)
             {
                 if (code.Biocoded)
                     code.UnCode();
 
-                if(spec.Biocode)
+                if (spec.Biocode)
                     code.CodeFor(pawn);
             }
 

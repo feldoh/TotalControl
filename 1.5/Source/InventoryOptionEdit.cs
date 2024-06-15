@@ -1,5 +1,5 @@
-﻿using RimWorld;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using RimWorld;
 using Verse;
 
 namespace FactionLoadout
@@ -21,9 +21,9 @@ namespace FactionLoadout
                 return 0;
 
             int count = option.thingDef != null ? 1 : 0;
-            if(option.subOptionsTakeAll != null)
+            if (option.subOptionsTakeAll != null)
             {
-                foreach(var item in option.subOptionsTakeAll)
+                foreach (var item in option.subOptionsTakeAll)
                 {
                     count += GetSize(item);
                 }
@@ -43,7 +43,8 @@ namespace FactionLoadout
         public float ChoiceChance = 1f;
         public float SkipChance;
 
-        public string BufferA, BufferB;
+        public string BufferA,
+            BufferB;
 
         public List<InventoryOptionEdit> SubOptionsTakeAll;
         public List<InventoryOptionEdit> SubOptionsChooseOne;
@@ -53,7 +54,8 @@ namespace FactionLoadout
             Thing = ThingDefOf.WoodLog;
         }
 
-        public InventoryOptionEdit(PawnInventoryOption option) : this()
+        public InventoryOptionEdit(PawnInventoryOption option)
+            : this()
         {
             if (option == null)
                 return;
@@ -63,10 +65,10 @@ namespace FactionLoadout
             this.ChoiceChance = option.choiceChance;
             this.SkipChance = option.skipChance;
 
-            if(option.subOptionsTakeAll?.Count > 0)
+            if (option.subOptionsTakeAll?.Count > 0)
             {
                 SubOptionsTakeAll = new List<InventoryOptionEdit>();
-                foreach(var thing in option.subOptionsTakeAll)
+                foreach (var thing in option.subOptionsTakeAll)
                 {
                     SubOptionsTakeAll.Add(new InventoryOptionEdit(thing));
                 }
@@ -109,9 +111,9 @@ namespace FactionLoadout
         public int GetSize()
         {
             int size = Thing != null ? 1 : 0;
-            if(SubOptionsChooseOne != null)
+            if (SubOptionsChooseOne != null)
             {
-                foreach(var item in SubOptionsChooseOne)
+                foreach (var item in SubOptionsChooseOne)
                 {
                     size += item.GetSize();
                 }

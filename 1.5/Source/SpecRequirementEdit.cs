@@ -1,5 +1,5 @@
-﻿using RimWorld;
-using System.Reflection;
+﻿using System.Reflection;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -16,7 +16,7 @@ namespace FactionLoadout
         public ApparelSelectionMode SelectionMode = ApparelSelectionMode.AlwaysTake;
         public float SelectionChance = 1f;
 
-        public SpecRequirementEdit() { }      
+        public SpecRequirementEdit() { }
 
         public void ExposeData()
         {

@@ -1,7 +1,7 @@
-﻿using RimWorld;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using RimWorld;
 using Verse;
 
 namespace FactionLoadout
@@ -16,7 +16,7 @@ namespace FactionLoadout
         {
             loadedPresets.Clear();
             var files = IO.ListXmlFiles(IO.SaveDataPath);
-            foreach(var file in files)
+            foreach (var file in files)
             {
                 try
                 {
@@ -24,7 +24,7 @@ namespace FactionLoadout
                     IO.LoadFromFile(preset, file.FullName);
                     loadedPresets.Add(preset);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     ModCore.Error($"Failed to load preset from '{file.FullName}'", e);
                 }
@@ -49,7 +49,7 @@ namespace FactionLoadout
             {
                 preset.DeleteFile();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 ModCore.Error($"Failed to delete preset file for {preset.Name} ({preset.GUID})", e);
             }
@@ -79,7 +79,7 @@ namespace FactionLoadout
 
         public bool HasMissingFactions()
         {
-            foreach(var item in factionChanges)
+            foreach (var item in factionChanges)
             {
                 if (item.Faction.IsMissing)
                     return true;
@@ -93,7 +93,7 @@ namespace FactionLoadout
             if (def == null)
                 return false;
 
-            foreach(var item in factionChanges)
+            foreach (var item in factionChanges)
             {
                 if (item.Faction.HasValue && item.Faction.Def == def)
                     return true;
@@ -104,7 +104,7 @@ namespace FactionLoadout
 
         public IEnumerable<string> GetMissingFactionAndModNames()
         {
-            foreach(var edit in factionChanges)
+            foreach (var edit in factionChanges)
             {
                 if (edit.Faction.IsMissing)
                 {
@@ -116,14 +116,16 @@ namespace FactionLoadout
         public int TryApplyAll()
         {
             int worked = 0;
-            foreach(var change in factionChanges)
+            foreach (var change in factionChanges)
             {
                 if (!change.Active)
                     continue;
 
                 if (change.Faction.IsMissing)
                 {
-                    ModCore.Warn($"Faction '{change.Faction.DefName}' is not loaded, so changes will not be applied.");
+                    ModCore.Warn(
+                        $"Faction '{change.Faction.DefName}' is not loaded, so changes will not be applied."
+                    );
                     continue;
                 }
 
@@ -150,8 +152,8 @@ namespace FactionLoadout
             char[] digits = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
             for (int i = 0; i < 16; i++)
             {
-                guid += digits[rand.Next(digits.Length)];                      
-            }          
+                guid += digits[rand.Next(digits.Length)];
+            }
         }
 
         public void Save()

@@ -22,7 +22,9 @@ public class ForcedHediff : IExposable
     {
         get
         {
-            resolvedHediffDef ??= new Lazy<HediffDef>(() => DefDatabase<HediffDef>.GetNamedSilentFail(hediffDef));
+            resolvedHediffDef ??= new Lazy<HediffDef>(
+                () => DefDatabase<HediffDef>.GetNamedSilentFail(hediffDef)
+            );
             return resolvedHediffDef.Value;
         }
         set
