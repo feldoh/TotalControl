@@ -46,7 +46,7 @@ namespace FactionLoadout
 
         public override string SettingsCategory()
         {
-            return "Faction Editor";
+            return "FactionLoadout_SettingName".Translate();
         }
 
         public override void DoSettingsWindowContents(Rect inRect)

@@ -18,4 +18,6 @@
   <FactionLoadout_Tab_Inventory>Inventory</FactionLoadout_Tab_Inventory>
   <FactionLoadout_Tab_RaidPoints>Raid Points</FactionLoadout_Tab_RaidPoints>
   <FactionLoadout_Tab_RaidLoot>Raid Loot</FactionLoadout_Tab_RaidLoot>
+
+  <FactionLoadout_SettingName>Total Control - Faction Editor</FactionLoadout_SettingName>
 </LanguageData>
