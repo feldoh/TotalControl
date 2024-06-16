@@ -7,7 +7,7 @@
 # Total Control - A Rimsential Mod
 
 ![Mod Version](https://img.shields.io/badge/Mod_Version-1.0.1-blue.svg)
-![RimWorld Version](https://img.shields.io/badge/Built_for_RimWorld-1.4-blue.svg)
+![RimWorld Version](https://img.shields.io/badge/Built_for_RimWorld-1.5-blue.svg)
 ![Harmony Version](https://img.shields.io/badge/Powered_by_Harmony-2.2.2-blue.svg)
 ![GitHub Downloads](https://img.shields.io/github/downloads/feldoh/TotalControl/total?colorB=blue&label=GitHub+Downloads)
 ![Steam Downloads](https://img.shields.io/steam/downloads/2649548096?colorB=blue&label=Steam+Downloads)
