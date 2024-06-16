@@ -1482,7 +1482,7 @@ public class PawnKindEditUI : Window
         if (Widgets.ButtonText(overrideButtonRect, "FactionLoadout_FactionDefault".Translate()))
         {
             Current.RaidCommonalityFromPointsCurve = new SimpleCurve(
-                Current.ParentEdit.Faction.Def.raidCommonalityFromPointsCurve?.points ?? []
+                FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidCommonalityFromPointsCurve?.points ?? []
             );
         }
         ui.GapLine();
@@ -1505,7 +1505,7 @@ public class PawnKindEditUI : Window
         if (Widgets.ButtonText(overrideButtonRect, "FactionLoadout_FactionDefault".Translate()))
         {
             Current.RaidLootValueFromPointsCurve = new SimpleCurve(
-                Current.ParentEdit.Faction.Def.raidLootValueFromPointsCurve?.points ?? []
+                FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidLootValueFromPointsCurve?.points ?? []
             );
         }
         Current.RaidLootValueFromPointsCurve ??= [];
@@ -1531,15 +1531,11 @@ public class PawnKindEditUI : Window
                 "FactionLoadout_CurvePoint".Translate(i + 1, point.x, point.y)
             );
 
-            string xBuffer = curvePointBuffer[i].First;
-            float x = point.x;
-            Widgets.TextFieldNumeric(pointRect.LeftHalf().RightHalf(), ref x, ref xBuffer);
-
-            string yBuffer = curvePointBuffer[i].Second;
-            float y = point.y;
-            Widgets.TextFieldNumeric(pointRect.RightHalf().LeftHalf(), ref y, ref yBuffer);
-            curve[i] = new CurvePoint(x, y);
-
+            Pair<string, string> buffer = curvePointBuffer[i];
+            Widgets.TextFieldNumeric(pointRect.LeftHalf().RightHalf(), ref point.loc.x, ref buffer.first);
+            Widgets.TextFieldNumeric(pointRect.RightHalf().LeftHalf(), ref point.loc.y, ref buffer.second);
+            curvePointBuffer[i] = buffer;
+            curve[i] = point;
             if (Widgets.ButtonText(pointRect.RightHalf().RightHalf(), "Remove".Translate()))
             {
                 curve.Points.Remove(point);
@@ -1551,7 +1547,7 @@ public class PawnKindEditUI : Window
 
         if (listing.ButtonText("Add".Translate()))
         {
-            CurvePoint p = curve.MaxBy(e => e.x);
+            CurvePoint p = curve.MaxByWithFallback(e => e.x, new CurvePoint(0, 0));
             float px = p.x + 1;
             float py = p.y + 1;
             ModCore.Debug($"Adding point {px}, {py}");
