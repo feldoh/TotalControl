@@ -175,9 +175,13 @@ public class PresetUI : Window
         ui.Gap();
         if (ui.ButtonText("Add new faction edit..."))
         {
-            IEnumerable<FactionDef> raw = DefDatabase<FactionDef>.AllDefsListForReading.Where(f =>
+            List<FactionDef> raw = DefDatabase<FactionDef>.AllDefsListForReading.Where(f =>
                 !Current.HasEditFor(f) && !f.isPlayer
-            );
+            ).ToList();
+            if (!Current.HasEditFor(Preset.SpecialCreepjoinerFaction))
+            {
+                raw.Add(Preset.SpecialCreepjoinerFaction);
+            }
             List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                 raw,
                 f => new MenuItemText(

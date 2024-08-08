@@ -197,6 +197,9 @@ namespace FactionLoadout
             if (def == null)
                 return null;
 
+            if (def is CreepJoinerFormKindDef)
+                return def;
+
             PawnKindDef created = new PawnKindDef();
             foreach (FieldInfo field in toCloneKind)
                 field.SetValue(created, CloneField(def, field));

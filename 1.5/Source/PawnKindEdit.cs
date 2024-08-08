@@ -14,6 +14,7 @@ public class PawnKindEdit : IExposable
 {
     public static Dictionary<PawnKindDef, List<PawnKindEdit>> activeEdits = new();
     public static Dictionary<PawnKindDef, PawnKindDef> replacementToOriginal = new();
+    public static RulePackDef FakeRulePack = new(){defName = "NONE"};
 
     public static void RecordReplacement(PawnKindDef original, PawnKindDef replacement) =>
         replacementToOriginal.SetOrAdd(replacement, original);
@@ -111,6 +112,8 @@ public class PawnKindEdit : IExposable
     public Gender? ForcedGender = null;
     public SimpleCurve RaidCommonalityFromPointsCurve = SimpleCurve.Empty();
     public SimpleCurve RaidLootValueFromPointsCurve = SimpleCurve.Empty();
+    public RulePackDef NameMaker = null;
+    public RulePackDef NameMakerFemale = null;
 
     // VFE Ancients
     public int? NumVFEAncientsSuperPowers = null;
@@ -186,6 +189,15 @@ public class PawnKindEdit : IExposable
         );
         Scribe_Deep.Look(ref RaidLootValueFromPointsCurve, "raidLootValueFromPointsCurve");
         Scribe_Deep.Look(ref RaidCommonalityFromPointsCurve, "raidCommonalityFromPointsCurve");
+
+        bool isFake = NameMaker == FakeRulePack;
+        if (isFake) NameMaker = null;
+        Scribe_Defs.Look(ref NameMaker, "nameMaker");
+        if (isFake) NameMaker = FakeRulePack;
+        isFake = NameMakerFemale == FakeRulePack;
+        if (isFake) NameMakerFemale = null;
+        Scribe_Defs.Look(ref NameMakerFemale, "nameMakerFemale");
+        if (isFake) NameMakerFemale = FakeRulePack;
 
         // VFEAncients Compatibility
         Scribe_Values.Look(ref NumVFEAncientsSuperPowers, "numVFEAncientsSuperPowers");
@@ -302,6 +314,8 @@ public class PawnKindEdit : IExposable
         ReplaceMaybe(ref def.label, Label);
         ReplaceMaybe(ref def.race, Race);
         ReplaceMaybe(ref def.fixedGender, ForcedGender);
+        ReplaceMaybe(ref def.nameMaker, NameMaker);
+        ReplaceMaybe(ref def.nameMakerFemale, NameMakerFemale);
 
         ReplaceMaybeList(ref def.techHediffsTags, TechHediffTags, global?.TechHediffTags != null);
         ReplaceMaybeList(

@@ -104,3 +104,14 @@ public static class PawnGenAgePatchCore
         return true;
     }
 }
+
+[HarmonyPatch(typeof(PawnGenerationRequest), nameof(PawnGenerationRequest.KindDef), MethodType.Getter)]
+public static class PawnGenRequestKindPatch
+{
+    [HarmonyPostfix]
+    public static void Postfix(ref PawnKindDef __result, PawnGenerationRequest __instance)
+    {
+        if (__result == null || __instance.Faction == null) return;
+        __result = FactionEdit.GetReplacementForPawnKind(__instance.Faction.def, __result);
+    }
+}

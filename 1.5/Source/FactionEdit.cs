@@ -10,6 +10,7 @@ namespace FactionLoadout;
 public class FactionEdit : IExposable
 {
     private static readonly Dictionary<string, FactionDef> originalFactionDefs = new();
+    private static Dictionary<(FactionDef, PawnKindDef), PawnKindDef> factionSpecificPawnKindReplacements = new();
     public bool Active = true;
     public ThingFilter ApparelStuffFilter;
     public bool DeletedOrClosed;
@@ -17,6 +18,13 @@ public class FactionEdit : IExposable
     public DefRef<FactionDef> Faction = new();
     public List<PawnKindEdit> KindEdits = new();
     public Dictionary<XenotypeDef, float> xenotypeChances = new();
+
+    public static PawnKindDef GetReplacementForPawnKind(FactionDef faction, PawnKindDef original)
+    {
+        factionSpecificPawnKindReplacements.TryGetValue((faction, original), out PawnKindDef replacement);
+        ModCore.Debug($"Found replacement for {original.defName} in {faction.defName}: {replacement?.defName ?? "<null>"}");
+        return replacement ?? original;
+    }
 
     public IEnumerable<PawnGroupMaker> GroupMakers
     {
@@ -230,6 +238,7 @@ public class FactionEdit : IExposable
             $"Replacing PawnKind '{original?.defName ?? "<null>"}' with '{replacement?.defName ?? "<null>"}' in faction {faction.defName}"
         );
         TweakAllPawnKinds(faction, current => current == original ? replacement : current);
+        factionSpecificPawnKindReplacements.SetOrAdd((faction, original), replacement);
     }
 
     public override string ToString()

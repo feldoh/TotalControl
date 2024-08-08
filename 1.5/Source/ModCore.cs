@@ -58,21 +58,23 @@ namespace FactionLoadout
             };
             ui.Begin(inRect);
             ui.CheckboxLabeled(
-                "Enable vanilla restrictions:  ",
+                "FactionLoadout_Settings_VanillaRestrictions".Translate(),
                 ref MySettings.VanillaRestrictions,
-                "If true, some vanilla restrictions are applied, such as only allowing materials that a faction has a high enough tech level for, or not giving forced weapons to non-violent pawns."
+                "FactionLoadout_Settings_VanillaRestrictionsDesc".Translate()
             );
             ui.GapLine();
             ui.CheckboxLabeled(
-                "Verbose Logging:  ",
+                "FactionLoadout_Settings_Verbose".Translate(),
                 ref MySettings.VerboseLogging,
-                "Adds more logs to track down what's being replaced where."
+                "FactionLoadout_Settings_VerboseDesc".Translate()
+            );
+            ui.CheckboxLabeled(
+                "FactionLoadout_Settings_PatchKindInRequests".Translate(),
+                ref MySettings.PatchKindInRequests,
+                "FactionLoadout_Settings_PatchKindInRequestsDesc".Translate()
             );
             ui.GapLine();
-
-            ui.Label(
-                "Here you can manage faction edit <b>presets</b>.\nEach preset contains a collection of faction edits. Only one preset can be active at a time.\n<i>Hold the SHIFT key to delete presets.</i>"
-            );
+            ui.Label("FactionLoadout_Settings_FactionPresetDesc".Translate());
             ui.GapLine();
 
             bool deleteMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
@@ -87,14 +89,14 @@ namespace FactionLoadout
 
                 GUI.color = active ? Color.green : Color.red;
                 bool currentActive = active;
-                Widgets.CheckboxLabeled(area, "Active", ref active, placeCheckboxNearText: true);
+                Widgets.CheckboxLabeled(area, "Active".Translate().CapitalizeFirst(), ref active, placeCheckboxNearText: true);
                 if (currentActive != active)
                     MySettings.ActivePreset = active ? preset.GUID : null;
 
                 GUI.color = Color.white;
                 area.x += 90;
                 GUI.color = deleteMode ? Color.red : Color.white;
-                if (Widgets.ButtonText(area, deleteMode ? "DELETE" : "EDIT"))
+                if (Widgets.ButtonText(area, deleteMode ? "Delete".Translate().CapitalizeFirst() : "Edit".Translate().CapitalizeFirst()))
                 {
                     if (!deleteMode)
                     {
@@ -162,6 +164,9 @@ namespace FactionLoadout
             }
 
             Harmony harmony = new Harmony("co.uk.epicguru.factionloadout");
+#if DEBUG
+Harmony.DEBUG = true;
+#endif
             harmony.Patch(
                 AccessTools.Method(typeof(PawnApparelGenerator), "GenerateStartingApparelFor"),
                 postfix: new HarmonyMethod(typeof(ApparelGenPatch), "Postfix")
@@ -215,6 +220,18 @@ namespace FactionLoadout
                     )
                 )
             );
+            if (MySettings.PatchKindInRequests)
+            {
+                harmony.Patch(
+                    AccessTools.PropertyGetter(typeof(PawnGenerationRequest), nameof(PawnGenerationRequest.KindDef)),
+                    postfix: new HarmonyMethod(
+                        AccessTools.Method(
+                            typeof(PawnGenRequestKindPatch),
+                            nameof(PawnGenRequestKindPatch.Postfix)
+                        )
+                    )
+                );
+            }
 
             Log(
                 $"Game comp finalized init, applied {count} presets that affected {edits} factions."

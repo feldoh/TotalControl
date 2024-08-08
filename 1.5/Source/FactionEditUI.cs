@@ -94,6 +94,13 @@ public class FactionEditUI : Window
             return;
         }
 
+        if (Current.Faction.DefName == Preset.SpecialCreepjoinerFactionDefName)
+        {
+            ui.Label(
+                "<color=yellow>EXPERIMENTAL! - This is a fake faction used for Creepjoiner editing, use at your own risk.</color>"
+            );
+        }
+
         // Disabled for now
         // DrawMaterialFilter(ui);
 

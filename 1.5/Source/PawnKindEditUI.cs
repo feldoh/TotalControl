@@ -22,6 +22,7 @@ public class PawnKindEditUI : Window
     private static List<ThingDef> AllInvItems;
     private static List<ThingDef> AllHumanlikeRaces;
     private static List<PawnKindDef> AllAnimalKindDefs;
+    private static List<RulePackDef> AllRulePackDefs;
 
     private static List<string> AllPowerDefs;
 
@@ -52,7 +53,6 @@ public class PawnKindEditUI : Window
             default:
                 return null;
         }
-        ;
     }
 
     private static void ScanDefs()
@@ -69,6 +69,7 @@ public class PawnKindEditUI : Window
         HashSet<ThingDef> allTech = new(128);
         HashSet<ThingDef> allInv = new(1024);
         HashSet<PawnKindDef> allAnimalKindDefs = new(1024);
+        HashSet<RulePackDef> allRulePackDefs = new(1024);
         HashSet<BodyTypeDef> allBodyTypeDefs = new(32);
 
         foreach (PawnKindDef def in DefDatabase<PawnKindDef>.AllDefsListForReading)
@@ -115,6 +116,7 @@ public class PawnKindEditUI : Window
         }
 
         allBodyTypeDefs.AddRange(DefDatabase<BodyTypeDef>.AllDefsListForReading);
+        allRulePackDefs.AddRange(DefDatabase<RulePackDef>.AllDefsListForReading);
 
         AllTechHediffTags = [.. techTags];
         AllTechHediffTags.Sort();
@@ -152,6 +154,10 @@ public class PawnKindEditUI : Window
                     StringComparison.Ordinal
                 )
         );
+
+        AllRulePackDefs = [.. allRulePackDefs];
+        AllRulePackDefs.Sort((a, b) => string.Compare(a.defName, b.defName, StringComparison.InvariantCulture));
+
         PopulateVFEAncientsObjects();
     }
 
@@ -364,6 +370,19 @@ public class PawnKindEditUI : Window
                 DrawReplaceWith
             );
 
+        DrawOverride(
+            ui,
+            DefaultKind.nameMaker ?? PawnKindEdit.FakeRulePack,
+            ref Current.NameMaker,
+            "Name Maker...",
+            DrawNameMaker);
+        DrawOverride(
+            ui,
+            DefaultKind.nameMakerFemale ?? PawnKindEdit.FakeRulePack,
+            ref Current.NameMakerFemale,
+            "Name Maker Female...",
+            DrawNameMakerFemale);
+
         DrawOverride(ui, Gender.None, ref Current.ForcedGender, "Forced Gender", DrawGender);
         DrawOverride(ui, DefaultKind.label, ref Current.Label, "Custom name", DrawCustomName);
         if (!Current.IsGlobal && !isAnimal)
@@ -372,6 +391,7 @@ public class PawnKindEditUI : Window
             DrawOverride(ui, DefaultKind.race, ref Current.Race, "Species", DrawRace);
             return;
         }
+
         DrawOverride(
             ui,
             DefaultKind.minGenerationAge,
@@ -488,10 +508,7 @@ public class PawnKindEditUI : Window
             AllHumanlikeRaces,
             Current.Race,
             DefaultKind.race,
-            r =>
-            {
-                Current.Race = r;
-            }
+            r => { Current.Race = r; }
         );
     }
 
@@ -503,10 +520,33 @@ public class PawnKindEditUI : Window
             AllAnimalKindDefs,
             Current.ReplaceWith,
             DefaultKind,
-            r =>
-            {
-                Current.ReplaceWith = r;
-            }
+            r => { Current.ReplaceWith = r; }
+        );
+    }
+
+    private void DrawNameMaker(Rect rect, bool active, RulePackDef defaultRulePack)
+    {
+        DrawDefSelector(
+            rect,
+            true,
+            AllRulePackDefs,
+            Current.NameMaker,
+            defaultRulePack ?? DefaultKind.nameMaker,
+            r => { Current.NameMaker = r; },
+            d => d?.defName ?? "None"
+        );
+    }
+
+    private void DrawNameMakerFemale(Rect rect, bool active, RulePackDef defaultRulePack)
+    {
+        DrawDefSelector(
+            rect,
+            true,
+            AllRulePackDefs,
+            Current.NameMakerFemale,
+            defaultRulePack ?? DefaultKind.nameMakerFemale,
+            r => { Current.NameMakerFemale = r; },
+            d => d?.defName ?? "None"
         );
     }
 
@@ -606,6 +646,7 @@ public class PawnKindEditUI : Window
                 placeCheckboxNearText: true
             );
         }
+
         TooltipHandler.TipRegion(
             renameBox,
             "This will give the cloned pawn kind a new name\nThis may have unintended consequences and may break existing pawns spawned for this faction."
@@ -860,10 +901,7 @@ public class PawnKindEditUI : Window
                 );
                 CustomFloatMenu.Open(
                     items,
-                    raw =>
-                    {
-                        item.Style = raw.Payload == null ? null : raw.GetPayload<ThingStyleDef>();
-                    }
+                    raw => { item.Style = raw.Payload == null ? null : raw.GetPayload<ThingStyleDef>(); }
                 );
             }
 
@@ -915,10 +953,7 @@ public class PawnKindEditUI : Window
                     enums,
                     e => e.ToString(),
                     e =>
-                        () =>
-                        {
-                            item.Quality = e;
-                        }
+                        () => { item.Quality = e; }
                 );
             }
 
@@ -1027,10 +1062,7 @@ public class PawnKindEditUI : Window
                     values,
                     Name,
                     e =>
-                        () =>
-                        {
-                            item.SelectionMode = e;
-                        }
+                        () => { item.SelectionMode = e; }
                 );
             }
 
@@ -1394,10 +1426,7 @@ public class PawnKindEditUI : Window
                 Current.ForcedXenotypeChances[key],
                 0f,
                 1f,
-                deleteAction: delegate
-                {
-                    toDelete.Add(key);
-                }
+                deleteAction: delegate { toDelete.Add(key); }
             );
 
         foreach (XenotypeDef delete in toDelete)
@@ -1411,10 +1440,7 @@ public class PawnKindEditUI : Window
                 floatMenuList.Add(
                     new FloatMenuOption(
                         def.LabelCap,
-                        delegate
-                        {
-                            Current.ForcedXenotypeChances[def] = 0.1f;
-                        }
+                        delegate { Current.ForcedXenotypeChances[def] = 0.1f; }
                     )
                 );
 
@@ -1474,6 +1500,7 @@ public class PawnKindEditUI : Window
             Widgets.Label(rect, "FactionLoadout_GlobalOnly".Translate());
             return;
         }
+
         Rect descRect = ui.GetRect(120);
         Widgets.Label(descRect, "FactionLoadout_Desc_RaidPoints".Translate());
         ui.GapLine();
@@ -1485,6 +1512,7 @@ public class PawnKindEditUI : Window
                 FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidCommonalityFromPointsCurve?.points ?? []
             );
         }
+
         ui.GapLine();
         DrawCurve(ui, ref Current.RaidCommonalityFromPointsCurve, ref curvePointBuffers[curveIndex++]);
     }
@@ -1497,6 +1525,7 @@ public class PawnKindEditUI : Window
             Widgets.Label(rect, "FactionLoadout_GlobalOnly".Translate());
             return;
         }
+
         Rect descRect = ui.GetRect(120);
         Widgets.Label(descRect, "FactionLoadout_Desc_RaidLoot".Translate());
         ui.GapLine();
@@ -1508,6 +1537,7 @@ public class PawnKindEditUI : Window
                 FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidLootValueFromPointsCurve?.points ?? []
             );
         }
+
         Current.RaidLootValueFromPointsCurve ??= [];
         ui.GapLine();
         DrawCurve(ui, ref Current.RaidLootValueFromPointsCurve, ref curvePointBuffers[curveIndex++]);
@@ -1654,10 +1684,7 @@ public class PawnKindEditUI : Window
                 );
                 CustomFloatMenu.Open(
                     items,
-                    raw =>
-                    {
-                        part.Thing = raw.GetPayload<ThingDef>();
-                    }
+                    raw => { part.Thing = raw.GetPayload<ThingDef>(); }
                 );
             }
 
@@ -1831,7 +1858,7 @@ public class PawnKindEditUI : Window
             return;
         List<MenuItemBase> items = CustomFloatMenu.MakeItems(
             defs,
-            d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description)
+            d => new MenuItemText(d, Name(d), TryGetIcon(d, out Color c), c, d.description)
         );
         CustomFloatMenu.Open(
             items,
@@ -2198,15 +2225,15 @@ public class PawnKindEditUI : Window
                 List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                     allThings,
                     makeItems
-                        ?? (
-                            d => new MenuItemText(
-                                d,
-                                d.LabelCap,
-                                TryGetIcon(d, out Color c),
-                                c,
-                                d.description
-                            )
+                    ?? (
+                        d => new MenuItemText(
+                            d,
+                            d.LabelCap,
+                            TryGetIcon(d, out Color c),
+                            c,
+                            d.description
                         )
+                    )
                 );
                 toReturn = CustomFloatMenu.Open(
                     items,
@@ -2321,8 +2348,8 @@ public class PawnKindEditUI : Window
                     VEPsycastsReflectionHelper.FindVEPsycastsExtension(Current.Def)
                         is { } psycastsExtension
                     && VEPsycastsReflectionHelper.GiveRandomAbilitiesField.Value?.GetValue(
-                        psycastsExtension
-                    )
+                            psycastsExtension
+                        )
                         is true
                 );
             Widgets.CheckboxLabeled(rect, "GiveRandomAbilities", ref value);

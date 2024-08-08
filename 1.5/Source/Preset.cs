@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using RimWorld;
 using Verse;
 
@@ -55,6 +56,27 @@ namespace FactionLoadout
             }
         }
 
+        public static string SpecialCreepjoinerFactionDefName = "FactionLoadout_Special_CreepJoiner";
+        public static FactionDef SpecialCreepjoinerFaction = new()
+        {
+            hidden = true,
+            defName = SpecialCreepjoinerFactionDefName,
+            label = "Special CreepJoiner",
+            description = "This is a special faction that is used to edit a faux CreepJoiner faction.",
+            humanlikeFaction = true,
+            raidsForbidden = true,
+            requiredCountAtGameStart = 0,
+            pawnGroupMakers = [new PawnGroupMaker()
+            {
+                kindDef = PawnGroupKindDefOf.Combat,
+                options = DefDatabase<CreepJoinerFormKindDef>.AllDefsListForReading.Select(creepKind => new PawnGenOption()
+                {
+                    kind = creepKind,
+                }).ToList(),
+            }]
+
+        };
+
         public string Name = "My preset";
         public List<FactionEdit> factionChanges = new List<FactionEdit>();
         public string GUID
@@ -74,6 +96,8 @@ namespace FactionLoadout
             EnsureGUID();
             Scribe_Values.Look(ref Name, "name", "My preset");
             Scribe_Values.Look(ref guid, "guid");
+            if (DefDatabase<FactionDef>.GetNamed(SpecialCreepjoinerFactionDefName, false) == null)
+                DefDatabase<FactionDef>.Add(SpecialCreepjoinerFaction);
             Scribe_Collections.Look(ref factionChanges, "factionChanges", LookMode.Deep);
         }
 

@@ -1,23 +1,35 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
+
 <LanguageData>
-  <FactionLoadout_Value>Value: {0}</FactionLoadout_Value>
-  <FactionLoadout_ColorValue>Color Value</FactionLoadout_ColorValue>
-  <FactionLoadout_LoadingScreenText>Apply Faction Overrides</FactionLoadout_LoadingScreenText>
+    <FactionLoadout_Value>Value: {0}</FactionLoadout_Value>
+    <FactionLoadout_ColorValue>Color Value</FactionLoadout_ColorValue>
+    <FactionLoadout_LoadingScreenText>Apply Faction Overrides</FactionLoadout_LoadingScreenText>
 
-  <FactionLoadout_GlobalOnly>Can only be edited via the global edit.</FactionLoadout_GlobalOnly>
-  <FactionLoadout_CurvePoint>Point {0}: ({1}, {2})</FactionLoadout_CurvePoint>
-  <FactionLoadout_Desc_RaidPoints>Commonality this faction will attack by raid points.\nEach point is like points on a graph. Consider (300, 0) and (500, 1):\nThey'll never attack until 300 then gradually become more common between 300 and 500, then remain the same.\nIf you use the same left number twice, last one wins.</FactionLoadout_Desc_RaidPoints>
-  <FactionLoadout_Desc_RaidLoot>Amount of loot this faction will drop by raid points.\nEach point is like points on a graph. Consider (300, 0) and (500, 150):\nThey'll bring nothing until 300 then gradually become more lucrative between 300 and 500, then remain the same.\nIf you use the same left number twice, last one wins.</FactionLoadout_Desc_RaidLoot>
-  <FactionLoadout_FactionDefault>Set to faction default</FactionLoadout_FactionDefault>
-  <FactionLoadout_Clear>Clear</FactionLoadout_Clear>
+    <FactionLoadout_GlobalOnly>Can only be edited via the global edit.</FactionLoadout_GlobalOnly>
+    <FactionLoadout_CurvePoint>Point {0}: ({1}, {2})</FactionLoadout_CurvePoint>
+    <FactionLoadout_Desc_RaidPoints>Commonality this faction will attack by raid points.\nEach point is like points on a graph. Consider (300, 0) and (500, 1):\nThey'll never attack until 300 then gradually become more common between 300 and 500, then remain the same.\nIf you use the same left number twice, last one wins.</FactionLoadout_Desc_RaidPoints>
+    <FactionLoadout_Desc_RaidLoot>Amount of loot this faction will drop by raid points.\nEach point is like points on a graph. Consider (300, 0) and (500, 150):\nThey'll bring nothing until 300 then gradually become more lucrative between 300 and 500, then remain the same.\nIf you use the same left number twice, last one wins.</FactionLoadout_Desc_RaidLoot>
+    <FactionLoadout_FactionDefault>Set to faction default</FactionLoadout_FactionDefault>
+    <FactionLoadout_Clear>Clear</FactionLoadout_Clear>
 
-  <FactionLoadout_Tab_Appearance>Appearance</FactionLoadout_Tab_Appearance>
-  <FactionLoadout_Tab_Apparel>Apparel</FactionLoadout_Tab_Apparel>
-  <FactionLoadout_Tab_Weapon>Weapon</FactionLoadout_Tab_Weapon>
-  <FactionLoadout_Tab_ImplantsAndBionics>Implants &amp; Bionics</FactionLoadout_Tab_ImplantsAndBionics>
-  <FactionLoadout_Tab_Inventory>Inventory</FactionLoadout_Tab_Inventory>
-  <FactionLoadout_Tab_RaidPoints>Raid Points</FactionLoadout_Tab_RaidPoints>
-  <FactionLoadout_Tab_RaidLoot>Raid Loot</FactionLoadout_Tab_RaidLoot>
+    <FactionLoadout_Tab_Appearance>Appearance</FactionLoadout_Tab_Appearance>
+    <FactionLoadout_Tab_Apparel>Apparel</FactionLoadout_Tab_Apparel>
+    <FactionLoadout_Tab_Weapon>Weapon</FactionLoadout_Tab_Weapon>
+    <FactionLoadout_Tab_ImplantsAndBionics>Implants &amp; Bionics</FactionLoadout_Tab_ImplantsAndBionics>
+    <FactionLoadout_Tab_Inventory>Inventory</FactionLoadout_Tab_Inventory>
+    <FactionLoadout_Tab_RaidPoints>Raid Points</FactionLoadout_Tab_RaidPoints>
+    <FactionLoadout_Tab_RaidLoot>Raid Loot</FactionLoadout_Tab_RaidLoot>
 
-  <FactionLoadout_SettingName>Total Control - Faction Editor</FactionLoadout_SettingName>
+    <FactionLoadout_SettingName>Total Control - Faction Editor</FactionLoadout_SettingName>
+
+    <FactionLoadout_Settings_VanillaRestrictions>Enable vanilla restrictions:  </FactionLoadout_Settings_VanillaRestrictions>
+    <FactionLoadout_Settings_VanillaRestrictionsDesc>If true, some vanilla restrictions are applied, such as only allowing materials that a faction has a high enough tech level for, or not giving forced weapons to non-violent pawns.</FactionLoadout_Settings_VanillaRestrictionsDesc>
+
+    <FactionLoadout_Settings_Verbose>Verbose Logging:  </FactionLoadout_Settings_Verbose>
+    <FactionLoadout_Settings_VerboseDesc>Adds more logs to track down what's being replaced where.</FactionLoadout_Settings_VerboseDesc>
+
+    <FactionLoadout_Settings_FactionPresetDesc>Here you can manage faction edit <b>presets</b>.\nEach preset contains a collection of faction edits. Only one preset can be active at a time.\n<i>Hold the SHIFT key to delete presets.</i>\nRemember all changes require a game restart to take effect.</FactionLoadout_Settings_FactionPresetDesc>
+    <FactionLoadout_Settings_PatchKindInRequests>Patch forced pawn kinds in PawnGen (Restart Required):  </FactionLoadout_Settings_PatchKindInRequests>
+    <FactionLoadout_Settings_PatchKindInRequestsDesc>Patch the pawn kind set in PawnGenerationRequests. Should catch cases where the game generates a pawn without taking the patched version from the faction when generating pawns like for royal permits. Currently experimental.</FactionLoadout_Settings_PatchKindInRequestsDesc>
+
 </LanguageData>
