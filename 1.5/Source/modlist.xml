@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModsConfigData>
+    <version>1.5.4104 rev435</version>
+    <activeMods>
+        <li>brrainz.harmony</li>
+        <li>ludeon.rimworld</li>
+        <li>ludeon.rimworld.royalty</li>
+        <li>ludeon.rimworld.ideology</li>
+        <li>ludeon.rimworld.biotech</li>
+        <li>ludeon.rimworld.anomaly</li>
+        <li>oskarpotocki.vanillafactionsexpanded.core_steam</li>
+        <li>vanillaexpanded.vpsycastse</li>
+        <li>co.uk.epicguru.factionloadout</li>
+        <li>uuugggg.tdbug</li>
+        <li>imranfish.xmlextensions</li>
+        <li>grizzlemethis.tickspersecond.rw</li>
+    </activeMods>
+    <knownExpansions>
+        <li>ludeon.rimworld</li>
+        <li>ludeon.rimworld.royalty</li>
+        <li>ludeon.rimworld.ideology</li>
+        <li>ludeon.rimworld.biotech</li>
+        <li>ludeon.rimworld.anomaly</li>
+    </knownExpansions>
+</ModsConfigData>

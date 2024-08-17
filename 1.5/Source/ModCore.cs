@@ -220,6 +220,11 @@ Harmony.DEBUG = true;
                     )
                 )
             );
+            
+            harmony.Patch(AccessTools.Method(typeof(OptionListingUtility), nameof(OptionListingUtility.DrawOptionListing)),
+                prefix: new HarmonyMethod(typeof(OptionListingUtility_Patch),
+                    nameof(OptionListingUtility_Patch.DrawOptionListing_Patch)));
+            
             if (MySettings.PatchKindInRequests)
             {
                 harmony.Patch(
