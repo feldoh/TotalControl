@@ -10,16 +10,13 @@
     <ReleasePath>../../Release</ReleasePath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    
-    <SteamCommonPath Condition=" '$(STEAM_COMMON_PATH)' == '' AND Exists('D:/SteamLibrary/steamapps/common/')">D:/SteamLibrary/steamapps/common</SteamCommonPath>
-    <SteamCommonPath Condition=" '$(STEAM_COMMON_PATH)' == '' AND !Exists('D:/SteamLibrary/steamapps/common/')">../../../../../</SteamCommonPath>
-    <SteamCommonPath Condition=" '$(STEAM_COMMON_PATH)' != '' ">$(STEAM_COMMON_PATH)</SteamCommonPath>
-      
-    <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">$(SteamCommonPath)/RimWorld/</RimworldPath>
+
+    <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">../../../../</RimworldPath>
     <RimworldPath Condition=" '$(RIMWORLD_PATH)' != '' ">$(RIMWORLD_PATH)</RimworldPath>
       
-    <SteamModsPath Condition=" '$(STEAM_MODS_PATH)' == '' ">$(SteamCommonPath)/../workshop/content/294100</SteamModsPath>
-    <SteamModsPath Condition=" '$(STEAM_MODS_PATH)' != '' ">$(STEAM_MODS_PATH)/294100</SteamModsPath>
+    <ModsPath Condition=" '$(STEAM_MODS_PATH)' == '' AND Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/../../workshop/content/294100</ModsPath>
+    <ModsPath Condition=" '$(STEAM_MODS_PATH)' == '' AND !Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/Mods</ModsPath>
+    <ModsPath Condition=" '$(STEAM_MODS_PATH)' != '' ">$(STEAM_MODS_PATH)/294100</ModsPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>false</Optimize>

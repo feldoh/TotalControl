@@ -10,16 +10,13 @@
         <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
         <LangVersion>preview</LangVersion>
         <PackageId>TotalControlVEPsycastsCompat</PackageId>
-
-        <SteamCommonPath Condition=" '$(STEAM_COMMON_PATH)' == '' AND Exists('D:/SteamLibrary/steamapps/common/')">D:/SteamLibrary/steamapps/common</SteamCommonPath>
-        <SteamCommonPath Condition=" '$(STEAM_COMMON_PATH)' == '' AND !Exists('D:/SteamLibrary/steamapps/common/')">../../../../../../../</SteamCommonPath>
-        <SteamCommonPath Condition=" '$(STEAM_COMMON_PATH)' != '' ">$(STEAM_COMMON_PATH)</SteamCommonPath>
       
-        <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">$(SteamCommonPath)/RimWorld/</RimworldPath>
+        <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">../../../../../../</RimworldPath>
         <RimworldPath Condition=" '$(RIMWORLD_PATH)' != '' ">$(RIMWORLD_PATH)</RimworldPath>
       
-        <SteamModsPath Condition=" '$(STEAM_MODS_PATH)' == '' ">$(SteamCommonPath)/../workshop/content/294100</SteamModsPath>
-        <SteamModsPath Condition=" '$(STEAM_MODS_PATH)' != '' ">$(STEAM_MODS_PATH)/294100</SteamModsPath>
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' == '' AND Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/../../workshop/content/294100</ModPath>
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' == '' AND !Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/Mods</ModPath>
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' != '' ">$(STEAM_MODS_PATH)/294100</ModPath>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -64,11 +61,11 @@
 
     <ItemGroup>
         <Reference Include="VanillaPsycastsExpanded">
-            <HintPath>$(SteamModsPath)/2842502659/1.5/Assemblies/VanillaPsycastsExpanded.dll</HintPath>
+            <HintPath>$(ModPath)/2842502659/1.5/Assemblies/VanillaPsycastsExpanded.dll</HintPath>
             <Private>false</Private>
         </Reference>
         <Reference Include="VFECore">
-            <HintPath>$(SteamModsPath)/2023507013/1.5/Assemblies/VFECore.dll</HintPath>
+            <HintPath>$(ModPath)/2023507013/1.5/Assemblies/VFECore.dll</HintPath>
             <Private>false</Private>
         </Reference>
     </ItemGroup>
