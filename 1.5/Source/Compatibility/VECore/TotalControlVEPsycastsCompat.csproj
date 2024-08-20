@@ -10,6 +10,13 @@
         <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
         <LangVersion>preview</LangVersion>
         <PackageId>TotalControlVEPsycastsCompat</PackageId>
+      
+        <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">../../../../../../</RimworldPath>
+        <RimworldPath Condition=" '$(RIMWORLD_PATH)' != '' ">$(RIMWORLD_PATH)</RimworldPath>
+      
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' == '' AND Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/../../workshop/content/294100</ModPath>
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' == '' AND !Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/Mods</ModPath>
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' != '' ">$(STEAM_MODS_PATH)/294100</ModPath>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -38,16 +45,14 @@
     </ItemGroup>
 
     <Choose>
-        <When Condition="Exists('../../../../../../RimWorldWin64_Data/Managed/Assembly-CSharp.dll')">
+        <When Condition="Exists('$(RimworldPath)/RimWorldWin64_Data/Managed/Assembly-CSharp.dll')">
             <ItemGroup>
                 <Reference Include="Assembly-CSharp">
-                    <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath>
-                    <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../../../RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath>
+                    <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath>
                     <Private>False</Private>
                 </Reference>
                 <Reference Include="UnityEngine.CoreModule">
-                    <HintPath Condition="Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
-                    <HintPath Condition="!Exists('D:/SteamLibrary/steamapps/common/RimWorld/RimWorldWin64_Data')">../../../../../../RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+                    <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
                     <Private>False</Private>
                 </Reference>
             </ItemGroup>
@@ -56,11 +61,11 @@
 
     <ItemGroup>
         <Reference Include="VanillaPsycastsExpanded">
-            <HintPath>../../../../../2842502659/1.5/Assemblies/VanillaPsycastsExpanded.dll</HintPath>
+            <HintPath>$(ModPath)/2842502659/1.5/Assemblies/VanillaPsycastsExpanded.dll</HintPath>
             <Private>false</Private>
         </Reference>
         <Reference Include="VFECore">
-            <HintPath>../../../../../2023507013/1.5/Assemblies/VFECore.dll</HintPath>
+            <HintPath>$(ModPath)/2023507013/1.5/Assemblies/VFECore.dll</HintPath>
             <Private>false</Private>
         </Reference>
     </ItemGroup>
