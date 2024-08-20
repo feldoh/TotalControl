@@ -6,7 +6,8 @@ namespace FactionLoadout;
 
 public class Dialog_FactionLoadout : Window
 {
-    public override Vector2 InitialSize => new Vector2(800f, 480f);
+    public override Vector2 InitialSize => new Vector2(800f, 600f);
+    public Vector2 scrollPosition = Vector2.zero;
 
     public Dialog_FactionLoadout()
     {
@@ -15,84 +16,116 @@ public class Dialog_FactionLoadout : Window
         forcePause = true;
         absorbInputAroundWindow = true;
     }
+
     public override void DoWindowContents(Rect inRect)
     {
-        Listing_Standard ui = new Listing_Standard
-        {
-            ColumnWidth = inRect.width,
-            maxOneColumn = true
-        };
-        ui.Begin(inRect);
+        int presetHeight = (Preset.LoadedPresets.Count + 1) * 30;
+        int restHeight = 300; // Adjust this value as needed
         
-        ui.Label("FactionLoadout_Settings_FactionPresetDesc".Translate());
-        ui.GapLine();
+        float scrollViewHeight = presetHeight + restHeight;
+        
+        Rect viewRect = new Rect(0, 0, inRect.width - 20, scrollViewHeight);
+        Rect viewPortRect = new Rect(0, 30, inRect.width, inRect.height-70);
+        scrollPosition = GUI.BeginScrollView(viewPortRect, scrollPosition, viewRect);
+        Listing_Standard ui = new Listing_Standard();
+        
+        try{
+            
+            ui.Begin(viewRect);
+            
+            ui.Label("FactionLoadout_Settings_FactionPresetDesc".Translate());
+            ui.GapLine();
+            
+            
+            ui.CheckboxLabeled(
+                "FactionLoadout_Settings_VanillaRestrictions".Translate(),
+                ref MySettings.VanillaRestrictions,
+                "FactionLoadout_Settings_VanillaRestrictionsDesc".Translate()
+            );
+            ui.GapLine();
+            ui.CheckboxLabeled(
+                "FactionLoadout_Settings_Verbose".Translate(),
+                ref MySettings.VerboseLogging,
+                "FactionLoadout_Settings_VerboseDesc".Translate()
+            );
+            ui.CheckboxLabeled(
+                "FactionLoadout_Settings_PatchKindInRequests".Translate(),
+                ref MySettings.PatchKindInRequests,
+                "FactionLoadout_Settings_PatchKindInRequestsDesc".Translate()
+            );
+            ui.GapLine();
+            ui.Label("FactionLoadout_Settings_FactionPresetDesc".Translate());
+            ui.GapLine();
 
-        bool deleteMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-        Preset toDelete = null;
+            bool deleteMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            Preset toDelete = null;
 
-        foreach (Preset preset in Preset.LoadedPresets)
-        {
-            Rect area = ui.GetRect(30);
-            area.width = 80;
-
-            bool active = MySettings.ActivePreset == preset.GUID;
-
-            GUI.color = active ? Color.green : Color.red;
-            bool currentActive = active;
-            Widgets.CheckboxLabeled(area, "Active".Translate().CapitalizeFirst(), ref active,
-                placeCheckboxNearText: true);
-            if (currentActive != active)
-                MySettings.ActivePreset = active ? preset.GUID : null;
-
-            GUI.color = Color.white;
-            area.x += 90;
-            GUI.color = deleteMode ? Color.red : Color.white;
-            if (Widgets.ButtonText(area,
-                    deleteMode ? "Delete".Translate().CapitalizeFirst() : "Edit".Translate().CapitalizeFirst()))
+            foreach (Preset preset in Preset.LoadedPresets)
             {
-                if (!deleteMode)
+                Rect area = ui.GetRect(30);
+                area.width = 80;
+
+                bool active = MySettings.ActivePreset == preset.GUID;
+
+                GUI.color = active ? Color.green : Color.red;
+                bool currentActive = active;
+                Widgets.CheckboxLabeled(area, "Active".Translate().CapitalizeFirst(), ref active,
+                    placeCheckboxNearText: true);
+                if (currentActive != active)
+                    MySettings.ActivePreset = active ? preset.GUID : null;
+
+                GUI.color = Color.white;
+                area.x += 90;
+                GUI.color = deleteMode ? Color.red : Color.white;
+                if (Widgets.ButtonText(area,
+                        deleteMode ? "Delete".Translate().CapitalizeFirst() : "Edit".Translate().CapitalizeFirst()))
                 {
-                    PresetUI.OpenEditor(preset);
-                    Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
-                    Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
+                    if (!deleteMode)
+                    {
+                        PresetUI.OpenEditor(preset);
+                        Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
+                        Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
+                    }
+                    else
+                    {
+                        toDelete = preset;
+                    }
                 }
-                else
-                {
-                    toDelete = preset;
-                }
+
+                GUI.color = Color.white;
+
+                area.x += 90;
+                area.width = 9999;
+                Widgets.Label(area, preset.Name);
             }
 
-            GUI.color = Color.white;
+            if (toDelete != null)
+                Preset.DeletePreset(toDelete);
 
-            area.x += 90;
-            area.width = 9999;
-            Widgets.Label(area, preset.Name);
+            if (Preset.LoadedPresets.EnumerableNullOrEmpty())
+                ui.Label("FactionLoadout_NothingHere".Translate());
+
+            ui.GapLine();
+            if (ui.ButtonText("FactionLoadout_CreateNewPreset".Translate()))
+            {
+                Preset preset = new();
+                Preset.AddNewPreset(preset);
+                preset.Save();
+
+                MySettings.ActivePreset = preset.GUID;
+
+                PresetUI.OpenEditor(preset);
+
+                Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
+                Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
+            }
         }
-
-        if (toDelete != null)
-            Preset.DeletePreset(toDelete);
-
-        if (Preset.LoadedPresets.EnumerableNullOrEmpty())
-            ui.Label(
-                "Huh, there's nothing here... Why not create a new preset by clicking the button below?"
-            );
-
-        ui.GapLine();
-        if (ui.ButtonText("Create new preset..."))
+        finally
         {
-            Preset preset = new();
-            Preset.AddNewPreset(preset);
-            preset.Save();
-
-            MySettings.ActivePreset = preset.GUID;
-
-            PresetUI.OpenEditor(preset);
-
-            Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
-            Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
+            ui.End();
+            GUI.EndScrollView();
         }
 
-        ui.End();
     }
     
     public override void PostClose()

@@ -4,6 +4,8 @@
     <FactionLoadout_Value>Value: {0}</FactionLoadout_Value>
     <FactionLoadout_ColorValue>Color Value</FactionLoadout_ColorValue>
     <FactionLoadout_LoadingScreenText>Apply Faction Overrides</FactionLoadout_LoadingScreenText>
+    <FactionLoadout_NothingHere>Huh, there's nothing here... Why not create a new preset by clicking the button below?</FactionLoadout_NothingHere>
+    <FactionLoadout_CreateNewPreset>Create new preset...</FactionLoadout_CreateNewPreset>
 
     <FactionLoadout_GlobalOnly>Can only be edited via the global edit.</FactionLoadout_GlobalOnly>
     <FactionLoadout_CurvePoint>Point {0}: ({1}, {2})</FactionLoadout_CurvePoint>

@@ -16,7 +16,7 @@ public static class OptionListingUtility_Patch
             optList.Add(new ListableOption_WebLink("FactionLoadout_SettingName".Translate(), delegate
             {
                 Find.WindowStack.Add(new Dialog_FactionLoadout());
-            }, TexButton.IconBook));
+            }, Textures.TC_Link));
         }
     }
 }
