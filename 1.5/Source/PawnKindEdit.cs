@@ -518,7 +518,7 @@ public class PawnKindEdit : IExposable
             return def != null
                 && (Def.defName == def.defName || def.defName == NormaliseDef(Def).defName);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             Log.Message(
                 $"Something was null when checking if edit for {Def?.defName ?? "UNKNOWN"} applies to {def?.defName ?? "UNKNOWN"}"
