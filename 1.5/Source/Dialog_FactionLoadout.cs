@@ -69,7 +69,7 @@ public class Dialog_FactionLoadout : Window
 
                 GUI.color = active ? Color.green : Color.red;
                 bool currentActive = active;
-                Widgets.CheckboxLabeled(area, "Active".Translate().CapitalizeFirst(), ref active,
+                Widgets.CheckboxLabeled(area, "FactionLoadout_Active".Translate().CapitalizeFirst(), ref active,
                     placeCheckboxNearText: true);
                 if (currentActive != active)
                     MySettings.ActivePreset = active ? preset.GUID : null;
@@ -78,7 +78,7 @@ public class Dialog_FactionLoadout : Window
                 area.x += 90;
                 GUI.color = deleteMode ? Color.red : Color.white;
                 if (Widgets.ButtonText(area,
-                        deleteMode ? "Delete".Translate().CapitalizeFirst() : "Edit".Translate().CapitalizeFirst()))
+                        deleteMode ? "Delete".Translate().CapitalizeFirst() : "FactionLoadout_Edit".Translate().CapitalizeFirst()))
                 {
                     if (!deleteMode)
                     {
