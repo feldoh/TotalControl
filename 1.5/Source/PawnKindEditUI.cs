@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -68,13 +69,17 @@ public class PawnKindEditUI : Window
         HashSet<ThingDef> weapons = new(256);
         HashSet<ThingDef> allTech = new(128);
         HashSet<ThingDef> allInv = new(1024);
+        HashSet<PawnKindDef> allPackAnimalKindDefs = new(1024);
         HashSet<PawnKindDef> allAnimalKindDefs = new(1024);
         HashSet<RulePackDef> allRulePackDefs = new(1024);
         HashSet<BodyTypeDef> allBodyTypeDefs = new(32);
 
         foreach (PawnKindDef def in DefDatabase<PawnKindDef>.AllDefsListForReading)
-            if (def.RaceProps.Animal && def.RaceProps.packAnimal)
+            if (def.RaceProps.Animal)
+            {
                 allAnimalKindDefs.Add(def);
+                if (def.RaceProps.packAnimal) allPackAnimalKindDefs.Add(def);
+            }
 
         foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
         {
@@ -142,7 +147,7 @@ public class PawnKindEditUI : Window
         AllHumanlikeRaces = [.. allHumanlikeRaces];
         AllHumanlikeRaces.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
-        AllAnimalKindDefs = [.. allAnimalKindDefs];
+        AllAnimalKindDefs = [.. allPackAnimalKindDefs];
         AllAnimalKindDefs.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
         AllBodyTypes = [.. allBodyTypeDefs];
@@ -262,7 +267,7 @@ public class PawnKindEditUI : Window
 
         if (tabs == null)
         {
-            tabs = [new Tab("General", DrawGeneralTab)];
+            tabs = [new Tab("FactionLoadout_Tab_General".Translate(), DrawGeneralTab)];
 
             bool isAnimal = DefaultKind.RaceProps.Animal;
             if (!isAnimal)
@@ -283,11 +288,13 @@ public class PawnKindEditUI : Window
                     }
                 );
                 if (VFEAncientsReflectionHelper.ModLoaded.Value)
-                    tabs.Add(new Tab("VFE Ancients", DrawAncientsTab));
+                    tabs.Add(new Tab("FactionLoadout_Tab_Ancients".Translate(), DrawAncientsTab));
                 if (VEPsycastsReflectionHelper.ModLoaded.Value)
-                    tabs.Add(new Tab("VE Psycasts", DrawPsycastsTab));
+                    tabs.Add(new Tab("FactionLoadout_Tab_Psycasts".Translate(), DrawPsycastsTab));
+                if (GiddyUpReflectionHelper.ModLoaded.Value)
+                    tabs.Add(new Tab("FactionLoadout_Tab_GiddyUp".Translate(), DrawGiddyUpTab));
                 if (ModsConfig.BiotechActive)
-                    tabs.Add(new Tab("Xenotypes", DrawXenotypeTab));
+                    tabs.Add(new Tab("FactionLoadout_Tab_Xenotypes".Translate(), DrawXenotypeTab));
             }
         }
 
@@ -353,6 +360,94 @@ public class PawnKindEditUI : Window
             lastHeight = ui.CurHeight;
             ui.End();
             Widgets.EndScrollView();
+        }
+    }
+
+    private void DrawGiddyUpTab(Listing_Standard ui)
+    {
+        if (!GiddyUpReflectionHelper.ModLoaded.Value)
+            return;
+        DrawOverride(
+            ui,
+            GiddyUpReflectionHelper.GetMountChance(DefaultKind) ?? 0,
+            ref Current.giddyupCustomMountChance,
+            "FactionLoadout_Giddyup_MountChance".Translate(),
+            DrawGiddyUpMountChance
+        );
+        ui.CheckboxLabeled("FactionLoadout_Giddyup_MountsOverriden".Translate(), ref Current.giddyupCustomMountsOverriden);
+        if (Current.giddyupCustomMountsOverriden)
+        {
+            Widgets.BeginScrollView(ui.GetRect((120)), ref scrolls[scrollIndex++], new Rect(0, 0, 100, 26 * Current.giddyupCustomMounts.Count));
+            
+        }
+        
+
+        DrawOverride(
+            ui,
+            false,
+            ref Current.giddyupCustomMountsOverriden,
+            "FactionLoadout_Giddyup_MountsOverriden".Translate(),
+            DrawGiddyUpMounts,
+            height: 120
+        );
+    }
+
+    private void DrawGiddyUpMountChance(Rect rect, bool active, int _)
+    {
+        if (active)
+        {
+            int value = Current.giddyupCustomMountChance ?? 0;
+            Widgets.IntEntry(rect, ref value, ref buffers[bufferIndex++]);
+            Current.giddyupCustomMountChance = value;
+        }
+        else
+        {
+            string txt = Current.IsGlobal ? "---" : "FactionLoadout_Giddyup_MountChanceDefault".Translate(GiddyUpReflectionHelper.GetMountChance(Current.Def) ?? 0)";
+            Widgets.Label(rect.GetCentered(txt), txt);
+        }
+    }
+    
+    private void DrawGiddyUpMounts(Rect rect, bool active, bool _)
+    {
+        if (active)
+        {
+            List<PawnKindDef> toDelete = [];
+
+            foreach (string key in Current.giddyupCustomMounts.Keys.ToList())
+            {
+                rect.GetInnerRect()
+                Widgets.Label(rect.LeftPart(50));
+            }
+                Current.giddyupCustomMounts[key] = UIHelpers.SliderLabeledWithDelete(
+                    ui,
+                    $"{DefDatabase<PawnKindDef>.GetNamedSilentFail(key)?.LabelCap ?? "---"}: {Current.giddyupCustomMounts[key]}",
+                    Current.ForcedXenotypeChances[key],
+                    0f,
+                    1f,
+                    deleteAction: delegate { toDelete.Add(key); }
+                );
+
+            foreach (XenotypeDef delete in toDelete)
+                Current.ForcedXenotypeChances.Remove(delete);
+
+            if (!ui.ButtonText("Add new..."))
+                return;
+            List<FloatMenuOption> floatMenuList = [];
+            foreach (XenotypeDef def in DefDatabase<XenotypeDef>.AllDefs)
+                if (!Current.ForcedXenotypeChances.ContainsKey(def))
+                    floatMenuList.Add(
+                        new FloatMenuOption(
+                            def.LabelCap,
+                            delegate { Current.ForcedXenotypeChances[def] = 0.1f; }
+                        )
+                    );
+
+            Find.WindowStack.Add(new FloatMenu(floatMenuList));
+        }
+        else
+        {
+            string txt = Current.IsGlobal ? "---" : "FactionLoadout_Giddyup_MountCountDefault".Translate(GiddyUpReflectionHelper.GetCustomMounts(DefaultKind)?.Count ?? 0);
+            Widgets.Label(rect.GetCentered(txt), txt);
         }
     }
 

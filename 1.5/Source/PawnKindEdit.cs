@@ -124,6 +124,14 @@ public class PawnKindEdit : IExposable
     public int? VEPsycastLevel = null;
     public IntRange? VEPsycastStatPoints = null;
     public bool? VEPsycastRandomAbilities = null;
+    
+    // Giddy-up
+    public int? giddyupCustomMountChance = null;
+    public Dictionary<string, int> giddyupCustomMounts = new();
+    public bool giddyupCustomMountsOverriden = false;
+    public float? giddyupSpeedModifier = null;
+    public float? giddyupArmorModifier = null;
+    public bool? giddyupUseMetalArmor = null;
 
     /**
      * public List<AbilityDef> giveAbilities
@@ -208,6 +216,14 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref VEPsycastLevel, "vePsycastLevel");
         Scribe_Values.Look(ref VEPsycastStatPoints, "vePsycastStatPoints");
         Scribe_Values.Look(ref VEPsycastRandomAbilities, "vePsycastRandomAbilities");
+        
+        // Giddy-up
+        Scribe_Values.Look(ref giddyupCustomMountChance, "giddyupCustomMountChance", null);
+        Scribe_Collections.Look(ref giddyupCustomMounts, "giddyupCustomMounts", LookMode.Value, LookMode.Value);
+        Scribe_Values.Look(ref giddyupCustomMountsOverriden, "giddyupCustomMountsOverriden", false);
+        Scribe_Values.Look(ref giddyupSpeedModifier, "giddyupSpeedModifier", null);
+        Scribe_Values.Look(ref giddyupArmorModifier, "giddyupArmorModifier", null);
+        Scribe_Values.Look(ref giddyupUseMetalArmor, "giddyupUseMetalArmor", null);
     }
 
     private void ReplaceMaybe<T>(ref T field, T maybe)
@@ -396,9 +412,32 @@ public class PawnKindEdit : IExposable
             return def; // Animals can't have powers
         ApplyVFEAncientsEdits(def);
         ApplyVEPsycastsEdits(def);
+        ApplyGiddyUpEdits(def);
 
         globalEdit = null;
         return def;
+    }
+    
+    private void ApplyGiddyUpEdits(PawnKindDef def)
+    {
+        if (!GiddyUpReflectionHelper.ModLoaded.Value) return;
+
+        if (giddyupCustomMountsOverriden)
+        {
+            Dictionary<PawnKindDef, int> resolvedMounts = new();
+            foreach (KeyValuePair<string, int> mount in giddyupCustomMounts)
+            {
+                PawnKindDef mountDef = DefDatabase<PawnKindDef>.GetNamed(mount.Key, false);
+                if (mountDef != null) resolvedMounts.SetOrAdd(mountDef, mount.Value);
+            }
+            GiddyUpReflectionHelper.SetCustomMounts(def, resolvedMounts);
+        }
+        if (giddyupCustomMountChance != null)
+            GiddyUpReflectionHelper.SetMountChance(def, giddyupCustomMountChance.Value);
+        
+        if (giddyupSpeedModifier != null) GiddyUpReflectionHelper.SetSpeedModifier(def, giddyupSpeedModifier.Value);
+        if (giddyupArmorModifier != null) GiddyUpReflectionHelper.SetArmorModifier(def, giddyupArmorModifier.Value);
+        if (giddyupUseMetalArmor != null) GiddyUpReflectionHelper.SetUseMetalArmor(def, giddyupUseMetalArmor.Value);
     }
 
     public virtual void ApplyVEPsycastsEdits(PawnKindDef def)
