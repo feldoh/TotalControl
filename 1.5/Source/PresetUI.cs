@@ -176,9 +176,9 @@ public class PresetUI : Window
         if (ui.ButtonText("Add new faction edit..."))
         {
             List<FactionDef> raw = DefDatabase<FactionDef>.AllDefsListForReading.Where(f =>
-                !Current.HasEditFor(f) && !f.isPlayer
+                !Current.HasEditFor(f)
             ).ToList();
-            if (!Current.HasEditFor(Preset.SpecialCreepjoinerFaction))
+            if (!Current.HasEditFor(Preset.SpecialCreepjoinerFaction) && !raw.Any(f => f.defName == Preset.SpecialCreepjoinerFaction.defName))
             {
                 raw.Add(Preset.SpecialCreepjoinerFaction);
             }
