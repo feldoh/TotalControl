@@ -36,4 +36,8 @@
     <FactionLoadout_Settings_PatchKindInRequests>Patch forced pawn kinds in PawnGen (Restart Required):  </FactionLoadout_Settings_PatchKindInRequests>
     <FactionLoadout_Settings_PatchKindInRequestsDesc>Patch the pawn kind set in PawnGenerationRequests. Should catch cases where the game generates a pawn without taking the patched version from the faction when generating pawns like for royal permits. Currently experimental.</FactionLoadout_Settings_PatchKindInRequestsDesc>
 
+    <FactionLoadout_Faction_Techlevel>Tech Level</FactionLoadout_Faction_Techlevel>
+    <FactionLoadout_NotOverriden_WithDefault>Not Overriden ({0})</FactionLoadout_NotOverriden_WithDefault>
+    <Undefined>Undefined</Undefined>
+
 </LanguageData>

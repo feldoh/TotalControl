@@ -104,6 +104,21 @@ public class FactionEditUI : Window
         // Disabled for now
         // DrawMaterialFilter(ui);
 
+        if (
+            ui.ButtonTextLabeled("FactionLoadout_Faction_Techlevel".Translate(),
+                Current.TechLevel?.ToStringHuman() ?? "FactionLoadout_NotOverriden_WithDefault".Translate(
+                    (Current.Faction?.Def?.techLevel ?? TechLevel.Undefined).ToStringHuman()))
+        )
+        {
+            IEnumerable<TechLevel?> enums = Enum.GetValues(typeof(TechLevel)).Cast<TechLevel?>().Append(null);
+            FloatMenuUtility.MakeMenu(
+                enums,
+                e => e?.ToStringHuman() ?? "FactionLoadout_NotOverriden_WithDefault".Translate((Current.Faction?.Def?.techLevel ?? TechLevel.Undefined).ToStringHuman()),
+                e =>
+                    () => { Current.TechLevel = e; }
+            );
+        }
+
         if (ModsConfig.BiotechActive)
         {
             ui.GapLine();
@@ -130,10 +145,7 @@ public class FactionEditUI : Window
                     Current.xenotypeChances[key],
                     0f,
                     1f,
-                    deleteAction: delegate
-                    {
-                        toDelete.Add(key);
-                    }
+                    deleteAction: delegate { toDelete.Add(key); }
                 );
 
             foreach (XenotypeDef delete in toDelete)
@@ -147,10 +159,7 @@ public class FactionEditUI : Window
                         floatMenuList.Add(
                             new FloatMenuOption(
                                 def.LabelCap,
-                                delegate
-                                {
-                                    Current.xenotypeChances[def] = 0.1f;
-                                }
+                                delegate { Current.xenotypeChances[def] = 0.1f; }
                             )
                         );
 
@@ -210,7 +219,7 @@ public class FactionEditUI : Window
 
                 foreach (
                     PawnGroupMaker maker in Current.Faction.Def.pawnGroupMakers
-                        ?? Enumerable.Empty<PawnGroupMaker>()
+                                            ?? Enumerable.Empty<PawnGroupMaker>()
                 )
                 {
                     Register(maker.options);

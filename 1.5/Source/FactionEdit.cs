@@ -13,6 +13,7 @@ public class FactionEdit : IExposable
     private static Dictionary<(FactionDef, PawnKindDef), PawnKindDef> factionSpecificPawnKindReplacements = new();
     public bool Active = true;
     public ThingFilter ApparelStuffFilter;
+    public TechLevel? TechLevel = null;
     public bool DeletedOrClosed;
 
     public DefRef<FactionDef> Faction = new();
@@ -43,6 +44,7 @@ public class FactionEdit : IExposable
         Scribe_Values.Look(ref Active, "active", true);
         Scribe_Deep.Look(ref ApparelStuffFilter, "apparelStuffFilter");
         Scribe_Deep.Look(ref Faction, "faction");
+        Scribe_Values.Look(ref TechLevel, "techLevel");
         Scribe_Collections.Look(ref KindEdits, "kindEdits", LookMode.Deep);
         Scribe_Collections.Look(
             ref xenotypeChances,
@@ -178,6 +180,8 @@ public class FactionEdit : IExposable
             def.raidCommonalityFromPointsCurve = global.RaidCommonalityFromPointsCurve;
         if ((global?.RaidLootValueFromPointsCurve?.PointsCount ?? 0) > 0)
             def.raidLootValueFromPointsCurve = global.RaidLootValueFromPointsCurve;
+
+        if (TechLevel != null) def.techLevel = TechLevel.Value;
 
         IReadOnlyList<PawnKindDef> kinds = GetAllPawnKinds(def);
 
