@@ -237,6 +237,16 @@ public class FactionEditUI : Window
                 foreach (PawnKindDef item in tempKinds)
                     yield return item;
 
+                // If there's no kinds to edit, other than the global add some for special cases.
+                if (tempKinds.Count(k => k != null) == 0)
+                {
+                    if (Current.Faction.Def == FactionDefOf.Ancients || Current.Faction.Def == FactionDefOf.AncientsHostile)
+                    {
+                        yield return PawnKindDefOf.AncientSoldier;
+                        yield return PawnKindDefOf.Slave;
+                    }
+                }
+
                 tempKinds.Clear();
             }
 
