@@ -9,6 +9,7 @@ namespace FactionLoadout
     public class ModCore : Mod
     {
         public Dialog_FactionLoadout settingsDialog = null;
+        public static MySettings Settings;
         public Dialog_FactionLoadout SettingsDialog => settingsDialog ??= new Dialog_FactionLoadout();
 
         public static void Debug(string msg)
@@ -38,7 +39,7 @@ namespace FactionLoadout
         public ModCore(ModContentPack content)
             : base(content)
         {
-            GetSettings<MySettings>();
+            Settings = GetSettings<MySettings>();
             LongEventHandler.QueueLongEvent(
                 LoadLate,
                 "FactionLoadout_LoadingScreenText",
@@ -102,7 +103,14 @@ Harmony.DEBUG = true;
             harmony.Patch(
                 AccessTools.Method(typeof(ThingIDMaker), "GiveIDTo"),
                 prefix: new HarmonyMethod(
-                    AccessTools.Method(typeof(ThingIDPatch), "Prefix"),
+                    AccessTools.Method(typeof(ThingIDPatch), nameof(ThingIDPatch.Prefix)),
+                    priority: Priority.First
+                )
+            );
+            harmony.Patch(
+                AccessTools.Method(typeof(IdeoUtility), nameof(IdeoUtility.IdeoChangeToWeight)),
+                prefix: new HarmonyMethod(
+                    AccessTools.Method(typeof(IdeoUtilityPatch), nameof(IdeoUtilityPatch.Prefix)),
                     priority: Priority.First
                 )
             );

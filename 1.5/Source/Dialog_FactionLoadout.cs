@@ -132,5 +132,6 @@ public class Dialog_FactionLoadout : Window
     {
         base.PostClose();
         Find.WindowStack.WindowOfType<PresetUI>()?.Close();
+        ModCore.Settings.ExposeData();
     }
 }

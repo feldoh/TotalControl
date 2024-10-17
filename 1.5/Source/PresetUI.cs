@@ -182,6 +182,10 @@ public class PresetUI : Window
             {
                 raw.Add(Preset.SpecialCreepjoinerFaction);
             }
+            if (!Current.HasEditFor(Preset.SpecialWildManFaction) && !raw.Any(f => f.defName == Preset.SpecialWildManFaction.defName))
+            {
+                raw.Add(Preset.SpecialWildManFaction);
+            }
             List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                 raw,
                 f => new MenuItemText(

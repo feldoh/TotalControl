@@ -22,6 +22,7 @@ public class FactionEdit : IExposable
 
     public static PawnKindDef GetReplacementForPawnKind(FactionDef faction, PawnKindDef original)
     {
+        if (original == PawnKindDefOf.WildMan) faction = Preset.SpecialWildManFaction;
         factionSpecificPawnKindReplacements.TryGetValue((faction, original), out PawnKindDef replacement);
         ModCore.Debug($"Found replacement for {original.defName} in {faction.defName}: {replacement?.defName ?? "<null>"}");
         return replacement ?? original;

@@ -100,6 +100,12 @@ public class FactionEditUI : Window
                 "<color=yellow>EXPERIMENTAL! - This is a fake faction used for Creepjoiner editing, use at your own risk.</color>"
             );
         }
+        if (Current.Faction.DefName == Preset.SpecialWildManFactionDefName)
+        {
+            ui.Label(
+                "<color=yellow>EXPERIMENTAL! - This is a fake faction used for WildMan editing, use at your own risk.</color>"
+            );
+        }
 
         // Disabled for now
         // DrawMaterialFilter(ui);
@@ -127,14 +133,14 @@ public class FactionEditUI : Window
             if (Current.xenotypeChances is null)
             {
                 Current.xenotypeChances =
-                    Current.Faction.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(
+                    Current.Faction?.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(
                         x => x.xenotype,
                         x => x.chance
                     ) ?? new Dictionary<XenotypeDef, float>();
                 if (!Current.xenotypeChances.ContainsKey(XenotypeDefOf.Baseliner))
                     Current.xenotypeChances.Add(
                         XenotypeDefOf.Baseliner,
-                        Current.Faction.Def?.xenotypeSet?.BaselinerChance ?? 1f
+                        Current.Faction?.Def?.xenotypeSet?.BaselinerChance ?? 1f
                     );
             }
 
@@ -399,16 +405,25 @@ public class FactionEditUI : Window
             Current.Apply(clonedFac, false);
             DestroyPawns();
 
-            Faction faction = new();
-            faction.def = clonedFac;
-            faction.loadID = -1;
-            faction.colorFromSpectrum = Rand.Range(0f, 1f);
-            faction.hidden = true;
-            faction.ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos;
-            faction.Name = clonedFac.fixedName;
-            faction.TryMakeInitialRelationsWith(Faction.OfPlayer);
+            Faction faction = new()
+            {
+                def = clonedFac,
+                loadID = -1,
+                colorFromSpectrum = Rand.Range(0f, 1f),
+                hidden = true,
+                ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos,
+                Name = clonedFac.fixedName,
+                relations = Find.FactionManager.AllFactionsVisible.Select(otherFaction => new FactionRelation()
+                {
+                    other = otherFaction,
+                    baseGoodwill = 0,
+                    kind = FactionRelationKind.Neutral
+                }).ToList(),
+                temporary = true
+            };
 
             ThingIDPatch.Active = _ThingIDPatch;
+            IdeoUtilityPatch.Active = true;
 
             foreach (PawnKindDef item in FactionEdit.GetAllPawnKinds(clonedFac))
                 try
@@ -421,7 +436,8 @@ public class FactionEditUI : Window
                             AllowDead = false,
                             CanGeneratePawnRelations = false,
                             RelationWithExtraPawnChanceFactor = 0,
-                            ColonistRelationChanceFactor = 0
+                            ColonistRelationChanceFactor = 0,
+                            ForceNoIdeo = true
                         }
                     );
                     pawns.Add(pawn);
@@ -435,6 +451,7 @@ public class FactionEditUI : Window
             ThingIDPatch.Active = false;
             FactionLeaderPatch.Active = false;
             FactionUtilityPawnGenPatch.Active = false;
+            IdeoUtilityPatch.Active = false;
         }
 
         GUI.enabled = true;

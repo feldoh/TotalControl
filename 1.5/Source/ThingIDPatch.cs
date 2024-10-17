@@ -9,7 +9,7 @@ namespace FactionLoadout
         public static bool Active = false;
 
         [HarmonyPriority(Priority.First)]
-        static bool Prefix(Thing t)
+        public static bool Prefix(Thing t)
         {
             if (Active)
             {

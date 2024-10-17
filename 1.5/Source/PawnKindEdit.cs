@@ -34,15 +34,27 @@ public class PawnKindEdit : IExposable
     public static PawnKindDef NormaliseDef(PawnKindDef def) =>
         replacementToOriginal.TryGetValue(def, def);
 
-    public static IEnumerable<PawnKindEdit> GetEditsFor(PawnKindDef def)
+    public static IEnumerable<PawnKindEdit> GetEditsFor(PawnKindDef def, FactionDef factionDef)
     {
         if (def == null)
             yield break;
+        factionDef = ForcedFactionForEditing(def, factionDef);
 
         if (!activeEdits.TryGetValue(def, out List<PawnKindEdit> list))
             yield break;
         foreach (PawnKindEdit item in list)
-            yield return item;
+            if (factionDef == null || item.ParentEdit.Faction.Def == factionDef || FactionEdit.TryGetOriginal(factionDef.defName) == item.ParentEdit.Faction.Def)
+                yield return item;
+    }
+
+    public static FactionDef ForcedFactionForEditing(PawnKindDef def, FactionDef fallbackFactionDef)
+    {
+        if (def == null)
+        {
+            return fallbackFactionDef;
+        }
+
+        return def == PawnKindDefOf.WildMan ? Preset.SpecialWildManFaction : fallbackFactionDef;
     }
 
     private static void AddActiveEdit(PawnKindDef def, PawnKindEdit edit)

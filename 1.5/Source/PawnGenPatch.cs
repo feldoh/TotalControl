@@ -14,7 +14,7 @@ public static class PawnGenPatchBodyTypeDef
     public static void Postfix(ref BodyTypeDef __result, Pawn pawn)
     {
         PawnKindEdit
-            .GetEditsFor(pawn.kindDef)
+            .GetEditsFor(pawn.kindDef, pawn.Faction?.def)
             .SelectMany(e => e.BodyTypes ?? [])
             .TryRandomElement(out BodyTypeDef bodyTypeDef);
         if (bodyTypeDef != null)
@@ -75,7 +75,7 @@ public static class PawnGenAgePatchCore
             return true;
         int? minAge = null;
         int? maxAge = null;
-        foreach (PawnKindEdit pawnKindEdit in PawnKindEdit.GetEditsFor(pawn.kindDef))
+        foreach (PawnKindEdit pawnKindEdit in PawnKindEdit.GetEditsFor(pawn.kindDef, pawn.Faction?.def))
         {
             if (pawnKindEdit.MinGenerationAge != null && (!pawnKindEdit.IsGlobal || minAge == null))
                 minAge = pawnKindEdit.MinGenerationAge;

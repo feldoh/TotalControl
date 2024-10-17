@@ -42,7 +42,7 @@ public static class ApparelGenPatch
         hairColors.Clear();
         edits = 0;
 
-        foreach (PawnKindEdit edit in PawnKindEdit.GetEditsFor(pawn.kindDef))
+        foreach (PawnKindEdit edit in PawnKindEdit.GetEditsFor(pawn.kindDef, pawn.Faction?.def))
         {
             Accumulate(edit);
             edits++;
