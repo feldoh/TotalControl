@@ -125,7 +125,7 @@ public class FactionEditUI : Window
             );
         }
 
-        if (ModsConfig.BiotechActive)
+        if (ModsConfig.BiotechActive && Current.Faction.Def != Preset.SpecialWildManFaction)
         {
             ui.GapLine();
             ui.Label("<b>Xenotype spawn rates:</b>");

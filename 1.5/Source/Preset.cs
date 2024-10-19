@@ -70,10 +70,10 @@ namespace FactionLoadout
             requiredCountAtGameStart = 0,
             pawnGroupMakers =
             [
-                new PawnGroupMaker()
+                new PawnGroupMaker
                 {
                     kindDef = PawnGroupKindDefOf.Combat,
-                    options = DefDatabase<CreepJoinerFormKindDef>.AllDefsListForReading.Select(creepKind => new PawnGenOption()
+                    options = DefDatabase<CreepJoinerFormKindDef>.AllDefsListForReading.Select(creepKind => new PawnGenOption
                     {
                         kind = creepKind,
                     }).ToList(),
@@ -192,7 +192,7 @@ namespace FactionLoadout
             guid = "";
 
             var rand = new Random();
-            char[] digits = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+            char[] digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
             for (int i = 0; i < 16; i++)
             {
                 guid += digits[rand.Next(digits.Length)];
