@@ -57,6 +57,8 @@ namespace FactionLoadout
         }
 
         public static string SpecialCreepjoinerFactionDefName = "FactionLoadout_Special_CreepJoiner";
+        public static string SpecialWildManFactionDefName = "FactionLoadout_Special_WildMan";
+
         public static FactionDef SpecialCreepjoinerFaction = new()
         {
             hidden = true,
@@ -66,19 +68,34 @@ namespace FactionLoadout
             humanlikeFaction = true,
             raidsForbidden = true,
             requiredCountAtGameStart = 0,
-            pawnGroupMakers = [new PawnGroupMaker()
-            {
-                kindDef = PawnGroupKindDefOf.Combat,
-                options = DefDatabase<CreepJoinerFormKindDef>.AllDefsListForReading.Select(creepKind => new PawnGenOption()
+            pawnGroupMakers =
+            [
+                new PawnGroupMaker
                 {
-                    kind = creepKind,
-                }).ToList(),
-            }]
+                    kindDef = PawnGroupKindDefOf.Combat,
+                    options = DefDatabase<CreepJoinerFormKindDef>.AllDefsListForReading.Select(creepKind => new PawnGenOption
+                    {
+                        kind = creepKind,
+                    }).ToList(),
+                }
+            ]
+        };
 
+        public static FactionDef SpecialWildManFaction = new()
+        {
+            hidden = true,
+            defName = SpecialWildManFactionDefName,
+            label = "Special WildMan",
+            description = "This is a special faction that is used to edit a faux WildMan faction.",
+            humanlikeFaction = true,
+            raidsForbidden = true,
+            requiredCountAtGameStart = 0,
+            basicMemberKind = PawnKindDefOf.WildMan
         };
 
         public string Name = "My preset";
         public List<FactionEdit> factionChanges = new List<FactionEdit>();
+
         public string GUID
         {
             get
@@ -98,6 +115,8 @@ namespace FactionLoadout
             Scribe_Values.Look(ref guid, "guid");
             if (DefDatabase<FactionDef>.GetNamed(SpecialCreepjoinerFactionDefName, false) == null)
                 DefDatabase<FactionDef>.Add(SpecialCreepjoinerFaction);
+            if (DefDatabase<FactionDef>.GetNamed(SpecialWildManFactionDefName, false) == null)
+                DefDatabase<FactionDef>.Add(SpecialWildManFaction);
             Scribe_Collections.Look(ref factionChanges, "factionChanges", LookMode.Deep);
         }
 
@@ -173,7 +192,7 @@ namespace FactionLoadout
             guid = "";
 
             var rand = new Random();
-            char[] digits = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+            char[] digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
             for (int i = 0; i < 16; i++)
             {
                 guid += digits[rand.Next(digits.Length)];

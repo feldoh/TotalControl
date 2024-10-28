@@ -44,7 +44,7 @@ namespace FactionLoadout
             pool4.Clear();
             edits = 0;
 
-            foreach (var edit in PawnKindEdit.GetEditsFor(pawn.kindDef))
+            foreach (var edit in PawnKindEdit.GetEditsFor(pawn.kindDef, pawn.Faction?.def))
             {
                 Accumulate(edit);
                 edits++;

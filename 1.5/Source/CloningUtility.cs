@@ -197,7 +197,7 @@ namespace FactionLoadout
             if (def == null)
                 return null;
 
-            if (def is CreepJoinerFormKindDef)
+            if (def is CreepJoinerFormKindDef || def == PawnKindDefOf.WildMan)
                 return def;
 
             PawnKindDef created = new PawnKindDef();
