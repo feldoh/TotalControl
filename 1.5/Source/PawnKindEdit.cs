@@ -43,7 +43,9 @@ public class PawnKindEdit : IExposable
         if (!activeEdits.TryGetValue(def, out List<PawnKindEdit> list))
             yield break;
         foreach (PawnKindEdit item in list)
-            if (factionDef == null || item.ParentEdit.Faction.Def == factionDef || FactionEdit.TryGetOriginal(factionDef.defName) == item.ParentEdit.Faction.Def)
+            if (factionDef == null || item.ParentEdit.Faction.Def == factionDef
+                                   || FactionEdit.TryGetOriginal(factionDef.defName) == item.ParentEdit.Faction.Def
+                                   || (factionDef.fixedName?.StartsWith("TEMP FACTION CLONE") ?? false))
                 yield return item;
     }
 
