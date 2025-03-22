@@ -146,7 +146,11 @@ Harmony.DEBUG = true;
             harmony.Patch(AccessTools.Method(typeof(OptionListingUtility), nameof(OptionListingUtility.DrawOptionListing)),
                 prefix: new HarmonyMethod(typeof(OptionListingUtility_Patch),
                     nameof(OptionListingUtility_Patch.DrawOptionListing_Patch)));
-            
+
+            harmony.Patch(AccessTools.Method(typeof(Pawn_GuestTracker), nameof(Pawn_GuestTracker.SetupRecruitable)),
+                prefix: new HarmonyMethod(typeof(PawnGenPatchRecruitable),
+                    nameof(PawnGenPatchRecruitable.Prefix)));
+
             if (MySettings.PatchKindInRequests)
             {
                 harmony.Patch(

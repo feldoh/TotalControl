@@ -128,6 +128,7 @@ public class PawnKindEdit : IExposable
     public SimpleCurve RaidLootValueFromPointsCurve = SimpleCurve.Empty();
     public RulePackDef NameMaker = null;
     public RulePackDef NameMakerFemale = null;
+    public float? UnwaveringlyLoyalChance = null;
 
     // VFE Ancients
     public int? NumVFEAncientsSuperPowers = null;
@@ -203,6 +204,7 @@ public class PawnKindEdit : IExposable
         );
         Scribe_Deep.Look(ref RaidLootValueFromPointsCurve, "raidLootValueFromPointsCurve");
         Scribe_Deep.Look(ref RaidCommonalityFromPointsCurve, "raidCommonalityFromPointsCurve");
+        Scribe_Values.Look(ref UnwaveringlyLoyalChance, "unwaveringlyLoyalChance");
 
         bool isFake = NameMaker == FakeRulePack;
         if (isFake) NameMaker = null;

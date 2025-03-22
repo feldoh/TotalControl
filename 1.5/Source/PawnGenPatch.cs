@@ -115,3 +115,27 @@ public static class PawnGenRequestKindPatch
         __result = FactionEdit.GetReplacementForPawnKind(__instance.Faction.def, __result);
     }
 }
+
+[HarmonyPatch(typeof(Pawn_GuestTracker), nameof(Pawn_GuestTracker.SetupRecruitable))]
+public static class PawnGenPatchRecruitable
+{
+    [HarmonyPrefix]
+    public static bool Prefix(Pawn_GuestTracker __instance)
+    {
+        if (__instance.pawn.Faction == null)
+            return true;
+        float? maxUnwaveringlyLoyalChance = null;
+        foreach (PawnKindEdit pawnKindEdit in PawnKindEdit.GetEditsFor(__instance.pawn.kindDef, __instance.pawn.Faction?.def))
+        {
+            if (pawnKindEdit.UnwaveringlyLoyalChance != null && (!pawnKindEdit.IsGlobal || maxUnwaveringlyLoyalChance == null))
+            {
+                maxUnwaveringlyLoyalChance = pawnKindEdit.UnwaveringlyLoyalChance ?? 0;
+            }
+        }
+        if (maxUnwaveringlyLoyalChance == null)
+            return true;
+
+        __instance.Recruitable = !Rand.Chance(maxUnwaveringlyLoyalChance.Value);
+        return false;
+    }
+}

@@ -424,6 +424,7 @@ public class FactionEditUI : Window
 
             ThingIDPatch.Active = _ThingIDPatch;
             IdeoUtilityPatch.Active = true;
+            FactionUtilityPawnGenPatch.Active = true;
 
             foreach (PawnKindDef item in FactionEdit.GetAllPawnKinds(clonedFac))
                 try

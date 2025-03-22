@@ -385,13 +385,6 @@ public class PawnKindEditUI : Window
 
         DrawOverride(ui, Gender.None, ref Current.ForcedGender, "Forced Gender", DrawGender);
         DrawOverride(ui, DefaultKind.label, ref Current.Label, "Custom name", DrawCustomName);
-        if (!Current.IsGlobal && !isAnimal)
-        {
-            // Human-likes can change race.
-            DrawOverride(ui, DefaultKind.race, ref Current.Race, "Species", DrawRace);
-            return;
-        }
-
         DrawOverride(
             ui,
             DefaultKind.minGenerationAge,
@@ -406,7 +399,6 @@ public class PawnKindEditUI : Window
             "Max Generation Age",
             DrawMaxAge
         );
-
         DrawOverride(
             ui,
             DefaultKind.itemQuality,
@@ -414,6 +406,23 @@ public class PawnKindEditUI : Window
             "Average Gear Quality",
             DrawItemQuality
         );
+
+        // Only non-animal things after here
+        if (isAnimal) return;
+
+        DrawOverride(
+            ui,
+            0f,
+            ref Current.UnwaveringlyLoyalChance,
+            "Unwaveringly Loyal Chance",
+            DrawUnwaveringlyLoyalChance
+        );
+
+        if (!Current.IsGlobal)
+        {
+            // Human-likes can change race, global would include animals.
+            DrawOverride(ui, DefaultKind.race, ref Current.Race, "Species", DrawRace);
+        }
     }
 
     private void DrawAppearanceTab(Listing_Standard ui)
@@ -1973,6 +1982,11 @@ public class PawnKindEditUI : Window
     private void DrawTechChance(Rect rect, bool active, float def)
     {
         DrawChance(ref Current.TechHediffChance, def, rect, active);
+    }
+
+    private void DrawUnwaveringlyLoyalChance(Rect rect, bool active, float def)
+    {
+        DrawChance(ref Current.UnwaveringlyLoyalChance, def, rect, active);
     }
 
     private void DrawMaxTech(Rect rect, bool active, int _)
