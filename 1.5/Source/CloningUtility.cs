@@ -24,25 +24,14 @@ namespace FactionLoadout
                 { "fixedLeaderKinds", CloneLeaderKinds },
                 { "apparelStuffFilter", CloneThingFilter }
             };
-            customKind = new Dictionary<string, Func<PawnKindDef, FieldInfo, object>>()
-            {
-                { "inventoryOptions", CloneInventory }
-            };
+            customKind = new Dictionary<string, Func<PawnKindDef, FieldInfo, object>>() { { "inventoryOptions", CloneInventory } };
 
             replacements = new Dictionary<string, PawnKindDef>();
 
             toCloneFac = new List<FieldInfo>();
-            toCloneFac.AddRange(
-                typeof(FactionDef).GetFields(
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
-                )
-            );
+            toCloneFac.AddRange(typeof(FactionDef).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
             toCloneKind = new List<FieldInfo>();
-            toCloneKind.AddRange(
-                typeof(PawnKindDef).GetFields(
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
-                )
-            );
+            toCloneKind.AddRange(typeof(PawnKindDef).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
         }
 
         private static object CloneThingFilter(FactionDef def, FieldInfo info)
@@ -62,10 +51,7 @@ namespace FactionLoadout
             if (current == null)
                 return null;
 
-            var created = Activator.CreateInstance(
-                typeof(List<>).MakeGenericType(info.FieldType.GetGenericArguments()[0]),
-                current
-            );
+            var created = Activator.CreateInstance(typeof(List<>).MakeGenericType(info.FieldType.GetGenericArguments()[0]), current);
             return created;
         }
 
@@ -173,9 +159,7 @@ namespace FactionLoadout
 
             created.defName += $"_CLONED_{cloneID++}";
 
-            ModCore.Log(
-                $"Cloned {created.LabelCap}, creating {replacements.Count} kindDefs: {string.Join(", ", replacements.Keys)}"
-            );
+            ModCore.Log($"Cloned {created.LabelCap}, creating {replacements.Count} kindDefs: {string.Join(", ", replacements.Keys)}");
             replacements.Clear();
 
             return created;
@@ -187,9 +171,7 @@ namespace FactionLoadout
                 return null;
 
             string name = info.Name;
-            return customFac.TryGetValue(name, out Func<FactionDef, FieldInfo, object> found)
-                ? found?.Invoke(def, info)
-                : info.GetValue(def);
+            return customFac.TryGetValue(name, out Func<FactionDef, FieldInfo, object> found) ? found?.Invoke(def, info) : info.GetValue(def);
         }
 
         public static PawnKindDef Clone(PawnKindDef def)
@@ -216,10 +198,7 @@ namespace FactionLoadout
             if (customKind.TryGetValue(name, out var found))
                 return found?.Invoke(def, info);
 
-            if (
-                info.FieldType.IsGenericType
-                && info.FieldType.GetGenericTypeDefinition() == typeof(List<>)
-            )
+            if (info.FieldType.IsGenericType && info.FieldType.GetGenericTypeDefinition() == typeof(List<>))
             {
                 return CloneList(def, info);
             }

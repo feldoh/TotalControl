@@ -11,16 +11,11 @@ public class DebugTools
     private static void DoTableInternalWeapons(string tag)
     {
         DebugTables.MakeTablesDialog(
-            DefDatabase<ThingDef>
-                .AllDefs.Where(td => td.weaponTags?.Contains(tag) ?? false)
-                .OrderBy(d => d.modContentPack?.Name ?? "Core"),
+            DefDatabase<ThingDef>.AllDefs.Where(td => td.weaponTags?.Contains(tag) ?? false).OrderBy(d => d.modContentPack?.Name ?? "Core"),
             new TableDataGetter<ThingDef>("defName", d => d.defName),
             new TableDataGetter<ThingDef>("name", d => d.LabelCap),
             new TableDataGetter<ThingDef>("source", d => d.modContentPack?.Name ?? "Core"),
-            new TableDataGetter<ThingDef>(
-                "tags",
-                d => GenText.ToSpaceList(d.weaponTags.Select(t => t.ToString()))
-            )
+            new TableDataGetter<ThingDef>("tags", d => GenText.ToSpaceList(d.weaponTags.Select(t => t.ToString())))
         );
     }
 
@@ -40,18 +35,7 @@ public class DebugTools
         );
     }
 
-    [DebugAction(
-        "Spawning",
-        "Spawn Faction Pawn",
-        false,
-        false,
-        false,
-        false,
-        0,
-        false,
-        allowedGameStates = AllowedGameStates.PlayingOnMap,
-        displayPriority = 1000
-    )]
+    [DebugAction("Spawning", "Spawn Faction Pawn", false, false, false, false, 0, false, allowedGameStates = AllowedGameStates.PlayingOnMap, displayPriority = 1000)]
     private static List<DebugActionNode> SpawnFactionPawn()
     {
         List<DebugActionNode> debugActionNodeList = [];

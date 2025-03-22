@@ -45,9 +45,7 @@ namespace FactionLoadout
             if (def != null || defName == null)
                 return;
             def = DefDatabase<T>.GetNamed(defName, false);
-            ModCore.Log(
-                $"Trying to restore missing def: {defName}... {(def == null ? "Failed!" : "Success!")}"
-            );
+            ModCore.Log($"Trying to restore missing def: {defName}... {(def == null ? "Failed!" : "Success!")}");
         }
 
         public override string ToString()

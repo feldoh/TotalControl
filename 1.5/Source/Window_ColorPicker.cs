@@ -23,11 +23,9 @@ namespace FactionLoadout
 
         private string previousFocusedControlName;
 
-        public static Widgets.ColorComponents visibleColorTextfields =
-            Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat;
+        public static Widgets.ColorComponents visibleColorTextfields = Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat;
 
-        public static Widgets.ColorComponents editableColorTextfields =
-            Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat;
+        public static Widgets.ColorComponents editableColorTextfields = Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat;
         public override Vector2 InitialSize => new Vector2(600f, 480f);
 
         public Window_ColorPicker(Color currentColor, Action<Color> selectAction)
@@ -47,9 +45,7 @@ namespace FactionLoadout
             using (new TextBlock(GameFont.Medium))
             {
                 TaggedString taggedString = "ChooseAColor".Translate().CapitalizeFirst();
-                RectDivider rectDivider = layout.NewRow(
-                    Text.CalcHeight(taggedString, layout.Rect.width)
-                );
+                RectDivider rectDivider = layout.NewRow(Text.CalcHeight(taggedString, layout.Rect.width));
                 GUI.SetNextControlName(Dialog_GlowerColorPicker.focusableControlNames[0]);
                 Widgets.Label(rectDivider, taggedString);
             }
@@ -57,28 +53,12 @@ namespace FactionLoadout
 
         private void BottomButtons(ref RectDivider layout)
         {
-            RectDivider rectDivider = layout.NewRow(
-                Dialog_GlowerColorPicker.ButSize.y,
-                VerticalJustification.Bottom
-            );
-            if (
-                Widgets.ButtonText(
-                    rectDivider.NewCol(Dialog_GlowerColorPicker.ButSize.x),
-                    "Cancel".Translate()
-                )
-            )
+            RectDivider rectDivider = layout.NewRow(Dialog_GlowerColorPicker.ButSize.y, VerticalJustification.Bottom);
+            if (Widgets.ButtonText(rectDivider.NewCol(Dialog_GlowerColorPicker.ButSize.x), "Cancel".Translate()))
             {
                 Close();
             }
-            if (
-                Widgets.ButtonText(
-                    rectDivider.NewCol(
-                        Dialog_GlowerColorPicker.ButSize.x,
-                        HorizontalJustification.Right
-                    ),
-                    "Accept".Translate()
-                )
-            )
+            if (Widgets.ButtonText(rectDivider.NewCol(Dialog_GlowerColorPicker.ButSize.x, HorizontalJustification.Right), "Accept".Translate()))
             {
                 selectAction(color);
                 Close();
@@ -87,10 +67,7 @@ namespace FactionLoadout
 
         private void ColorTextfields(ref RectDivider layout, out Vector2 size)
         {
-            RectAggregator aggregator = new RectAggregator(
-                new Rect(layout.Rect.position, new Vector2(125f, 0f)),
-                195906069
-            );
+            RectAggregator aggregator = new RectAggregator(new Rect(layout.Rect.position, new Vector2(125f, 0f)), 195906069);
             bool num = Widgets.ColorTextfields(
                 ref aggregator,
                 ref color,
@@ -172,45 +149,23 @@ namespace FactionLoadout
                 Color.RGBToHSV(color, out var H, out var S, out var V);
                 Color defaultColor = Color.HSVToRGB(H, S, V);
                 defaultColor.a = 1f;
-                Dialog_GlowerColorPicker.ColorPalette(
-                    ref layout,
-                    ref color,
-                    defaultColor,
-                    false,
-                    out var paletteHeight
-                );
+                Dialog_GlowerColorPicker.ColorPalette(ref layout, ref color, defaultColor, false, out var paletteHeight);
                 ColorTextfields(ref layout, out var size);
                 float height = Mathf.Max(paletteHeight, 170f, size.y);
                 RectDivider rectDivider = layout.NewRow(height);
                 rectDivider.NewCol(size.x);
                 rectDivider.NewCol(250f, HorizontalJustification.Right);
                 Widgets.HSVColorWheel(
-                    rectDivider.Rect.ContractedBy(
-                        (rectDivider.Rect.width - 128f) / 2f,
-                        (rectDivider.Rect.height - 128f) / 2f
-                    ),
+                    rectDivider.Rect.ContractedBy((rectDivider.Rect.width - 128f) / 2f, (rectDivider.Rect.height - 128f) / 2f),
                     ref color,
                     ref hsvColorWheelDragging,
                     1f
                 );
-                Widgets.ColorTemperatureBar(
-                    layout.NewRow(34f),
-                    ref color,
-                    ref colorTemperatureDragging,
-                    1f
-                );
+                Widgets.ColorTemperatureBar(layout.NewRow(34f), ref color, ref colorTemperatureDragging, 1f);
                 layout.NewRow(5f);
                 RectDivider valueRow = layout.NewRow(30f);
-                Widgets.Label(
-                    valueRow.NewCol(100f),
-                    "FactionLoadout_Value".Translate(Math.Round(value * 255)).CapitalizeFirst()
-                );
-                Widgets.HorizontalSlider(
-                    valueRow.NewCol(400f),
-                    ref value,
-                    new FloatRange(0f, 1f),
-                    "FactionLoadout_ColorValue".Translate().CapitalizeFirst()
-                );
+                Widgets.Label(valueRow.NewCol(100f), "FactionLoadout_Value".Translate(Math.Round(value * 255)).CapitalizeFirst());
+                Widgets.HorizontalSlider(valueRow.NewCol(400f), ref value, new FloatRange(0f, 1f), "FactionLoadout_ColorValue".Translate().CapitalizeFirst());
                 ColorReadback(layout, color, oldColor);
                 TabControl();
                 if (Event.current.type == EventType.Layout)

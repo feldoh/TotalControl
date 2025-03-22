@@ -73,17 +73,11 @@ namespace FactionLoadout
                 }
                 catch (Exception e)
                 {
-                    ModCore.Error(
-                        $"Exception generating required apparel '{item.Thing.LabelCap}'",
-                        e
-                    );
+                    ModCore.Error($"Exception generating required apparel '{item.Thing.LabelCap}'", e);
                     continue;
                 }
 
-                if (
-                    created.def.equipmentType == EquipmentType.Primary
-                    && pawn.equipment.Primary != null
-                )
+                if (created.def.equipmentType == EquipmentType.Primary && pawn.equipment.Primary != null)
                     pawn.equipment.Remove(pawn.equipment.Primary);
                 pawn.equipment.AddEquipment(created);
             }
@@ -151,9 +145,7 @@ namespace FactionLoadout
             var thing = ThingMaker.MakeThing(spec.Thing, spec.Material) as ThingWithComps;
             if (thing == null)
             {
-                ModCore.Error(
-                    $"Failed to generate a '{spec.Thing.LabelCap}' made out of '{spec.Material?.LabelCap ?? "<nothing>"}'."
-                );
+                ModCore.Error($"Failed to generate a '{spec.Thing.LabelCap}' made out of '{spec.Material?.LabelCap ?? "<nothing>"}'.");
                 return null;
             }
 
@@ -161,9 +153,7 @@ namespace FactionLoadout
                 thing.SetStyleDef(spec.Style);
 
             if (spec.Quality != null)
-                thing
-                    .TryGetComp<CompQuality>()
-                    ?.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
+                thing.TryGetComp<CompQuality>()?.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
 
             if (spec.Color != default)
                 thing.SetColor(spec.Color, false);

@@ -7,10 +7,7 @@ namespace FactionLoadout
 {
     public class CustomFloatMenu : Window
     {
-        public static CustomFloatMenu Open(
-            List<MenuItemBase> items,
-            Action<MenuItemBase> onSelected
-        )
+        public static CustomFloatMenu Open(List<MenuItemBase> items, Action<MenuItemBase> onSelected)
         {
             var created = new CustomFloatMenu();
             created.Items = items;
@@ -35,10 +32,7 @@ namespace FactionLoadout
             return label.Insert(index + search.Length, "</color>").Insert(index, "<color=#57ff57>");
         }
 
-        public static List<MenuItemBase> MakeItems<T>(
-            IEnumerable<T> rawItems,
-            Func<T, MenuItemBase> makeItem
-        )
+        public static List<MenuItemBase> MakeItems<T>(IEnumerable<T> rawItems, Func<T, MenuItemBase> makeItem)
         {
             var list = new List<MenuItemBase>();
             foreach (var item in rawItems)
@@ -68,9 +62,7 @@ namespace FactionLoadout
         {
             if (Items == null || Items.Count == 0)
             {
-                ModCore.Error(
-                    "CustomFloatMenu tried to draw with no items! Window has been closed."
-                );
+                ModCore.Error("CustomFloatMenu tried to draw with no items! Window has been closed.");
                 Close();
                 return;
             }
@@ -89,9 +81,7 @@ namespace FactionLoadout
             Widgets.DrawHighlightIfMouseover(colArea);
             if (Widgets.ButtonInvisible(colArea))
             {
-                Find.WindowStack.Add(
-                    new Window_ColorPicker(Tint, t => Tint = t) { layer = WindowLayer.Super }
-                );
+                Find.WindowStack.Add(new Window_ColorPicker(Tint, t => Tint = t) { layer = WindowLayer.Super });
             }
 
             // Goal: evenly split items into columns.
@@ -188,13 +178,7 @@ namespace FactionLoadout
 
         public MenuItemText() { }
 
-        public MenuItemText(
-            object payload,
-            string text,
-            Texture2D icon = null,
-            Color iconColor = default,
-            string tooltip = null
-        )
+        public MenuItemText(object payload, string text, Texture2D icon = null, Color iconColor = default, string tooltip = null)
         {
             this.Payload = payload;
             this.Label = text;

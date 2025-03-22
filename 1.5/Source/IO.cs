@@ -7,8 +7,7 @@ namespace FactionLoadout
     [HotSwappable]
     public static class IO
     {
-        public static string SaveDataPath =>
-            Path.Combine(GenFilePaths.ConfigFolderPath, "TotalControlData");
+        public static string SaveDataPath => Path.Combine(GenFilePaths.ConfigFolderPath, "TotalControlData");
 
         public static bool DeleteFile(string filePath)
         {
