@@ -13,10 +13,7 @@ public static class PawnGenPatchBodyTypeDef
     [HarmonyPostfix]
     public static void Postfix(ref BodyTypeDef __result, Pawn pawn)
     {
-        PawnKindEdit
-            .GetEditsFor(pawn.kindDef, pawn.Faction?.def)
-            .SelectMany(e => e.BodyTypes ?? [])
-            .TryRandomElement(out BodyTypeDef bodyTypeDef);
+        PawnKindEdit.GetEditsFor(pawn.kindDef, pawn.Faction?.def).SelectMany(e => e.BodyTypes ?? []).TryRandomElement(out BodyTypeDef bodyTypeDef);
         if (bodyTypeDef != null)
         {
             __result = bodyTypeDef;
@@ -40,12 +37,7 @@ public static class PawnGenPatchCore
             Stack<BodyPartRecord> validParts =
                 forcedHediff.parts == null || forcedHediff.parts.Count == 0
                     ? null
-                    : new Stack<BodyPartRecord>(
-                        __result
-                            .health.hediffSet.GetNotMissingParts()
-                            .Where(p => forcedHediff.parts.Contains(p.def))
-                            .InRandomOrder()
-                    );
+                    : new Stack<BodyPartRecord>(__result.health.hediffSet.GetNotMissingParts().Where(p => forcedHediff.parts.Contains(p.def)).InRandomOrder());
 
             int maxToApply = Math.Min(forcedHediff.PartsToHit(), validParts?.Count ?? 1);
             for (int i = 0; i < maxToApply; i++)
@@ -53,11 +45,7 @@ public static class PawnGenPatchCore
                 if (__result.health.hediffSet.GetHediffCount(forcedHediff.HediffDef) >= maxToApply)
                     break;
                 {
-                    Hediff hediff = HediffMaker.MakeHediff(
-                        forcedHediff.HediffDef,
-                        __result,
-                        validParts?.Pop()
-                    );
+                    Hediff hediff = HediffMaker.MakeHediff(forcedHediff.HediffDef, __result, validParts?.Pop());
                     __result.health.AddHediff(hediff);
                 }
             }
@@ -85,18 +73,10 @@ public static class PawnGenAgePatchCore
 
         if (minAge == null && maxAge == null)
             return true;
-        FloatRange allowedAges =
-            new(minAge ?? pawn.kindDef.minGenerationAge, maxAge ?? pawn.kindDef.maxGenerationAge);
+        FloatRange allowedAges = new(minAge ?? pawn.kindDef.minGenerationAge, maxAge ?? pawn.kindDef.maxGenerationAge);
         request.FixedBiologicalAge = allowedAges.RandomInRange;
-        request.AllowedDevelopmentalStages = LifeStageUtility.CalculateDevelopmentalStage(
-            pawn,
-            (float)request.FixedBiologicalAge
-        );
-        if (
-            request.FixedChronologicalAge.HasValue
-            && request.FixedBiologicalAge.GetValueOrDefault()
-                > (double)request.FixedChronologicalAge.GetValueOrDefault()
-        )
+        request.AllowedDevelopmentalStages = LifeStageUtility.CalculateDevelopmentalStage(pawn, (float)request.FixedBiologicalAge);
+        if (request.FixedChronologicalAge.HasValue && request.FixedBiologicalAge.GetValueOrDefault() > (double)request.FixedChronologicalAge.GetValueOrDefault())
         {
             request.FixedChronologicalAge = request.FixedBiologicalAge;
         }
@@ -111,7 +91,8 @@ public static class PawnGenRequestKindPatch
     [HarmonyPostfix]
     public static void Postfix(ref PawnKindDef __result, PawnGenerationRequest __instance)
     {
-        if (__result == null || __instance.Faction == null) return;
+        if (__result == null || __instance.Faction == null)
+            return;
         __result = FactionEdit.GetReplacementForPawnKind(__instance.Faction.def, __result);
     }
 }

@@ -14,10 +14,9 @@ public class PawnKindEdit : IExposable
 {
     public static Dictionary<PawnKindDef, List<PawnKindEdit>> activeEdits = new();
     public static Dictionary<PawnKindDef, PawnKindDef> replacementToOriginal = new();
-    public static RulePackDef FakeRulePack = new(){defName = "NONE"};
+    public static RulePackDef FakeRulePack = new() { defName = "NONE" };
 
-    public static void RecordReplacement(PawnKindDef original, PawnKindDef replacement) =>
-        replacementToOriginal.SetOrAdd(replacement, original);
+    public static void RecordReplacement(PawnKindDef original, PawnKindDef replacement) => replacementToOriginal.SetOrAdd(replacement, original);
 
     public static List<PawnKindEdit> RemoveActiveEdits(PawnKindDef pawnKindDef)
     {
@@ -31,8 +30,7 @@ public class PawnKindEdit : IExposable
         activeEdits.SetOrAdd(pawnKindDef, edits);
     }
 
-    public static PawnKindDef NormaliseDef(PawnKindDef def) =>
-        replacementToOriginal.TryGetValue(def, def);
+    public static PawnKindDef NormaliseDef(PawnKindDef def) => replacementToOriginal.TryGetValue(def, def);
 
     public static IEnumerable<PawnKindEdit> GetEditsFor(PawnKindDef def, FactionDef factionDef)
     {
@@ -43,9 +41,12 @@ public class PawnKindEdit : IExposable
         if (!activeEdits.TryGetValue(def, out List<PawnKindEdit> list))
             yield break;
         foreach (PawnKindEdit item in list)
-            if (factionDef == null || item.ParentEdit.Faction.Def == factionDef
-                                   || FactionEdit.TryGetOriginal(factionDef.defName) == item.ParentEdit.Faction.Def
-                                   || (factionDef.fixedName?.StartsWith("TEMP FACTION CLONE") ?? false))
+            if (
+                factionDef == null
+                || item.ParentEdit.Faction.Def == factionDef
+                || FactionEdit.TryGetOriginal(factionDef.defName) == item.ParentEdit.Faction.Def
+                || (factionDef.fixedName?.StartsWith("TEMP FACTION CLONE") ?? false)
+            )
                 yield return item;
     }
 
@@ -79,12 +80,7 @@ public class PawnKindEdit : IExposable
 
     public FactionEdit ParentEdit
     {
-        get
-        {
-            return Preset
-                .LoadedPresets.SelectMany(preset => preset.factionChanges)
-                .FirstOrDefault(change => change.KindEdits.Contains(this));
-        }
+        get { return Preset.LoadedPresets.SelectMany(preset => preset.factionChanges).FirstOrDefault(change => change.KindEdits.Contains(this)); }
     }
 
     public PawnKindDef ReplaceWith = null;
@@ -118,6 +114,7 @@ public class PawnKindEdit : IExposable
     public string Label = null;
     public ThingDef Race = null;
     public List<HairDef> CustomHair = null;
+    public List<BeardDef> CustomBeards = null;
     public List<BodyTypeDef> BodyTypes = null;
     public List<Color> CustomHairColors = null;
     public bool DeletedOrClosed;
@@ -193,27 +190,27 @@ public class PawnKindEdit : IExposable
         Scribe_Defs.Look(ref Race, "race");
         Scribe_Values.Look(ref ForcedGender, "forcedGender");
         Scribe_Collections.Look(ref BodyTypes, "bodyTypes", LookMode.Def);
+        Scribe_Collections.Look(ref CustomBeards, "customBeards", LookMode.Def);
         Scribe_Collections.Look(ref CustomHair, "customHair", LookMode.Def);
         Scribe_Collections.Look(ref CustomHairColors, "customHairColors");
         Scribe_Collections.Look(ref ForcedHediffs, "forcedHediffs", LookMode.Deep);
-        Scribe_Collections.Look(
-            ref ForcedXenotypeChances,
-            "forcedXenotypeChances",
-            LookMode.Def,
-            LookMode.Value
-        );
+        Scribe_Collections.Look(ref ForcedXenotypeChances, "forcedXenotypeChances", LookMode.Def, LookMode.Value);
         Scribe_Deep.Look(ref RaidLootValueFromPointsCurve, "raidLootValueFromPointsCurve");
         Scribe_Deep.Look(ref RaidCommonalityFromPointsCurve, "raidCommonalityFromPointsCurve");
         Scribe_Values.Look(ref UnwaveringlyLoyalChance, "unwaveringlyLoyalChance");
 
         bool isFake = NameMaker == FakeRulePack;
-        if (isFake) NameMaker = null;
+        if (isFake)
+            NameMaker = null;
         Scribe_Defs.Look(ref NameMaker, "nameMaker");
-        if (isFake) NameMaker = FakeRulePack;
+        if (isFake)
+            NameMaker = FakeRulePack;
         isFake = NameMakerFemale == FakeRulePack;
-        if (isFake) NameMakerFemale = null;
+        if (isFake)
+            NameMakerFemale = null;
         Scribe_Defs.Look(ref NameMakerFemale, "nameMakerFemale");
-        if (isFake) NameMakerFemale = FakeRulePack;
+        if (isFake)
+            NameMakerFemale = FakeRulePack;
 
         // VFEAncients Compatibility
         Scribe_Values.Look(ref NumVFEAncientsSuperPowers, "numVFEAncientsSuperPowers");
@@ -334,18 +331,10 @@ public class PawnKindEdit : IExposable
         ReplaceMaybe(ref def.nameMakerFemale, NameMakerFemale);
 
         ReplaceMaybeList(ref def.techHediffsTags, TechHediffTags, global?.TechHediffTags != null);
-        ReplaceMaybeList(
-            ref def.techHediffsDisallowTags,
-            TechHediffDisallowedTags,
-            global?.TechHediffDisallowedTags != null
-        );
+        ReplaceMaybeList(ref def.techHediffsDisallowTags, TechHediffDisallowedTags, global?.TechHediffDisallowedTags != null);
         ReplaceMaybeList(ref def.weaponTags, WeaponTags, global?.WeaponTags != null);
         ReplaceMaybeList(ref def.apparelTags, ApparelTags, global?.ApparelTags != null);
-        ReplaceMaybeList(
-            ref def.apparelDisallowTags,
-            ApparelDisallowedTags,
-            global?.ApparelDisallowedTags != null
-        );
+        ReplaceMaybeList(ref def.apparelDisallowTags, ApparelDisallowedTags, global?.ApparelDisallowedTags != null);
         ReplaceMaybeList(ref def.apparelRequired, ApparelRequired, global?.ApparelRequired != null);
         ReplaceMaybeList(ref def.techHediffsRequired, TechRequired, global?.TechRequired != null);
 
@@ -361,9 +350,7 @@ public class PawnKindEdit : IExposable
         if (Race != null)
         {
             // Try find life stages of new race.
-            PawnKindDef realKind = DefDatabase<PawnKindDef>.AllDefsListForReading.FirstOrDefault(
-                k => k != def && k.defName != def.defName && k.race == Race
-            );
+            PawnKindDef realKind = DefDatabase<PawnKindDef>.AllDefsListForReading.FirstOrDefault(k => k != def && k.defName != def.defName && k.race == Race);
             if (realKind != null)
                 def.lifeStages = realKind.lifeStages;
         }
@@ -379,8 +366,7 @@ public class PawnKindEdit : IExposable
 
         if (ForcedHediffs is { Count: > 0 })
         {
-            ForcedHediffModExtension hediffExtension =
-                def.GetModExtension<ForcedHediffModExtension>();
+            ForcedHediffModExtension hediffExtension = def.GetModExtension<ForcedHediffModExtension>();
             if (hediffExtension == null)
             {
                 hediffExtension = new ForcedHediffModExtension();
@@ -388,17 +374,10 @@ public class PawnKindEdit : IExposable
             }
 
             hediffExtension.forcedHediffs.AddRange(ForcedHediffs);
-            ModCore.Debug(
-                $"Adding forced hediffs {hediffExtension.forcedHediffs?.Select(h => h.HediffDef?.defName).ToCommaList() ?? "None"} to {def.defName}"
-            );
+            ModCore.Debug($"Adding forced hediffs {hediffExtension.forcedHediffs?.Select(h => h.HediffDef?.defName).ToCommaList() ?? "None"} to {def.defName}");
         }
 
-        if (
-            ModsConfig.BiotechActive
-            && def.RaceProps.Humanlike
-            && ForceSpecificXenos
-            && (ForcedXenotypeChances?.Count ?? 0) >= 1
-        )
+        if (ModsConfig.BiotechActive && def.RaceProps.Humanlike && ForceSpecificXenos && (ForcedXenotypeChances?.Count ?? 0) >= 1)
         {
             def.useFactionXenotypes = false;
             def.xenotypeSet ??= new XenotypeSet();
@@ -421,96 +400,55 @@ public class PawnKindEdit : IExposable
     {
         if (!VEPsycastsReflectionHelper.ModLoaded.Value)
             return;
-        if (
-            VEPsycastLevel == null
-            && VEPsycastStatPoints == null
-            && VEPsycastRandomAbilities == null
-        )
+        if (VEPsycastLevel == null && VEPsycastStatPoints == null && VEPsycastRandomAbilities == null)
             return;
         def.modExtensions ??= [];
-        DefModExtension vePsycastExtension = VEPsycastsReflectionHelper.FindVEPsycastsExtension(
-            def
-        );
+        DefModExtension vePsycastExtension = VEPsycastsReflectionHelper.FindVEPsycastsExtension(def);
         if (vePsycastExtension == null)
         {
-            vePsycastExtension =
-                AccessTools.CreateInstance(VEPsycastsReflectionHelper.VpeExtensionType.Value)
-                as DefModExtension;
-            VEPsycastsReflectionHelper.ImplantDefField.Value?.SetValue(
-                vePsycastExtension,
-                DefDatabase<HediffDef>.GetNamed("VPE_PsycastAbilityImplant")
-            );
+            vePsycastExtension = AccessTools.CreateInstance(VEPsycastsReflectionHelper.VpeExtensionType.Value) as DefModExtension;
+            VEPsycastsReflectionHelper.ImplantDefField.Value?.SetValue(vePsycastExtension, DefDatabase<HediffDef>.GetNamed("VPE_PsycastAbilityImplant"));
             VEPsycastsReflectionHelper.UnlockedPathsField.Value?.SetValue(
                 vePsycastExtension,
-                AccessTools.CreateInstance(
-                    VEPsycastsReflectionHelper.ClosedUnlockedPathsListGenericType.Value
-                )
+                AccessTools.CreateInstance(VEPsycastsReflectionHelper.ClosedUnlockedPathsListGenericType.Value)
             );
             def.modExtensions.Add(vePsycastExtension);
         }
 
         // Set the field values
         if (VEPsycastLevel != null)
-            VEPsycastsReflectionHelper.LevelField.Value?.SetValue(
-                vePsycastExtension,
-                VEPsycastLevel
-            );
+            VEPsycastsReflectionHelper.LevelField.Value?.SetValue(vePsycastExtension, VEPsycastLevel);
         if (VEPsycastStatPoints != null)
-            VEPsycastsReflectionHelper.StatUpgradePointsField.Value?.SetValue(
-                vePsycastExtension,
-                VEPsycastStatPoints
-            );
+            VEPsycastsReflectionHelper.StatUpgradePointsField.Value?.SetValue(vePsycastExtension, VEPsycastStatPoints);
         if (VEPsycastRandomAbilities != null)
-            VEPsycastsReflectionHelper.GiveRandomAbilitiesField.Value?.SetValue(
-                vePsycastExtension,
-                VEPsycastRandomAbilities
-            );
+            VEPsycastsReflectionHelper.GiveRandomAbilitiesField.Value?.SetValue(vePsycastExtension, VEPsycastRandomAbilities);
     }
 
     public virtual void ApplyVFEAncientsEdits(PawnKindDef def)
     {
         if (!VFEAncientsReflectionHelper.ModLoaded.Value)
             return;
-        if (
-            NumVFEAncientsSuperPowers == null
-            && NumVFEAncientsSuperWeaknesses == null
-            && ForcedVFEAncientsItems == null
-        )
+        if (NumVFEAncientsSuperPowers == null && NumVFEAncientsSuperWeaknesses == null && ForcedVFEAncientsItems == null)
             return;
         def.modExtensions ??= [];
-        DefModExtension ancientsExtension = VFEAncientsReflectionHelper.FindVEAncientsExtension(
-            def
-        );
+        DefModExtension ancientsExtension = VFEAncientsReflectionHelper.FindVEAncientsExtension(def);
         if (ancientsExtension == null)
         {
-            ancientsExtension =
-                AccessTools.CreateInstance(
-                    VFEAncientsReflectionHelper.VfeAncientsExtensionType.Value
-                ) as DefModExtension;
+            ancientsExtension = AccessTools.CreateInstance(VFEAncientsReflectionHelper.VfeAncientsExtensionType.Value) as DefModExtension;
             def.modExtensions.Add(ancientsExtension);
         }
 
         // Set the field values
         if (NumVFEAncientsSuperPowers != null)
-            VFEAncientsReflectionHelper.NumRandomSuperpowersField.Value?.SetValue(
-                ancientsExtension,
-                NumVFEAncientsSuperPowers
-            );
+            VFEAncientsReflectionHelper.NumRandomSuperpowersField.Value?.SetValue(ancientsExtension, NumVFEAncientsSuperPowers);
         if (NumVFEAncientsSuperWeaknesses != null)
-            VFEAncientsReflectionHelper.NumRandomWeaknessesField.Value?.SetValue(
-                ancientsExtension,
-                NumVFEAncientsSuperWeaknesses
-            );
+            VFEAncientsReflectionHelper.NumRandomWeaknessesField.Value?.SetValue(ancientsExtension, NumVFEAncientsSuperWeaknesses);
         if (ForcedVFEAncientsItems == null)
             return;
-        object powers = VFEAncientsReflectionHelper.ForcePowersField.Value?.GetValue(
-            ancientsExtension
-        );
+        object powers = VFEAncientsReflectionHelper.ForcePowersField.Value?.GetValue(ancientsExtension);
         if (powers == null)
         {
-            powers = AccessTools.CreateInstance(
-                VFEAncientsReflectionHelper.ClosedPowerListGenericType.Value
-            );
+            powers = AccessTools.CreateInstance(VFEAncientsReflectionHelper.ClosedPowerListGenericType.Value);
             VFEAncientsReflectionHelper.ForcePowersField.Value?.SetValue(ancientsExtension, powers);
         }
 
@@ -518,9 +456,7 @@ public class PawnKindEdit : IExposable
             return;
         powerList.Clear();
         ForcedVFEAncientsItems
-            .Select(i =>
-                VFEAncientsReflectionHelper.GetPowerDefMethod.Value.Invoke(null, new object[] { i })
-            )
+            .Select(i => VFEAncientsReflectionHelper.GetPowerDefMethod.Value.Invoke(null, new object[] { i }))
             .Where(p => p != null)
             .DoIf(p => !powerList.Contains(p), p => powerList.Add(p));
     }
@@ -531,14 +467,11 @@ public class PawnKindEdit : IExposable
         {
             if (Def == null)
                 return false;
-            return def != null
-                && (Def.defName == def.defName || def.defName == NormaliseDef(Def).defName);
+            return def != null && (Def.defName == def.defName || def.defName == NormaliseDef(Def).defName);
         }
         catch (Exception)
         {
-            Log.Message(
-                $"Something was null when checking if edit for {Def?.defName ?? "UNKNOWN"} applies to {def?.defName ?? "UNKNOWN"}"
-            );
+            Log.Message($"Something was null when checking if edit for {Def?.defName ?? "UNKNOWN"} applies to {def?.defName ?? "UNKNOWN"}");
             throw;
         }
     }
@@ -549,6 +482,5 @@ public static class ReflectionHelper
     public static Lazy<Type> DefDatabaseGenericType = new(() => typeof(DefDatabase<>));
     public static Lazy<Type> ListGenericType = new(() => typeof(List<>));
 
-    public static Lazy<MethodInfo> GetCompGenericMethod =
-        new(() => AccessTools.Method(typeof(Pawn), "GetComp"));
+    public static Lazy<MethodInfo> GetCompGenericMethod = new(() => AccessTools.Method(typeof(Pawn), "GetComp"));
 }

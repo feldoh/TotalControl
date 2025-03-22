@@ -17,12 +17,14 @@ public class FactionEdit : IExposable
     public bool DeletedOrClosed;
 
     public DefRef<FactionDef> Faction = new();
-    public List<PawnKindEdit> KindEdits = new();
-    public Dictionary<XenotypeDef, float> xenotypeChances = new();
+    public List<PawnKindEdit> KindEdits = [];
+    public Dictionary<XenotypeDef, float> xenotypeChances = [];
+    public bool OverrideFactionXenotypes = false;
 
     public static PawnKindDef GetReplacementForPawnKind(FactionDef faction, PawnKindDef original)
     {
-        if (original == PawnKindDefOf.WildMan) faction = Preset.SpecialWildManFaction;
+        if (original == PawnKindDefOf.WildMan)
+            faction = Preset.SpecialWildManFaction;
         factionSpecificPawnKindReplacements.TryGetValue((faction, original), out PawnKindDef replacement);
         ModCore.Debug($"Found replacement for {original.defName} in {faction.defName}: {replacement?.defName ?? "<null>"}");
         return replacement ?? original;
@@ -47,12 +49,10 @@ public class FactionEdit : IExposable
         Scribe_Deep.Look(ref Faction, "faction");
         Scribe_Values.Look(ref TechLevel, "techLevel");
         Scribe_Collections.Look(ref KindEdits, "kindEdits", LookMode.Deep);
-        Scribe_Collections.Look(
-            ref xenotypeChances,
-            "xenotypeChances",
-            LookMode.Def,
-            LookMode.Value
-        );
+        Scribe_Collections.Look(ref xenotypeChances, "xenotypeChances", LookMode.Def, LookMode.Value);
+        Scribe_Values.Look(ref OverrideFactionXenotypes, "overrideFactionXenotypes", false);
+        if (Scribe.mode == LoadSaveMode.PostLoadInit && !xenotypeChances.NullOrEmpty())
+            OverrideFactionXenotypes = true;
     }
 
     public static void TweakAllPawnKinds(FactionDef def, Func<PawnKindDef, PawnKindDef> func)
@@ -108,12 +108,7 @@ public class FactionEdit : IExposable
     {
         HashSet<PawnKindDef> kinds = (def.pawnGroupMakers ?? Enumerable.Empty<PawnGroupMaker>())
             .SelectMany(group =>
-                Enumerable
-                    .Empty<PawnGenOption>()
-                    .ConcatIfNotNull(group.options)
-                    .ConcatIfNotNull(group.traders)
-                    .ConcatIfNotNull(group.carriers)
-                    .ConcatIfNotNull(group.guards)
+                Enumerable.Empty<PawnGenOption>().ConcatIfNotNull(group.options).ConcatIfNotNull(group.traders).ConcatIfNotNull(group.carriers).ConcatIfNotNull(group.guards)
             )
             .Select(pgo => pgo.kind)
             .ToHashSet();
@@ -151,9 +146,7 @@ public class FactionEdit : IExposable
 
     public PawnKindEdit GetEditFor(PawnKindDef def)
     {
-        return def == null
-            ? null
-            : Enumerable.FirstOrDefault(KindEdits, edit => edit.AppliesTo(def));
+        return def == null ? null : Enumerable.FirstOrDefault(KindEdits, edit => edit.AppliesTo(def));
     }
 
     public bool HasGlobalEditor()
@@ -182,7 +175,8 @@ public class FactionEdit : IExposable
         if ((global?.RaidLootValueFromPointsCurve?.PointsCount ?? 0) > 0)
             def.raidLootValueFromPointsCurve = global.RaidLootValueFromPointsCurve;
 
-        if (TechLevel != null) def.techLevel = TechLevel.Value;
+        if (TechLevel != null)
+            def.techLevel = TechLevel.Value;
 
         IReadOnlyList<PawnKindDef> kinds = GetAllPawnKinds(def);
 
@@ -190,26 +184,18 @@ public class FactionEdit : IExposable
         {
             PawnKindDef kind = PawnKindEdit.NormaliseDef(fkind);
             PawnKindEdit editor = GetEditFor(kind);
-            PawnKindDef safeKind =
-                global != null || editor != null ? CloningUtility.Clone(kind) : kind;
+            PawnKindDef safeKind = global != null || editor != null ? CloningUtility.Clone(kind) : kind;
             global?.Apply(safeKind, null);
             if (editor?.Apply(safeKind, global) is { } newKind && newKind != safeKind)
                 safeKind = newKind;
 
-            if (
-                ModsConfig.BiotechActive
-                && (xenotypeChances?.Count ?? 0) >= 1
-                && (!editor?.ForceSpecificXenos ?? false)
-                && safeKind.RaceProps.Humanlike
-            )
+            if (ModsConfig.BiotechActive && (xenotypeChances?.Count ?? 0) >= 1 && (!editor?.ForceSpecificXenos ?? false) && safeKind.RaceProps.Humanlike)
             {
                 safeKind.xenotypeSet ??= new XenotypeSet();
                 safeKind.xenotypeSet.xenotypeChances ??= [];
                 safeKind.xenotypeSet.xenotypeChances.Clear();
                 foreach (KeyValuePair<XenotypeDef, float> rate in xenotypeChances ?? [])
-                    safeKind.xenotypeSet.xenotypeChances.Add(
-                        new XenotypeChance(rate.Key, rate.Value)
-                    );
+                    safeKind.xenotypeSet.xenotypeChances.Add(new XenotypeChance(rate.Key, rate.Value));
             }
 
             if ((global?.RenameDef ?? false) || (editor?.RenameDef ?? false))
@@ -234,14 +220,11 @@ public class FactionEdit : IExposable
             def.xenotypeSet?.xenotypeChances?.Add(new XenotypeChance(rate.Key, rate.Value));
     }
 
-    public static string GetNewNameForPawnKind(PawnKindDef pawnKindDef, FactionDef factionDef) =>
-        $"{pawnKindDef.defName}_TCCln_{factionDef.defName}";
+    public static string GetNewNameForPawnKind(PawnKindDef pawnKindDef, FactionDef factionDef) => $"{pawnKindDef.defName}_TCCln_{factionDef.defName}";
 
     private void ReplaceKind(FactionDef faction, PawnKindDef original, PawnKindDef replacement)
     {
-        ModCore.Debug(
-            $"Replacing PawnKind '{original?.defName ?? "<null>"}' with '{replacement?.defName ?? "<null>"}' in faction {faction.defName}"
-        );
+        ModCore.Debug($"Replacing PawnKind '{original?.defName ?? "<null>"}' with '{replacement?.defName ?? "<null>"}' in faction {faction.defName}");
         TweakAllPawnKinds(faction, current => current == original ? replacement : current);
         factionSpecificPawnKindReplacements.SetOrAdd((faction, original), replacement);
     }

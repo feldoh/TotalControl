@@ -40,12 +40,7 @@ namespace FactionLoadout
             : base(content)
         {
             Settings = GetSettings<MySettings>();
-            LongEventHandler.QueueLongEvent(
-                LoadLate,
-                "FactionLoadout_LoadingScreenText",
-                false,
-                null
-            );
+            LongEventHandler.QueueLongEvent(LoadLate, "FactionLoadout_LoadingScreenText", false, null);
         }
 
         public override string SettingsCategory()
@@ -72,47 +67,29 @@ namespace FactionLoadout
                 edits += changed;
                 count++;
 
-                Messages.Message(
-                    $"Applied faction edit '{preset.Name}': modified {changed} factions.",
-                    MessageTypeDefOf.PositiveEvent
-                );
+                Messages.Message($"Applied faction edit '{preset.Name}': modified {changed} factions.", MessageTypeDefOf.PositiveEvent);
             }
 
             Harmony harmony = new Harmony("co.uk.epicguru.factionloadout");
 #if DEBUG
-Harmony.DEBUG = true;
+            Harmony.DEBUG = true;
 #endif
-            harmony.Patch(
-                AccessTools.Method(typeof(PawnApparelGenerator), "GenerateStartingApparelFor"),
-                postfix: new HarmonyMethod(typeof(ApparelGenPatch), "Postfix")
-            );
+            harmony.Patch(AccessTools.Method(typeof(PawnApparelGenerator), "GenerateStartingApparelFor"), postfix: new HarmonyMethod(typeof(ApparelGenPatch), "Postfix"));
             harmony.Patch(
                 AccessTools.Method(typeof(Faction), "TryGenerateNewLeader"),
-                prefix: new HarmonyMethod(
-                    AccessTools.Method(typeof(FactionLeaderPatch), "Prefix"),
-                    priority: Priority.First
-                )
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(FactionLeaderPatch), "Prefix"), priority: Priority.First)
             );
             harmony.Patch(
                 AccessTools.Method(typeof(FactionUtility), "HostileTo"),
-                prefix: new HarmonyMethod(
-                    AccessTools.Method(typeof(FactionUtilityPawnGenPatch), "Prefix"),
-                    priority: Priority.First
-                )
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(FactionUtilityPawnGenPatch), "Prefix"), priority: Priority.First)
             );
             harmony.Patch(
                 AccessTools.Method(typeof(ThingIDMaker), "GiveIDTo"),
-                prefix: new HarmonyMethod(
-                    AccessTools.Method(typeof(ThingIDPatch), nameof(ThingIDPatch.Prefix)),
-                    priority: Priority.First
-                )
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(ThingIDPatch), nameof(ThingIDPatch.Prefix)), priority: Priority.First)
             );
             harmony.Patch(
                 AccessTools.Method(typeof(IdeoUtility), nameof(IdeoUtility.IdeoChangeToWeight)),
-                prefix: new HarmonyMethod(
-                    AccessTools.Method(typeof(IdeoUtilityPatch), nameof(IdeoUtilityPatch.Prefix)),
-                    priority: Priority.First
-                )
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(IdeoUtilityPatch), nameof(IdeoUtilityPatch.Prefix)), priority: Priority.First)
             );
             harmony.Patch(
                 AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"),
@@ -120,53 +97,36 @@ Harmony.DEBUG = true;
             );
             harmony.Patch(
                 AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
-                postfix: new HarmonyMethod(
-                    AccessTools.Method(typeof(PawnGenPatchCore), nameof(PawnGenPatchCore.Postfix))
-                )
+                postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchCore), nameof(PawnGenPatchCore.Postfix)))
             );
             harmony.Patch(
                 AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GenerateRandomAge)),
-                prefix: new HarmonyMethod(
-                    AccessTools.Method(
-                        typeof(PawnGenAgePatchCore),
-                        nameof(PawnGenAgePatchCore.Prefix)
-                    )
-                )
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenAgePatchCore), nameof(PawnGenAgePatchCore.Prefix)))
             );
             harmony.Patch(
                 AccessTools.Method(typeof(PawnGenerator), "GetBodyTypeFor"),
-                postfix: new HarmonyMethod(
-                    AccessTools.Method(
-                        typeof(PawnGenPatchBodyTypeDef),
-                        nameof(PawnGenPatchBodyTypeDef.Postfix)
-                    )
-                )
+                postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchBodyTypeDef), nameof(PawnGenPatchBodyTypeDef.Postfix)))
             );
-            
-            harmony.Patch(AccessTools.Method(typeof(OptionListingUtility), nameof(OptionListingUtility.DrawOptionListing)),
-                prefix: new HarmonyMethod(typeof(OptionListingUtility_Patch),
-                    nameof(OptionListingUtility_Patch.DrawOptionListing_Patch)));
 
-            harmony.Patch(AccessTools.Method(typeof(Pawn_GuestTracker), nameof(Pawn_GuestTracker.SetupRecruitable)),
-                prefix: new HarmonyMethod(typeof(PawnGenPatchRecruitable),
-                    nameof(PawnGenPatchRecruitable.Prefix)));
+            harmony.Patch(
+                AccessTools.Method(typeof(OptionListingUtility), nameof(OptionListingUtility.DrawOptionListing)),
+                prefix: new HarmonyMethod(typeof(OptionListingUtility_Patch), nameof(OptionListingUtility_Patch.DrawOptionListing_Patch))
+            );
+
+            harmony.Patch(
+                AccessTools.Method(typeof(Pawn_GuestTracker), nameof(Pawn_GuestTracker.SetupRecruitable)),
+                prefix: new HarmonyMethod(typeof(PawnGenPatchRecruitable), nameof(PawnGenPatchRecruitable.Prefix))
+            );
 
             if (MySettings.PatchKindInRequests)
             {
                 harmony.Patch(
                     AccessTools.PropertyGetter(typeof(PawnGenerationRequest), nameof(PawnGenerationRequest.KindDef)),
-                    postfix: new HarmonyMethod(
-                        AccessTools.Method(
-                            typeof(PawnGenRequestKindPatch),
-                            nameof(PawnGenRequestKindPatch.Postfix)
-                        )
-                    )
+                    postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenRequestKindPatch), nameof(PawnGenRequestKindPatch.Postfix)))
                 );
             }
 
-            Log(
-                $"Game comp finalized init, applied {count} presets that affected {edits} factions."
-            );
+            Log($"Game comp finalized init, applied {count} presets that affected {edits} factions.");
         }
     }
 

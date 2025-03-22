@@ -59,39 +59,38 @@ namespace FactionLoadout
         public static string SpecialCreepjoinerFactionDefName = "FactionLoadout_Special_CreepJoiner";
         public static string SpecialWildManFactionDefName = "FactionLoadout_Special_WildMan";
 
-        public static FactionDef SpecialCreepjoinerFaction = new()
-        {
-            hidden = true,
-            defName = SpecialCreepjoinerFactionDefName,
-            label = "Special CreepJoiner",
-            description = "This is a special faction that is used to edit a faux CreepJoiner faction.",
-            humanlikeFaction = true,
-            raidsForbidden = true,
-            requiredCountAtGameStart = 0,
-            pawnGroupMakers =
-            [
-                new PawnGroupMaker
-                {
-                    kindDef = PawnGroupKindDefOf.Combat,
-                    options = DefDatabase<CreepJoinerFormKindDef>.AllDefsListForReading.Select(creepKind => new PawnGenOption
+        public static FactionDef SpecialCreepjoinerFaction =
+            new()
+            {
+                hidden = true,
+                defName = SpecialCreepjoinerFactionDefName,
+                label = "Special CreepJoiner",
+                description = "This is a special faction that is used to edit a faux CreepJoiner faction.",
+                humanlikeFaction = true,
+                raidsForbidden = true,
+                requiredCountAtGameStart = 0,
+                pawnGroupMakers =
+                [
+                    new PawnGroupMaker
                     {
-                        kind = creepKind,
-                    }).ToList(),
-                }
-            ]
-        };
+                        kindDef = PawnGroupKindDefOf.Combat,
+                        options = DefDatabase<CreepJoinerFormKindDef>.AllDefsListForReading.Select(creepKind => new PawnGenOption { kind = creepKind, }).ToList(),
+                    }
+                ]
+            };
 
-        public static FactionDef SpecialWildManFaction = new()
-        {
-            hidden = true,
-            defName = SpecialWildManFactionDefName,
-            label = "Special WildMan",
-            description = "This is a special faction that is used to edit a faux WildMan faction.",
-            humanlikeFaction = true,
-            raidsForbidden = true,
-            requiredCountAtGameStart = 0,
-            basicMemberKind = PawnKindDefOf.WildMan
-        };
+        public static FactionDef SpecialWildManFaction =
+            new()
+            {
+                hidden = true,
+                defName = SpecialWildManFactionDefName,
+                label = "Special WildMan",
+                description = "This is a special faction that is used to edit a faux WildMan faction.",
+                humanlikeFaction = true,
+                raidsForbidden = true,
+                requiredCountAtGameStart = 0,
+                basicMemberKind = PawnKindDefOf.WildMan
+            };
 
         public string Name = "My preset";
         public List<FactionEdit> factionChanges = new List<FactionEdit>();
@@ -166,9 +165,7 @@ namespace FactionLoadout
 
                 if (change.Faction.IsMissing)
                 {
-                    ModCore.Warn(
-                        $"Faction '{change.Faction.DefName}' is not loaded, so changes will not be applied."
-                    );
+                    ModCore.Warn($"Faction '{change.Faction.DefName}' is not loaded, so changes will not be applied.");
                     continue;
                 }
 

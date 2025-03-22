@@ -81,39 +81,31 @@ public class FactionEditUI : Window
         ui.Begin(inRect);
 
         Rect r = ui.GetRect(50);
-        Widgets.Label(
-            r,
-            $"<size=34><b>Faction: <color=#cf9af5>{Current.Faction.Def?.LabelCap ?? "none"}</color></b></size>"
-        );
+        Widgets.Label(r, $"<size=34><b>Faction: <color=#cf9af5>{Current.Faction.Def?.LabelCap ?? "none"}</color></b></size>");
         if (Current.Faction.IsMissing)
         {
-            ui.Label(
-                $"<color=red>Missing faction! Could not find '{Current.Faction}', probably because it's in an unloaded mod.</color>"
-            );
+            ui.Label($"<color=red>Missing faction! Could not find '{Current.Faction}', probably because it's in an unloaded mod.</color>");
             ui.End();
             return;
         }
 
         if (Current.Faction.DefName == Preset.SpecialCreepjoinerFactionDefName)
         {
-            ui.Label(
-                "<color=yellow>EXPERIMENTAL! - This is a fake faction used for Creepjoiner editing, use at your own risk.</color>"
-            );
+            ui.Label("<color=yellow>EXPERIMENTAL! - This is a fake faction used for Creepjoiner editing, use at your own risk.</color>");
         }
         if (Current.Faction.DefName == Preset.SpecialWildManFactionDefName)
         {
-            ui.Label(
-                "<color=yellow>EXPERIMENTAL! - This is a fake faction used for WildMan editing, use at your own risk.</color>"
-            );
+            ui.Label("<color=yellow>EXPERIMENTAL! - This is a fake faction used for WildMan editing, use at your own risk.</color>");
         }
 
         // Disabled for now
         // DrawMaterialFilter(ui);
 
         if (
-            ui.ButtonTextLabeled("FactionLoadout_Faction_Techlevel".Translate(),
-                Current.TechLevel?.ToStringHuman() ?? "FactionLoadout_NotOverriden_WithDefault".Translate(
-                    (Current.Faction?.Def?.techLevel ?? TechLevel.Undefined).ToStringHuman()))
+            ui.ButtonTextLabeled(
+                "FactionLoadout_Faction_Techlevel".Translate(),
+                Current.TechLevel?.ToStringHuman() ?? "FactionLoadout_NotOverriden_WithDefault".Translate((Current.Faction?.Def?.techLevel ?? TechLevel.Undefined).ToStringHuman())
+            )
         )
         {
             IEnumerable<TechLevel?> enums = Enum.GetValues(typeof(TechLevel)).Cast<TechLevel?>().Append(null);
@@ -121,55 +113,67 @@ public class FactionEditUI : Window
                 enums,
                 e => e?.ToStringHuman() ?? "FactionLoadout_NotOverriden_WithDefault".Translate((Current.Faction?.Def?.techLevel ?? TechLevel.Undefined).ToStringHuman()),
                 e =>
-                    () => { Current.TechLevel = e; }
+                    () =>
+                    {
+                        Current.TechLevel = e;
+                    }
             );
         }
 
-        if (ModsConfig.BiotechActive && Current.Faction.Def != Preset.SpecialWildManFaction)
+        if (ModsConfig.BiotechActive && Current.Faction?.Def != Preset.SpecialWildManFaction)
         {
             ui.GapLine();
-            ui.Label("<b>Xenotype spawn rates:</b>");
-            var toDelete = new List<XenotypeDef>();
-            if (Current.xenotypeChances is null)
+            ui.CheckboxLabeled("<b>Edit Xenotype spawn rates:</b>", ref Current.OverrideFactionXenotypes);
+            if (Current.OverrideFactionXenotypes)
             {
-                Current.xenotypeChances =
-                    Current.Faction?.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(
-                        x => x.xenotype,
-                        x => x.chance
-                    ) ?? new Dictionary<XenotypeDef, float>();
-                if (!Current.xenotypeChances.ContainsKey(XenotypeDefOf.Baseliner))
-                    Current.xenotypeChances.Add(
-                        XenotypeDefOf.Baseliner,
-                        Current.Faction?.Def?.xenotypeSet?.BaselinerChance ?? 1f
+                var toDelete = new List<XenotypeDef>();
+                if (Current.xenotypeChances.NullOrEmpty() && Current.OverrideFactionXenotypes)
+                {
+                    Current.xenotypeChances =
+                        Current.Faction?.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype, x => x.chance) ?? new Dictionary<XenotypeDef, float>();
+                    if (!Current.xenotypeChances.ContainsKey(XenotypeDefOf.Baseliner))
+                        Current.xenotypeChances.Add(XenotypeDefOf.Baseliner, Current.Faction?.Def?.xenotypeSet?.BaselinerChance ?? 1f);
+                }
+
+                Current.xenotypeChances[XenotypeDefOf.Baseliner] = Math.Max(0f, 1f - Current.xenotypeChances.Sum(x => x.Key == XenotypeDefOf.Baseliner ? 0 : x.Value));
+
+                foreach (XenotypeDef key in Current.xenotypeChances.Keys.ToList())
+                    Current.xenotypeChances[key] = UIHelpers.SliderLabeledWithDelete(
+                        ui,
+                        $"{key.LabelCap}: {Current.xenotypeChances[key].ToStringPercent()}",
+                        Current.xenotypeChances[key],
+                        0f,
+                        1f,
+                        deleteAction: delegate
+                        {
+                            toDelete.Add(key);
+                        }
                     );
+
+                foreach (XenotypeDef delete in toDelete)
+                    Current.xenotypeChances.Remove(delete);
+
+                if (ui.ButtonText("Add new..."))
+                {
+                    var floatMenuList = new List<FloatMenuOption>();
+                    foreach (XenotypeDef def in DefDatabase<XenotypeDef>.AllDefs)
+                        if (!Current.xenotypeChances.ContainsKey(def))
+                            floatMenuList.Add(
+                                new FloatMenuOption(
+                                    def.LabelCap,
+                                    delegate
+                                    {
+                                        Current.xenotypeChances[def] = 0.1f;
+                                    }
+                                )
+                            );
+
+                    Find.WindowStack.Add(new FloatMenu(floatMenuList));
+                }
             }
-
-            foreach (XenotypeDef key in Current.xenotypeChances.Keys.ToList())
-                Current.xenotypeChances[key] = UIHelpers.SliderLabeledWithDelete(
-                    ui,
-                    $"{key.LabelCap}: {Current.xenotypeChances[key].ToStringPercent()}",
-                    Current.xenotypeChances[key],
-                    0f,
-                    1f,
-                    deleteAction: delegate { toDelete.Add(key); }
-                );
-
-            foreach (XenotypeDef delete in toDelete)
-                Current.xenotypeChances.Remove(delete);
-
-            if (ui.ButtonText("Add new..."))
+            else
             {
-                var floatMenuList = new List<FloatMenuOption>();
-                foreach (XenotypeDef def in DefDatabase<XenotypeDef>.AllDefs)
-                    if (!Current.xenotypeChances.ContainsKey(def))
-                        floatMenuList.Add(
-                            new FloatMenuOption(
-                                def.LabelCap,
-                                delegate { Current.xenotypeChances[def] = 0.1f; }
-                            )
-                        );
-
-                Find.WindowStack.Add(new FloatMenu(floatMenuList));
+                Current.xenotypeChances.Clear();
             }
         }
 
@@ -194,10 +198,7 @@ public class FactionEditUI : Window
                 Find.WindowStack.Add(new PawnKindEditUI(edit));
 
             rect.x += 54;
-            Widgets.Label(
-                rect,
-                $"<b>{(edit.IsGlobal ? "<color=cyan>Global (affects all faction pawns)</color>" : edit.Def.LabelCap)}</b>"
-            );
+            Widgets.Label(rect, $"<b>{(edit.IsGlobal ? "<color=cyan>Global (affects all faction pawns)</color>" : edit.Def.LabelCap)}</b>");
         }
 
         foreach (PawnKindEdit item in bin)
@@ -223,10 +224,7 @@ public class FactionEditUI : Window
                             tempKinds.Add(thing.kind);
                 }
 
-                foreach (
-                    PawnGroupMaker maker in Current.Faction.Def.pawnGroupMakers
-                                            ?? Enumerable.Empty<PawnGroupMaker>()
-                )
+                foreach (PawnGroupMaker maker in Current.Faction.Def.pawnGroupMakers ?? Enumerable.Empty<PawnGroupMaker>())
                 {
                     Register(maker.options);
                     Register(maker.guards);
@@ -259,13 +257,7 @@ public class FactionEditUI : Window
             var kinds = MakeKinds().ToList();
             var items = CustomFloatMenu.MakeItems(
                 kinds,
-                k =>
-                    k != null
-                        ? new MenuItemText(k, k.LabelCap, tooltip: k.description)
-                        : new MenuItemText(
-                            null,
-                            "<color=cyan><b>Global (affects all faction pawns)</b></color>"
-                        )
+                k => k != null ? new MenuItemText(k, k.LabelCap, tooltip: k.description) : new MenuItemText(null, "<color=cyan><b>Global (affects all faction pawns)</b></color>")
             );
             CustomFloatMenu.Open(
                 items,
@@ -306,9 +298,7 @@ public class FactionEditUI : Window
 
         if (!isInGame)
         {
-            ui.Label(
-                "<color=yellow>[ERROR] You must load a save game to preview pawns. Sorry!</color>"
-            );
+            ui.Label("<color=yellow>[ERROR] You must load a save game to preview pawns. Sorry!</color>");
         }
         else
         {
@@ -332,10 +322,7 @@ public class FactionEditUI : Window
                         Widgets.DrawTextureFitted(pawnArea, Widgets.CheckboxOffTex, 1f);
 
                     Widgets.DrawHighlightIfMouseover(pawnArea);
-                    TooltipHandler.TipRegion(
-                        pawnArea,
-                        pawn?.KindLabel?.CapitalizeFirst() ?? "<ERROR INVALID PAWN>"
-                    );
+                    TooltipHandler.TipRegion(pawnArea, pawn?.KindLabel?.CapitalizeFirst() ?? "<ERROR INVALID PAWN>");
                     if (Mouse.IsOver(pawnArea) && pawn != null)
                     {
                         Pawn p = pawns[i];
@@ -351,21 +338,11 @@ public class FactionEditUI : Window
                             () =>
                             {
                                 var list =
-                                    typeof(Selector)
-                                        .GetField(
-                                            "selected",
-                                            BindingFlags.Instance | BindingFlags.NonPublic
-                                        )
-                                        ?.GetValue(Find.Selector) as List<object>
+                                    typeof(Selector).GetField("selected", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(Find.Selector) as List<object>
                                     ?? new List<object>();
                                 list.Clear();
                                 list.Add(p);
-                                typeof(ITab_Pawn_Gear)
-                                    .GetMethod(
-                                        "FillTab",
-                                        BindingFlags.Instance | BindingFlags.NonPublic
-                                    )
-                                    ?.Invoke(new ITab_Pawn_Gear(), new object[] { });
+                                typeof(ITab_Pawn_Gear).GetMethod("FillTab", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(new ITab_Pawn_Gear(), new object[] { });
                                 list.Clear();
                             }
                         );
@@ -374,29 +351,19 @@ public class FactionEditUI : Window
                     pawnArea.height = 200;
                     pawnArea.y += w + 10;
                     if (pawnArea.width >= 50)
-                        Widgets.Label(
-                            pawnArea,
-                            pawns[i]?.KindLabel.CapitalizeFirst() ?? "<ERROR INVALID PAWN>"
-                        );
+                        Widgets.Label(pawnArea, pawns[i]?.KindLabel.CapitalizeFirst() ?? "<ERROR INVALID PAWN>");
                 }
             }
         }
 
         GUI.enabled = isInGame;
         bool f = Input.GetKeyDown(KeyCode.F);
-        if (
-            (
-                ui.ButtonText("Regenerate previews [Hotkey: F]")
-                || pawns.Count == 0
-                || (f && framesSinceF > 20)
-            ) && isInGame
-        )
+        if ((ui.ButtonText("Regenerate previews [Hotkey: F]") || pawns.Count == 0 || (f && framesSinceF > 20)) && isInGame)
         {
             if (f)
                 framesSinceF = 0;
 
-            FactionDef toClone =
-                FactionEdit.TryGetOriginal(Current.Faction.Def.defName) ?? Current.Faction.Def;
+            FactionDef toClone = FactionEdit.TryGetOriginal(Current.Faction.Def.defName) ?? Current.Faction.Def;
             clonedFac = CloningUtility.Clone(toClone);
             clonedFac.defName = Current.Faction.Def.defName;
             clonedFac.humanlikeFaction = Current.Faction.Def.humanlikeFaction;
@@ -405,22 +372,25 @@ public class FactionEditUI : Window
             Current.Apply(clonedFac, false);
             DestroyPawns();
 
-            Faction faction = new()
-            {
-                def = clonedFac,
-                loadID = -1,
-                colorFromSpectrum = Rand.Range(0f, 1f),
-                hidden = true,
-                ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos,
-                Name = clonedFac.fixedName,
-                relations = Find.FactionManager.AllFactionsVisible.Select(otherFaction => new FactionRelation()
+            Faction faction =
+                new()
                 {
-                    other = otherFaction,
-                    baseGoodwill = 0,
-                    kind = FactionRelationKind.Neutral
-                }).ToList(),
-                temporary = true
-            };
+                    def = clonedFac,
+                    loadID = -1,
+                    colorFromSpectrum = Rand.Range(0f, 1f),
+                    hidden = true,
+                    ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos,
+                    Name = clonedFac.fixedName,
+                    relations = Find
+                        .FactionManager.AllFactionsVisible.Select(otherFaction => new FactionRelation()
+                        {
+                            other = otherFaction,
+                            baseGoodwill = 0,
+                            kind = FactionRelationKind.Neutral
+                        })
+                        .ToList(),
+                    temporary = true
+                };
 
             ThingIDPatch.Active = _ThingIDPatch;
             IdeoUtilityPatch.Active = true;
@@ -464,12 +434,7 @@ public class FactionEditUI : Window
     {
         Rect matRect = ui.GetRect(28);
         matRect.width = 300;
-        if (
-            Widgets.ButtonText(
-                matRect,
-                $"Use custom apparel materials: {(Current.ApparelStuffFilter == null ? "<color=#ff4d4d>NO</color>" : "<color=#81f542>YES</color>")}"
-            )
-        )
+        if (Widgets.ButtonText(matRect, $"Use custom apparel materials: {(Current.ApparelStuffFilter == null ? "<color=#ff4d4d>NO</color>" : "<color=#81f542>YES</color>")}"))
         {
             filterState = new ThingFilterUI.UIState();
 
@@ -481,9 +446,7 @@ public class FactionEditUI : Window
             {
                 Current.ApparelStuffFilter = new ThingFilter();
                 if (Current.Faction.Def.apparelStuffFilter != null)
-                    Current.ApparelStuffFilter.CopyAllowancesFrom(
-                        Current.Faction.Def.apparelStuffFilter
-                    );
+                    Current.ApparelStuffFilter.CopyAllowancesFrom(Current.Faction.Def.apparelStuffFilter);
             }
         }
 

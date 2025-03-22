@@ -10,6 +10,7 @@
     <ReleasePath>../../Release</ReleasePath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <SteamModsPath>$(RIMWORLD_STEAM_MODS_PATH)</SteamModsPath>
 
     <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">../../../../</RimworldPath>
     <RimworldPath Condition=" '$(RIMWORLD_PATH)' != '' ">$(RIMWORLD_PATH)</RimworldPath>
@@ -131,6 +132,18 @@
     <RemoveDir Directories="$(ReleasePath)" Condition="Exists('$(ReleasePath)')" />
     <Delete Files="$(ZipFilePath)" Condition="Exists('$(ZipFilePath)')" />
   </Target>
+
+  <!-- Add A step to the build to run csharpier on build -->
+  <Target Name="CheckCsharpier" BeforeTargets="Build">
+    <Exec Command="dotnet csharpier --version" IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="ExitCode"/>
+    </Exec>
+  </Target>
+
+  <Target Name="FormatCode" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Release' And '$(ExitCode)' == '0' " DependsOnTargets="CheckCsharpier">
+    <Exec Command="dotnet csharpier ." />
+  </Target>
+
   <Target Name="PostBuild" AfterTargets="Build" Condition=" '$(Configuration)' == 'Release' " DependsOnTargets="CleanRelease">
     <MakeDir Directories="$(ReleasePath)" />
     <Copy SourceFiles="@(ReleaseFiles)" DestinationFiles="@(ReleaseFiles->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
@@ -138,5 +151,10 @@
     <Copy SourceFiles="@(AboutFiles)" DestinationFolder="$(ReleasePath)/About" />
     <Copy SourceFiles="@(CommonFiles)" DestinationFiles="@(CommonFiles->'$(ReleasePath)/Common/%(RecursiveDir)%(Filename)%(Extension)')" />
     <ZipDirectory DestinationFile="$(ZipFilePath)" SourceDirectory="$(ReleasePath)" Overwrite="true" />
+    <ItemGroup>
+      <ReleaseFolder Include="$(ReleasePath)/**" />
+    </ItemGroup>
+    <RemoveDir Condition="Exists('$(SteamModsPath)') And Exists('$(SteamModsPath)/$(AssemblyName)')" Directories="$(SteamModsPath)/$(AssemblyName)" ContinueOnError="true"/>
+    <Copy Condition="Exists('$(SteamModsPath)') And !Exists('$(SteamModsPath)/$(AssemblyName)')" SourceFiles="@(ReleaseFolder)" DestinationFiles="@(ReleaseFolder->'$(SteamModsPath)/$(AssemblyName)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 </Project>

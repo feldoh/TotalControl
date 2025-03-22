@@ -13,10 +13,16 @@ public static class OptionListingUtility_Patch
     {
         if (optList.Any(opt => opt is ListableOption_WebLink))
         {
-            optList.Add(new ListableOption_WebLink("FactionLoadout_SettingName".Translate(), delegate
-            {
-                Find.WindowStack.Add(new Dialog_FactionLoadout());
-            }, Textures.TC_Link));
+            optList.Add(
+                new ListableOption_WebLink(
+                    "FactionLoadout_SettingName".Translate(),
+                    delegate
+                    {
+                        Find.WindowStack.Add(new Dialog_FactionLoadout());
+                    },
+                    Textures.TC_Link
+                )
+            );
         }
     }
 }

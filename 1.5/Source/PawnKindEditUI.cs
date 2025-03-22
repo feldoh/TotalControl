@@ -39,10 +39,7 @@ public class PawnKindEditUI : Window
                 return TryGetIcon(kd.race, out color);
             case ThingDef td:
                 if (td.defName.StartsWith("Corpse_"))
-                    return TryGetIcon(
-                        DefDatabase<ThingDef>.GetNamed(td.defName.Substring(7), false),
-                        out color
-                    );
+                    return TryGetIcon(DefDatabase<ThingDef>.GetNamed(td.defName.Substring(7), false), out color);
                 ThingDef stuff = GenStuff.DefaultStuffFor(td);
                 color = stuff == null ? td.uiIconColor : td.GetColorForStuff(stuff);
                 return Widgets.GetIconFor(td, stuff);
@@ -146,14 +143,7 @@ public class PawnKindEditUI : Window
         AllAnimalKindDefs.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
         AllBodyTypes = [.. allBodyTypeDefs];
-        AllBodyTypes.Sort(
-            (a, b) =>
-                string.Compare(
-                    (string)a.LabelCap ?? a.defName,
-                    (string)b.LabelCap ?? b.defName,
-                    StringComparison.Ordinal
-                )
-        );
+        AllBodyTypes.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, StringComparison.Ordinal));
 
         AllRulePackDefs = [.. allRulePackDefs];
         AllRulePackDefs.Sort((a, b) => string.Compare(a.defName, b.defName, StringComparison.InvariantCulture));
@@ -165,10 +155,7 @@ public class PawnKindEditUI : Window
     {
         if (!VFEAncientsReflectionHelper.ModLoaded.Value)
             return;
-        if (
-            VFEAncientsReflectionHelper.GetPowerDefsMethod.Value?.GetValue(null)
-            is not IList powerList
-        )
+        if (VFEAncientsReflectionHelper.GetPowerDefsMethod.Value?.GetValue(null) is not IList powerList)
             return;
         AllPowerDefs = new List<string>();
         foreach (object power in powerList)
@@ -218,9 +205,7 @@ public class PawnKindEditUI : Window
             FactionDef found = FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.DefName);
             if (found == null)
                 return Current.Def;
-            PawnKindDef found2 = found
-                .GetKindDefs()
-                .FirstOrDefault(k => k.defName == Current.Def.defName);
+            PawnKindDef found2 = found.GetKindDefs().FirstOrDefault(k => k.defName == Current.Def.defName);
             return found2 ?? Current.Def;
         }
     }
@@ -238,12 +223,7 @@ public class PawnKindEditUI : Window
     public override void PostOpen()
     {
         base.PostOpen();
-        windowRect = new Rect(
-            UI.screenWidth * 0.5f,
-            30,
-            UI.screenWidth * 0.5f - 20,
-            UI.screenHeight - 50
-        );
+        windowRect = new Rect(UI.screenWidth * 0.5f, 30, UI.screenWidth * 0.5f - 20, UI.screenHeight - 50);
     }
 
     public override void DoWindowContents(Rect inRect)
@@ -273,10 +253,7 @@ public class PawnKindEditUI : Window
                         new("FactionLoadout_Tab_Appearance".Translate(), DrawAppearanceTab),
                         new("FactionLoadout_Tab_Apparel".Translate(), DrawApparelTab),
                         new("FactionLoadout_Tab_Weapon".Translate(), DrawWeaponTab),
-                        new(
-                            "FactionLoadout_Tab_ImplantsAndBionics".Translate(),
-                            DrawImplantsAndBionicsTab
-                        ),
+                        new("FactionLoadout_Tab_ImplantsAndBionics".Translate(), DrawImplantsAndBionicsTab),
                         new("FactionLoadout_Tab_Inventory".Translate(), DrawInventoryTab),
                         new("FactionLoadout_Tab_RaidPoints".Translate(), DrawRaidPointsTab),
                         new("FactionLoadout_Tab_RaidLoot".Translate(), DrawRaidLootTab),
@@ -293,8 +270,7 @@ public class PawnKindEditUI : Window
 
         Rect titleArea = inRect;
         titleArea.height = 40;
-        string title =
-            $"<size=32><b>Pawn Type: <color=#cf9af5>{(Current.IsGlobal ? "Global (affects all faction pawns)" : Current.Def.LabelCap)}</color></b></size>";
+        string title = $"<size=32><b>Pawn Type: <color=#cf9af5>{(Current.IsGlobal ? "Global (affects all faction pawns)" : Current.Def.LabelCap)}</color></b></size>";
         Widgets.Label(titleArea, title);
 
         Rect tabRect = inRect;
@@ -316,17 +292,8 @@ public class PawnKindEditUI : Window
             button.x += 150 * (i - 5 * row);
 
             Tab tab = tabs[i];
-            Color bg =
-                selectedTab == i ? new Color32(49, 82, 133, 255) : new Color(0.2f, 0.2f, 0.2f, 1f);
-            if (
-                Widgets.CustomButtonText(
-                    ref button,
-                    $"<b>{tab.Name}</b>",
-                    bg,
-                    Color.white,
-                    Color.white
-                )
-            )
+            Color bg = selectedTab == i ? new Color32(49, 82, 133, 255) : new Color(0.2f, 0.2f, 0.2f, 1f);
+            if (Widgets.CustomButtonText(ref button, $"<b>{tab.Name}</b>", bg, Color.white, Color.white))
             {
                 selectedTab = i;
                 buffers = new string[64];
@@ -338,11 +305,7 @@ public class PawnKindEditUI : Window
                 continue;
             Rect contentArea = inRect;
             contentArea.yMin += 100 + 50 * (tabRows - 1);
-            Widgets.BeginScrollView(
-                contentArea,
-                ref globalScroll,
-                new Rect(0, 0, inRect.width - 24, lastHeight)
-            );
+            Widgets.BeginScrollView(contentArea, ref globalScroll, new Rect(0, 0, inRect.width - 24, lastHeight));
             lastHeight = 0f;
 
             Listing_Standard ui = new() { ColumnWidth = inRect.width - 24 };
@@ -362,61 +325,22 @@ public class PawnKindEditUI : Window
         bool isAnimal = DefaultKind.RaceProps.Animal;
 
         if (!Current.IsGlobal && isAnimal)
-            DrawOverride(
-                ui,
-                DefaultKind,
-                ref Current.ReplaceWith,
-                "Replace with...",
-                DrawReplaceWith
-            );
+            DrawOverride(ui, DefaultKind, ref Current.ReplaceWith, "Replace with...", DrawReplaceWith);
 
-        DrawOverride(
-            ui,
-            DefaultKind.nameMaker ?? PawnKindEdit.FakeRulePack,
-            ref Current.NameMaker,
-            "Name Maker...",
-            DrawNameMaker);
-        DrawOverride(
-            ui,
-            DefaultKind.nameMakerFemale ?? PawnKindEdit.FakeRulePack,
-            ref Current.NameMakerFemale,
-            "Name Maker Female...",
-            DrawNameMakerFemale);
+        DrawOverride(ui, DefaultKind.nameMaker ?? PawnKindEdit.FakeRulePack, ref Current.NameMaker, "Name Maker...", DrawNameMaker);
+        DrawOverride(ui, DefaultKind.nameMakerFemale ?? PawnKindEdit.FakeRulePack, ref Current.NameMakerFemale, "Name Maker Female...", DrawNameMakerFemale);
 
         DrawOverride(ui, Gender.None, ref Current.ForcedGender, "Forced Gender", DrawGender);
         DrawOverride(ui, DefaultKind.label, ref Current.Label, "Custom name", DrawCustomName);
-        DrawOverride(
-            ui,
-            DefaultKind.minGenerationAge,
-            ref Current.MinGenerationAge,
-            "Min Generation Age",
-            DrawMinAge
-        );
-        DrawOverride(
-            ui,
-            DefaultKind.maxGenerationAge,
-            ref Current.MaxGenerationAge,
-            "Max Generation Age",
-            DrawMaxAge
-        );
-        DrawOverride(
-            ui,
-            DefaultKind.itemQuality,
-            ref Current.ItemQuality,
-            "Average Gear Quality",
-            DrawItemQuality
-        );
+        DrawOverride(ui, DefaultKind.minGenerationAge, ref Current.MinGenerationAge, "Min Generation Age", DrawMinAge);
+        DrawOverride(ui, DefaultKind.maxGenerationAge, ref Current.MaxGenerationAge, "Max Generation Age", DrawMaxAge);
+        DrawOverride(ui, DefaultKind.itemQuality, ref Current.ItemQuality, "Average Gear Quality", DrawItemQuality);
 
         // Only non-animal things after here
-        if (isAnimal) return;
+        if (isAnimal)
+            return;
 
-        DrawOverride(
-            ui,
-            0f,
-            ref Current.UnwaveringlyLoyalChance,
-            "Unwaveringly Loyal Chance",
-            DrawUnwaveringlyLoyalChance
-        );
+        DrawOverride(ui, 0f, ref Current.UnwaveringlyLoyalChance, "Unwaveringly Loyal Chance", DrawUnwaveringlyLoyalChance);
 
         if (!Current.IsGlobal)
         {
@@ -427,60 +351,35 @@ public class PawnKindEditUI : Window
 
     private void DrawAppearanceTab(Listing_Standard ui)
     {
-        DrawOverride(
-            ui,
-            null,
-            ref Current.CustomHair,
-            "Forced Hair Styles",
-            DrawHairStyles,
-            GetHeightFor(Current.CustomHair),
-            false
-        );
-        DrawOverride(
-            ui,
-            null,
-            ref Current.CustomHairColors,
-            "Forced Hair Colors",
-            DrawHairColors,
-            GetHeightFor(Current.CustomHairColors, 36),
-            false
-        );
-        DrawOverride(
-            ui,
-            null,
-            ref Current.BodyTypes,
-            "Allowed Body Types",
-            DrawBodyTypes,
-            GetHeightFor(Current.BodyTypes),
-            false
-        );
+        DrawOverride(ui, null, ref Current.CustomBeards, "Forced Beard Styles", DrawBeardStyles, GetHeightFor(Current.CustomBeards), false);
+        DrawOverride(ui, null, ref Current.CustomHair, "Forced Hair Styles", DrawHairStyles, GetHeightFor(Current.CustomHair), false);
+        DrawOverride(ui, null, ref Current.CustomHairColors, "Forced Hair Colors", DrawHairColors, GetHeightFor(Current.CustomHairColors, 36), false);
+        DrawOverride(ui, null, ref Current.BodyTypes, "Allowed Body Types", DrawBodyTypes, GetHeightFor(Current.BodyTypes), false);
     }
 
     private void DrawHairStyles(Rect rect, bool active, List<HairDef> nullList)
     {
         MenuItemBase MakeItem(HairDef def)
         {
-            return new MenuItemIcon(
-                def,
-                $"{def.LabelCap} ({def.modContentPack?.Name ?? "<no-mod>"})",
-                def.Icon
-            )
-            {
-                Size = new Vector2(100, 100),
-                BGColor = Color.white
-            };
+            return new MenuItemIcon(def, $"{def.LabelCap} ({def.modContentPack?.Name ?? "<no-mod>"})", def.Icon) { Size = new Vector2(100, 100), BGColor = Color.white };
         }
 
-        CustomFloatMenu sel = DrawDefList(
-            rect,
-            active,
-            ref scrolls[scrollIndex++],
-            Current.CustomHair,
-            nullList,
-            DefDatabase<HairDef>.AllDefsListForReading,
-            true,
-            MakeItem
-        );
+        CustomFloatMenu sel = DrawDefList(rect, active, ref scrolls[scrollIndex++], Current.CustomHair, nullList, DefDatabase<HairDef>.AllDefsListForReading, true, MakeItem);
+        if (sel == null)
+            return;
+        sel.AllowChangeTint = true;
+        sel.Tint = new Color32(245, 212, 78, 255);
+        sel.Columns = 4;
+    }
+
+    private void DrawBeardStyles(Rect rect, bool active, List<BeardDef> nullList)
+    {
+        MenuItemBase MakeItem(BeardDef def)
+        {
+            return new MenuItemIcon(def, $"{def.LabelCap} ({def.modContentPack?.Name ?? "<no-mod>"})", def.Icon) { Size = new Vector2(100, 100), BGColor = Color.white };
+        }
+
+        CustomFloatMenu sel = DrawDefList(rect, active, ref scrolls[scrollIndex++], Current.CustomBeards, nullList, DefDatabase<BeardDef>.AllDefsListForReading, true, MakeItem);
         if (sel == null)
             return;
         sel.AllowChangeTint = true;
@@ -517,7 +416,10 @@ public class PawnKindEditUI : Window
             AllHumanlikeRaces,
             Current.Race,
             DefaultKind.race,
-            r => { Current.Race = r; }
+            r =>
+            {
+                Current.Race = r;
+            }
         );
     }
 
@@ -529,7 +431,10 @@ public class PawnKindEditUI : Window
             AllAnimalKindDefs,
             Current.ReplaceWith,
             DefaultKind,
-            r => { Current.ReplaceWith = r; }
+            r =>
+            {
+                Current.ReplaceWith = r;
+            }
         );
     }
 
@@ -541,7 +446,10 @@ public class PawnKindEditUI : Window
             AllRulePackDefs,
             Current.NameMaker,
             defaultRulePack ?? DefaultKind.nameMaker,
-            r => { Current.NameMaker = r; },
+            r =>
+            {
+                Current.NameMaker = r;
+            },
             d => d?.defName ?? "None"
         );
     }
@@ -554,7 +462,10 @@ public class PawnKindEditUI : Window
             AllRulePackDefs,
             Current.NameMakerFemale,
             defaultRulePack ?? DefaultKind.nameMakerFemale,
-            r => { Current.NameMakerFemale = r; },
+            r =>
+            {
+                Current.NameMakerFemale = r;
+            },
             d => d?.defName ?? "None"
         );
     }
@@ -566,78 +477,33 @@ public class PawnKindEditUI : Window
             return;
         DrawForceOnlySelected(ui);
 
-        DrawOverride(
-            ui,
-            DefaultKind.apparelMoney,
-            ref Current.ApparelMoney,
-            "Apparel Value",
-            DrawApparelMoney
-        );
-        DrawOverride(
-            ui,
-            DefaultKind.apparelTags,
-            ref Current.ApparelTags,
-            "Allowed Apparel Types",
-            DrawApparelTags,
-            GetHeightFor(Current.ApparelTags),
-            true
-        );
+        DrawOverride(ui, DefaultKind.apparelMoney, ref Current.ApparelMoney, "Apparel Value", DrawApparelMoney);
+        DrawOverride(ui, DefaultKind.apparelTags, ref Current.ApparelTags, "Allowed Apparel Types", DrawApparelTags, GetHeightFor(Current.ApparelTags), true);
         // Disabled for now. Not very useful.
         //DrawOverride(ui, DefaultFac.apparelDisallowTags, ref Current.ApparelDisallowedTags, "Disallowed Apparel Types", DrawDisallowedApparelTags, GetHeightFor(Current.ApparelDisallowedTags), true);
-        DrawOverride(
-            ui,
-            DefaultKind.apparelColor,
-            ref Current.ApparelColor,
-            "Apparel Color (where applicable)",
-            DrawApparelColor
-        );
-        DrawOverride(
-            ui,
-            DefaultKind.apparelRequired,
-            ref Current.ApparelRequired,
-            "Required Apparel (simple)",
-            DrawRequiredApparel,
-            GetHeightFor(Current.ApparelRequired),
-            true
-        );
-        DrawSpecificGear(
-            ui,
-            ref Current.SpecificApparel,
-            "Required Apparel (advanced)",
-            t => t.IsApparel,
-            ThingDefOf.Apparel_Parka
-        );
+        DrawOverride(ui, DefaultKind.apparelColor, ref Current.ApparelColor, "Apparel Color (where applicable)", DrawApparelColor);
+        DrawOverride(ui, DefaultKind.apparelRequired, ref Current.ApparelRequired, "Required Apparel (simple)", DrawRequiredApparel, GetHeightFor(Current.ApparelRequired), true);
+        DrawSpecificGear(ui, ref Current.SpecificApparel, "Required Apparel (advanced)", t => t.IsApparel, ThingDefOf.Apparel_Parka);
     }
 
     private void DrawForceOnlySelected(Listing_Standard ui)
     {
         Rect onlySelectedBox = ui.GetRect(32);
-        Widgets.CheckboxLabeled(
-            onlySelectedBox,
-            "Force only selected: ",
-            ref Current.ForceOnlySelected,
-            placeCheckboxNearText: true
-        );
+        Widgets.CheckboxLabeled(onlySelectedBox, "Force only selected: ", ref Current.ForceOnlySelected, placeCheckboxNearText: true);
         ui.Gap();
     }
 
     private void DrawForceNaked(Listing_Standard ui)
     {
         Rect nakedBox = ui.GetRect(32);
-        Widgets.CheckboxLabeled(
-            nakedBox,
-            "Force naked: ",
-            ref Current.ForceNaked,
-            placeCheckboxNearText: true
-        );
+        Widgets.CheckboxLabeled(nakedBox, "Force naked: ", ref Current.ForceNaked, placeCheckboxNearText: true);
         ui.Gap();
     }
 
     private void DrawRename(Listing_Standard ui)
     {
         Rect renameBox = ui.GetRect(32);
-        bool forcedByGlobal =
-            !Current.IsGlobal && (Current.ParentEdit.GetGlobalEditor()?.RenameDef ?? false);
+        bool forcedByGlobal = !Current.IsGlobal && (Current.ParentEdit.GetGlobalEditor()?.RenameDef ?? false);
         string label = Current.IsGlobal
             ? "Rename All Pawnkind Defs in this Faction"
             : $"Rename Def [{Current.Def.defName} => {FactionEdit.GetNewNameForPawnKind(Current.Def, Current.ParentEdit.Faction.Def)}]{(
@@ -648,12 +514,7 @@ public class PawnKindEditUI : Window
         }
         else
         {
-            Widgets.CheckboxLabeled(
-                renameBox,
-                label,
-                ref Current.RenameDef,
-                placeCheckboxNearText: true
-            );
+            Widgets.CheckboxLabeled(renameBox, label, ref Current.RenameDef, placeCheckboxNearText: true);
         }
 
         TooltipHandler.TipRegion(
@@ -663,25 +524,14 @@ public class PawnKindEditUI : Window
         ui.Gap();
     }
 
-    private void DrawSpecificGear(
-        Listing_Standard ui,
-        ref List<SpecRequirementEdit> edits,
-        string label,
-        Func<ThingDef, bool> thingFilter,
-        ThingDef defaultThing
-    )
+    private void DrawSpecificGear(Listing_Standard ui, ref List<SpecRequirementEdit> edits, string label, Func<ThingDef, bool> thingFilter, ThingDef defaultThing)
     {
         float height = edits == null ? 32 : 300;
 
         ui.Label($"<b>{label}</b>");
         Rect rect = ui.GetRect(height);
         bool active = edits != null;
-        if (
-            Widgets.ButtonText(
-                new Rect(rect.x, rect.y, 120, 32),
-                $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"
-            )
-        )
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
         {
             if (active)
                 edits = null;
@@ -697,11 +547,7 @@ public class PawnKindEditUI : Window
         ref Vector2 scroll = ref scrolls[scrollIndex++];
         if (active)
         {
-            Widgets.BeginScrollView(
-                content,
-                ref scroll,
-                new Rect(0, 0, 100, 152 * edits.Count - 10)
-            );
+            Widgets.BeginScrollView(content, ref scroll, new Rect(0, 0, 100, 152 * edits.Count - 10));
             Listing_Standard tempUI = new();
             tempUI.Begin(new Rect(0, 0, content.width - 20, 152 * edits.Count));
             DrawSpecificGearContent(tempUI, thingFilter, edits);
@@ -724,11 +570,7 @@ public class PawnKindEditUI : Window
         ui.Gap();
     }
 
-    private void DrawSpecificGearContent(
-        Listing_Standard ui,
-        Func<ThingDef, bool> thingFilter,
-        List<SpecRequirementEdit> edits
-    )
+    private void DrawSpecificGearContent(Listing_Standard ui, Func<ThingDef, bool> thingFilter, List<SpecRequirementEdit> edits)
     {
         bool active = edits != null;
         if (!active)
@@ -746,13 +588,7 @@ public class PawnKindEditUI : Window
 
             Rect icon = area;
             icon.width = icon.height = 64;
-            Widgets.DefIcon(
-                icon,
-                item.Thing,
-                item.Material,
-                thingStyleDef: item.Style,
-                color: item.Color == default ? null : item.Color
-            );
+            Widgets.DefIcon(icon, item.Thing, item.Material, thingStyleDef: item.Style, color: item.Color == default ? null : item.Color);
 
             Rect label = icon;
             label.x += 70;
@@ -778,19 +614,8 @@ public class PawnKindEditUI : Window
             Widgets.DrawHighlightIfMouseover(defSel);
             if (Widgets.ButtonInvisible(defSel))
             {
-                IEnumerable<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading.Where(
-                    thingFilter
-                );
-                List<MenuItemBase> items = CustomFloatMenu.MakeItems(
-                    defs,
-                    d => new MenuItemText(
-                        d,
-                        d.LabelCap,
-                        TryGetIcon(d, out Color c),
-                        c,
-                        d.description
-                    )
-                );
+                IEnumerable<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading.Where(thingFilter);
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
                 CustomFloatMenu.Open(
                     items,
                     raw =>
@@ -830,36 +655,20 @@ public class PawnKindEditUI : Window
             {
                 if (item.Material == null)
                 {
-                    FactionDef faction = Find
-                        .WindowStack.WindowOfType<FactionEditUI>()
-                        ?.Current?.Faction?.Def;
-                    TechLevel techLevel = MySettings.VanillaRestrictions
-                        ? faction?.techLevel ?? TechLevel.Undefined
-                        : TechLevel.Undefined;
-                    item.Material = GenStuff
-                        .AllowedStuffsFor(item.Thing, techLevel)
-                        .FirstOrDefault();
+                    FactionDef faction = Find.WindowStack.WindowOfType<FactionEditUI>()?.Current?.Faction?.Def;
+                    TechLevel techLevel = MySettings.VanillaRestrictions ? faction?.techLevel ?? TechLevel.Undefined : TechLevel.Undefined;
+                    item.Material = GenStuff.AllowedStuffsFor(item.Thing, techLevel).FirstOrDefault();
                 }
 
                 Widgets.DrawHighlightIfMouseover(material);
                 if (Widgets.ButtonInvisible(material))
                 {
-                    FactionDef faction = Find
-                        .WindowStack.WindowOfType<FactionEditUI>()
-                        ?.Current?.Faction?.Def;
-                    TechLevel techLevel = MySettings.VanillaRestrictions
-                        ? faction?.techLevel ?? TechLevel.Undefined
-                        : TechLevel.Undefined;
+                    FactionDef faction = Find.WindowStack.WindowOfType<FactionEditUI>()?.Current?.Faction?.Def;
+                    TechLevel techLevel = MySettings.VanillaRestrictions ? faction?.techLevel ?? TechLevel.Undefined : TechLevel.Undefined;
                     IEnumerable<ThingDef> defs = GenStuff.AllowedStuffsFor(item.Thing, techLevel);
                     List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                         defs,
-                        d => new MenuItemText(
-                            d,
-                            d.LabelAsStuff.CapitalizeFirst(),
-                            TryGetIcon(d, out Color c),
-                            c,
-                            d.description
-                        )
+                        d => new MenuItemText(d, d.LabelAsStuff.CapitalizeFirst(), TryGetIcon(d, out Color c), c, d.description)
                     );
                     CustomFloatMenu.Open(
                         items,
@@ -884,10 +693,7 @@ public class PawnKindEditUI : Window
             if (!canHaveStyle)
                 item.Style = null;
             if (item.Style != null)
-                Widgets.Label(
-                    style,
-                    item.Style.Category?.LabelCap ?? "<VALID_STYLE_BUT_MISSING_CAT>"
-                );
+                Widgets.Label(style, item.Style.Category?.LabelCap ?? "<VALID_STYLE_BUT_MISSING_CAT>");
             else
                 Widgets.Label(style, $"None {(canHaveStyle ? "" : "(cannot be styled)")}");
 
@@ -895,22 +701,14 @@ public class PawnKindEditUI : Window
             Widgets.DrawHighlightIfMouseover(style);
             if (Widgets.ButtonInvisible(style) && canHaveStyle)
             {
-                List<MenuItemBase> items = CustomFloatMenu.MakeItems(
-                    StyleHelper.GetValidStyles(item.Thing),
-                    s => new MenuItemText(s.style, s.name, s.exampleIcon)
-                );
-                items.Add(
-                    new MenuItemText(
-                        null,
-                        "_ No Style _",
-                        null,
-                        default,
-                        "This item will have no style at all."
-                    )
-                );
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(StyleHelper.GetValidStyles(item.Thing), s => new MenuItemText(s.style, s.name, s.exampleIcon));
+                items.Add(new MenuItemText(null, "_ No Style _", null, default, "This item will have no style at all."));
                 CustomFloatMenu.Open(
                     items,
-                    raw => { item.Style = raw.Payload == null ? null : raw.GetPayload<ThingStyleDef>(); }
+                    raw =>
+                    {
+                        item.Style = raw.Payload == null ? null : raw.GetPayload<ThingStyleDef>();
+                    }
                 );
             }
 
@@ -950,19 +748,17 @@ public class PawnKindEditUI : Window
 
             Rect quality = qualityCheck;
             quality.y += 34;
-            if (
-                canDoQuality
-                && item.Quality != null
-                && Widgets.ButtonText(quality, item.Quality.ToString())
-            )
+            if (canDoQuality && item.Quality != null && Widgets.ButtonText(quality, item.Quality.ToString()))
             {
-                IEnumerable<QualityCategory> enums = Enum.GetValues(typeof(QualityCategory))
-                    .Cast<QualityCategory>();
+                IEnumerable<QualityCategory> enums = Enum.GetValues(typeof(QualityCategory)).Cast<QualityCategory>();
                 FloatMenuUtility.MakeMenu(
                     enums,
                     e => e.ToString(),
                     e =>
-                        () => { item.Quality = e; }
+                        () =>
+                        {
+                            item.Quality = e;
+                        }
                 );
             }
 
@@ -1064,14 +860,15 @@ public class PawnKindEditUI : Window
                     };
                 }
 
-                IEnumerable<ApparelSelectionMode> values = MakeEnumerable(
-                    Enum.GetValues(typeof(ApparelSelectionMode))
-                );
+                IEnumerable<ApparelSelectionMode> values = MakeEnumerable(Enum.GetValues(typeof(ApparelSelectionMode)));
                 FloatMenuUtility.MakeMenu(
                     values,
                     Name,
                     e =>
-                        () => { item.SelectionMode = e; }
+                        () =>
+                        {
+                            item.SelectionMode = e;
+                        }
                 );
             }
 
@@ -1093,64 +890,21 @@ public class PawnKindEditUI : Window
 
     private void DrawWeaponTab(Listing_Standard ui)
     {
-        DrawOverride(
-            ui,
-            DefaultKind.weaponMoney,
-            ref Current.WeaponMoney,
-            "Weapon Value",
-            DrawWeaponMoney
-        );
-        DrawOverride(
-            ui,
-            QualityCategory.Normal,
-            ref Current.ForcedWeaponQuality,
-            "Forced Weapon Quality",
-            DrawWeaponQuality
-        );
-        DrawOverride(
-            ui,
-            DefaultKind.biocodeWeaponChance,
-            ref Current.BiocodeWeaponChance,
-            "Biocode Chance",
-            DrawBiocodeChance
-        );
-        DrawOverride(
-            ui,
-            DefaultKind.weaponTags,
-            ref Current.WeaponTags,
-            "Allowed Weapon Types",
-            DrawWeaponTags,
-            GetHeightFor(Current.WeaponTags),
-            true
-        );
-        DrawSpecificGear(
-            ui,
-            ref Current.SpecificWeapons,
-            "Required Weapons (advanced)",
-            t => t.IsWeapon,
-            ThingDef.Named("Gun_AssaultRifle")
-        );
+        DrawOverride(ui, DefaultKind.weaponMoney, ref Current.WeaponMoney, "Weapon Value", DrawWeaponMoney);
+        DrawOverride(ui, QualityCategory.Normal, ref Current.ForcedWeaponQuality, "Forced Weapon Quality", DrawWeaponQuality);
+        DrawOverride(ui, DefaultKind.biocodeWeaponChance, ref Current.BiocodeWeaponChance, "Biocode Chance", DrawBiocodeChance);
+        DrawOverride(ui, DefaultKind.weaponTags, ref Current.WeaponTags, "Allowed Weapon Types", DrawWeaponTags, GetHeightFor(Current.WeaponTags), true);
+        DrawSpecificGear(ui, ref Current.SpecificWeapons, "Required Weapons (advanced)", t => t.IsWeapon, ThingDef.Named("Gun_AssaultRifle"));
     }
 
-    private void DrawSpecificHediffs(
-        Listing_Standard ui,
-        ref List<ForcedHediff> edits,
-        string label,
-        Func<HediffDef, bool> hediffFilter,
-        HediffDef defaultHediffDef
-    )
+    private void DrawSpecificHediffs(Listing_Standard ui, ref List<ForcedHediff> edits, string label, Func<HediffDef, bool> hediffFilter, HediffDef defaultHediffDef)
     {
         float height = edits == null ? 32 : 340;
 
         ui.Label($"<b>{label}</b>");
         Rect rect = ui.GetRect(height);
         bool active = edits != null;
-        if (
-            Widgets.ButtonText(
-                new Rect(rect.x, rect.y, 120, 32),
-                $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"
-            )
-        )
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
         {
             edits = active ? null : [];
             active = !active;
@@ -1163,11 +917,7 @@ public class PawnKindEditUI : Window
         ref Vector2 scroll = ref scrolls[scrollIndex++];
         if (active)
         {
-            Widgets.BeginScrollView(
-                content,
-                ref scroll,
-                new Rect(0, 0, 100, 320 * edits.Count - 10)
-            );
+            Widgets.BeginScrollView(content, ref scroll, new Rect(0, 0, 100, 320 * edits.Count - 10));
             Listing_Standard tempUI = new();
             tempUI.Begin(new Rect(0, 0, content.width - 20, 320 * edits.Count));
             DrawSpecificHediffContent(tempUI, hediffFilter, edits);
@@ -1190,11 +940,7 @@ public class PawnKindEditUI : Window
         ui.Gap();
     }
 
-    private void DrawSpecificHediffContent(
-        Listing_Standard tempUI,
-        Func<HediffDef, bool> hediffFilter,
-        List<ForcedHediff> edits
-    )
+    private void DrawSpecificHediffContent(Listing_Standard tempUI, Func<HediffDef, bool> hediffFilter, List<ForcedHediff> edits)
     {
         bool active = edits != null;
         if (!active)
@@ -1224,19 +970,8 @@ public class PawnKindEditUI : Window
             Rect hediffRect = new(area.x + 5, area.y + 5, 250, 25);
             if (Widgets.ButtonText(hediffRect, item.HediffDef.LabelCap))
             {
-                IEnumerable<HediffDef> defs = DefDatabase<HediffDef>.AllDefsListForReading.Where(
-                    hediffFilter
-                );
-                List<MenuItemBase> items = CustomFloatMenu.MakeItems(
-                    defs,
-                    d => new MenuItemText(
-                        d,
-                        d.LabelCap,
-                        TryGetIcon(d, out Color c),
-                        c,
-                        d.description
-                    )
-                );
+                IEnumerable<HediffDef> defs = DefDatabase<HediffDef>.AllDefsListForReading.Where(hediffFilter);
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
                 CustomFloatMenu.Open(
                     items,
                     raw =>
@@ -1249,72 +984,27 @@ public class PawnKindEditUI : Window
 
             Rect hediffMaxPartsRect = new(area.x + 10, area.y + 32, (area.width - 100) * 0.8f, 20);
             Widgets.Label(hediffMaxPartsRect.LeftPart(0.15f), "Max parts to hit");
-            Widgets.IntEntry(
-                hediffMaxPartsRect.RightPart(0.75f),
-                ref item.maxParts,
-                ref buffers[bufferIndex++]
-            );
+            Widgets.IntEntry(hediffMaxPartsRect.RightPart(0.75f), ref item.maxParts, ref buffers[bufferIndex++]);
             Rect hediffMaxPartsRangeRect = new(area.x + 10, area.y + 60, area.width - 10, 30);
             Widgets.Label(hediffMaxPartsRangeRect.LeftPart(0.15f), "Parts to Hit");
-            Widgets.IntRange(
-                hediffMaxPartsRangeRect.RightPart(0.75f),
-                (int)hediffMaxPartsRangeRect.y,
-                ref item.maxPartsRange,
-                0,
-                10
-            );
+            Widgets.IntRange(hediffMaxPartsRangeRect.RightPart(0.75f), (int)hediffMaxPartsRangeRect.y, ref item.maxPartsRange, 0, 10);
             Rect hediffChanceRect = new(area.x + 10, area.y + 90, area.width - 10, 30);
-            Widgets.Label(
-                hediffChanceRect.LeftPart(0.7f),
-                $"Chance to Apply Any: ({item.chance.ToStringPercent()})"
-            );
-            Widgets.TextFieldPercent(
-                hediffChanceRect.RightPart(0.29f),
-                ref item.chance,
-                ref buffers[bufferIndex++]
-            );
+            Widgets.Label(hediffChanceRect.LeftPart(0.7f), $"Chance to Apply Any: ({item.chance.ToStringPercent()})");
+            Widgets.TextFieldPercent(hediffChanceRect.RightPart(0.29f), ref item.chance, ref buffers[bufferIndex++]);
             Rect partsLabelRect = new(area.x + 10, area.y + 130, area.width - 10, 30);
-            Widgets.Label(
-                partsLabelRect,
-                "Body Parts to Hit (None if should not target specific parts)"
-            );
+            Widgets.Label(partsLabelRect, "Body Parts to Hit (None if should not target specific parts)");
             Rect validPartsRect = new(area.x, area.y + 160, (area.width) * 0.5f, area.height - 170);
-            IEnumerable<BodyPartDef> bodyPartDefs = (Current.Race?.race ?? Current.Def.RaceProps)
-                .body.AllParts.Select(bpr => bpr.def)
-                .Distinct()
-                .ToList();
+            IEnumerable<BodyPartDef> bodyPartDefs = (Current.Race?.race ?? Current.Def.RaceProps).body.AllParts.Select(bpr => bpr.def).Distinct().ToList();
             item.parts ??= [];
-            DrawDefList(
-                validPartsRect,
-                true,
-                ref scrolls[scrollIndex++],
-                item.parts,
-                null,
-                bodyPartDefs,
-                false
-            );
+            DrawDefList(validPartsRect, true, ref scrolls[scrollIndex++], item.parts, null, bodyPartDefs, false);
             tempUI.Gap(3);
         }
     }
 
     private void DrawImplantsAndBionicsTab(Listing_Standard ui)
     {
-        DrawOverride(
-            ui,
-            DefaultKind.techHediffsMoney,
-            ref Current.TechMoney,
-            "Implants & Bionics Value",
-            DrawTechMoney
-        );
-        DrawOverride(
-            ui,
-            DefaultKind.techHediffsTags,
-            ref Current.TechHediffTags,
-            "Allowed Implants & Bionics Types",
-            DrawTechTags,
-            GetHeightFor(Current.TechHediffTags),
-            true
-        );
+        DrawOverride(ui, DefaultKind.techHediffsMoney, ref Current.TechMoney, "Implants & Bionics Value", DrawTechMoney);
+        DrawOverride(ui, DefaultKind.techHediffsTags, ref Current.TechHediffTags, "Allowed Implants & Bionics Types", DrawTechTags, GetHeightFor(Current.TechHediffTags), true);
         DrawOverride(
             ui,
             DefaultKind.techHediffsDisallowTags,
@@ -1324,56 +1014,18 @@ public class PawnKindEditUI : Window
             GetHeightFor(Current.TechHediffDisallowedTags),
             true
         );
-        DrawOverride(
-            ui,
-            DefaultKind.techHediffsRequired,
-            ref Current.TechRequired,
-            "Required Implants & Bionics",
-            DrawRequiredTech,
-            GetHeightFor(Current.TechRequired),
-            true
-        );
-        DrawOverride(
-            ui,
-            DefaultKind.techHediffsChance,
-            ref Current.TechHediffChance,
-            "Implants & Bionics Chance",
-            DrawTechChance
-        );
-        DrawOverride(
-            ui,
-            DefaultKind.techHediffsMaxAmount,
-            ref Current.TechHediffsMaxAmount,
-            "Max # of Implants & Bionics",
-            DrawMaxTech
-        );
-        DrawSpecificHediffs(
-            ui,
-            ref Current.ForcedHediffs,
-            "Required Hediffs (advanced)",
-            t => true,
-            HediffDefOf.Scaria
-        );
+        DrawOverride(ui, DefaultKind.techHediffsRequired, ref Current.TechRequired, "Required Implants & Bionics", DrawRequiredTech, GetHeightFor(Current.TechRequired), true);
+        DrawOverride(ui, DefaultKind.techHediffsChance, ref Current.TechHediffChance, "Implants & Bionics Chance", DrawTechChance);
+        DrawOverride(ui, DefaultKind.techHediffsMaxAmount, ref Current.TechHediffsMaxAmount, "Max # of Implants & Bionics", DrawMaxTech);
+        DrawSpecificHediffs(ui, ref Current.ForcedHediffs, "Required Hediffs (advanced)", t => true, HediffDefOf.Scaria);
     }
 
     private void DrawAncientsTab(Listing_Standard ui)
     {
         if (!VFEAncientsReflectionHelper.ModLoaded.Value)
             return;
-        DrawOverride(
-            ui,
-            0,
-            ref Current.NumVFEAncientsSuperPowers,
-            "# of VFE Ancients Super Powers",
-            DrawNumVFEAncientsSuperPowers
-        );
-        DrawOverride(
-            ui,
-            0,
-            ref Current.NumVFEAncientsSuperWeaknesses,
-            "# of VFE Ancients Super Weaknesses",
-            DrawNumVFEAncientsSuperWeaknesses
-        );
+        DrawOverride(ui, 0, ref Current.NumVFEAncientsSuperPowers, "# of VFE Ancients Super Powers", DrawNumVFEAncientsSuperPowers);
+        DrawOverride(ui, 0, ref Current.NumVFEAncientsSuperWeaknesses, "# of VFE Ancients Super Weaknesses", DrawNumVFEAncientsSuperWeaknesses);
         DrawOverride(
             ui,
             new List<string>(),
@@ -1389,21 +1041,9 @@ public class PawnKindEditUI : Window
     {
         if (!VEPsycastsReflectionHelper.ModLoaded.Value)
             return;
-        DrawOverride(
-            ui,
-            false,
-            ref Current.VEPsycastRandomAbilities,
-            "Give Random Abilities",
-            DrawVPERandomAbilities
-        );
+        DrawOverride(ui, false, ref Current.VEPsycastRandomAbilities, "Give Random Abilities", DrawVPERandomAbilities);
         DrawOverride(ui, 1, ref Current.VEPsycastLevel, "Psycaster Level", DrawVPELevel);
-        DrawOverride(
-            ui,
-            IntRange.zero,
-            ref Current.VEPsycastStatPoints,
-            "Psycaster Stat Points",
-            DrawVPEStats
-        );
+        DrawOverride(ui, IntRange.zero, ref Current.VEPsycastStatPoints, "Psycaster Stat Points", DrawVPEStats);
     }
 
     private void DrawXenotypeTab(Listing_Standard ui)
@@ -1416,16 +1056,9 @@ public class PawnKindEditUI : Window
         List<XenotypeDef> toDelete = [];
         if (Current.ForcedXenotypeChances is null)
         {
-            Current.ForcedXenotypeChances =
-                Current.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(
-                    x => x.xenotype,
-                    x => x.chance
-                ) ?? new Dictionary<XenotypeDef, float>();
+            Current.ForcedXenotypeChances = Current.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype, x => x.chance) ?? new Dictionary<XenotypeDef, float>();
             if (!Current.ForcedXenotypeChances.ContainsKey(XenotypeDefOf.Baseliner))
-                Current.ForcedXenotypeChances.Add(
-                    XenotypeDefOf.Baseliner,
-                    Current.Def?.xenotypeSet?.BaselinerChance ?? 1f
-                );
+                Current.ForcedXenotypeChances.Add(XenotypeDefOf.Baseliner, Current.Def?.xenotypeSet?.BaselinerChance ?? 1f);
         }
 
         foreach (XenotypeDef key in Current.ForcedXenotypeChances.Keys.ToList())
@@ -1435,7 +1068,10 @@ public class PawnKindEditUI : Window
                 Current.ForcedXenotypeChances[key],
                 0f,
                 1f,
-                deleteAction: delegate { toDelete.Add(key); }
+                deleteAction: delegate
+                {
+                    toDelete.Add(key);
+                }
             );
 
         foreach (XenotypeDef delete in toDelete)
@@ -1449,7 +1085,10 @@ public class PawnKindEditUI : Window
                 floatMenuList.Add(
                     new FloatMenuOption(
                         def.LabelCap,
-                        delegate { Current.ForcedXenotypeChances[def] = 0.1f; }
+                        delegate
+                        {
+                            Current.ForcedXenotypeChances[def] = 0.1f;
+                        }
                     )
                 );
 
@@ -1459,25 +1098,13 @@ public class PawnKindEditUI : Window
     private void DrawForceSpecificXenos(Listing_Standard ui)
     {
         Rect xenoBox = ui.GetRect(32);
-        Widgets.CheckboxLabeled(
-            xenoBox,
-            "Force Specific Xenotypes: ",
-            ref Current.ForceSpecificXenos,
-            placeCheckboxNearText: true
-        );
+        Widgets.CheckboxLabeled(xenoBox, "Force Specific Xenotypes: ", ref Current.ForceSpecificXenos, placeCheckboxNearText: true);
         ui.Gap();
     }
 
     private void DrawVFEAncientsPowers(Rect rect, bool active, List<string> defaultPowers)
     {
-        DrawStringList(
-            rect,
-            active,
-            ref scrolls[scrollIndex++],
-            Current.ForcedVFEAncientsItems,
-            new List<string>(),
-            AllPowerDefs
-        );
+        DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.ForcedVFEAncientsItems, new List<string>(), AllPowerDefs);
     }
 
     private void DrawInventoryTab(Listing_Standard ui)
@@ -1490,12 +1117,7 @@ public class PawnKindEditUI : Window
                 rect,
                 "If true, the override inventory entirely replaces the default one.\nIf false, the override inventory is added to the default inventory."
             );
-            Widgets.CheckboxLabeled(
-                rect,
-                "Replace default inventory? ",
-                ref Current.ReplaceDefaultInventory,
-                placeCheckboxNearText: true
-            );
+            Widgets.CheckboxLabeled(rect, "Replace default inventory? ", ref Current.ReplaceDefaultInventory, placeCheckboxNearText: true);
         }
 
         DrawInventory(ui);
@@ -1542,9 +1164,7 @@ public class PawnKindEditUI : Window
         Rect overrideButtonRect = ui.GetRect(30);
         if (Widgets.ButtonText(overrideButtonRect, "FactionLoadout_FactionDefault".Translate()))
         {
-            Current.RaidLootValueFromPointsCurve = new SimpleCurve(
-                FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidLootValueFromPointsCurve?.points ?? []
-            );
+            Current.RaidLootValueFromPointsCurve = new SimpleCurve(FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidLootValueFromPointsCurve?.points ?? []);
         }
 
         Current.RaidLootValueFromPointsCurve ??= [];
@@ -1565,10 +1185,7 @@ public class PawnKindEditUI : Window
 
             Rect pointRect = listing.GetRect(Text.LineHeight + 3);
 
-            Widgets.Label(
-                pointRect.LeftHalf().LeftHalf(),
-                "FactionLoadout_CurvePoint".Translate(i + 1, point.x, point.y)
-            );
+            Widgets.Label(pointRect.LeftHalf().LeftHalf(), "FactionLoadout_CurvePoint".Translate(i + 1, point.x, point.y));
 
             Pair<string, string> buffer = curvePointBuffer[i];
             Widgets.TextFieldNumeric(pointRect.LeftHalf().RightHalf(), ref point.loc.x, ref buffer.first);
@@ -1611,12 +1228,7 @@ public class PawnKindEditUI : Window
         ui.Label($"<b>Inventory</b>");
         Rect rect = ui.GetRect(height);
         bool active = field != null;
-        if (
-            Widgets.ButtonText(
-                new Rect(rect.x, rect.y, 120, 32),
-                $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"
-            )
-        )
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
         {
             if (active)
                 Current.Inventory = null;
@@ -1630,10 +1242,7 @@ public class PawnKindEditUI : Window
         Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
         content = content.ExpandedBy(-2);
         GUI.enabled = active;
-        ui.CheckboxLabeled(
-            $"Remove fixed inventory [Fixed Inventory Size: {Current.Def.fixedInventory?.Count ?? 0}]:",
-            ref Current.RemoveFixedInventory
-        );
+        ui.CheckboxLabeled($"Remove fixed inventory [Fixed Inventory Size: {Current.Def.fixedInventory?.Count ?? 0}]:", ref Current.RemoveFixedInventory);
 
         if (Current.Inventory != null)
         {
@@ -1645,21 +1254,14 @@ public class PawnKindEditUI : Window
         }
         else
         {
-            string txt = Current.IsGlobal
-                ? "---"
-                : $"[Default] Max. {InventoryOptionEdit.GetSize(Current.Def.inventoryOptions)} items";
+            string txt = Current.IsGlobal ? "---" : $"[Default] Max. {InventoryOptionEdit.GetSize(Current.Def.inventoryOptions)} items";
             Widgets.Label(content.GetCentered(txt), txt);
         }
 
         GUI.enabled = true;
     }
 
-    private bool DrawInvPart(
-        Listing_Standard ui,
-        InventoryOptionEdit part,
-        bool isChildOfAll,
-        bool isChildOfOne
-    )
+    private bool DrawInvPart(Listing_Standard ui, InventoryOptionEdit part, bool isChildOfAll, bool isChildOfOne)
     {
         Rect defRect = ui.GetRect(28);
         bool delete = false;
@@ -1681,19 +1283,13 @@ public class PawnKindEditUI : Window
             Widgets.DefLabelWithIcon(defRect, part.Thing);
             if (Widgets.ButtonInvisible(defRect))
             {
-                List<MenuItemBase> items = CustomFloatMenu.MakeItems(
-                    AllInvItems,
-                    d => new MenuItemText(
-                        d,
-                        d.LabelCap,
-                        TryGetIcon(d, out Color c),
-                        c,
-                        d.description
-                    )
-                );
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(AllInvItems, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
                 CustomFloatMenu.Open(
                     items,
-                    raw => { part.Thing = raw.GetPayload<ThingDef>(); }
+                    raw =>
+                    {
+                        part.Thing = raw.GetPayload<ThingDef>();
+                    }
                 );
             }
 
@@ -1706,19 +1302,9 @@ public class PawnKindEditUI : Window
                 defRect.height = 20;
 
                 if (isChildOfAll)
-                    Widgets.HorizontalSlider(
-                        defRect,
-                        ref part.SkipChance,
-                        FloatRange.ZeroToOne,
-                        $"Skip chance: {100f * part.SkipChance:F0}%"
-                    );
+                    Widgets.HorizontalSlider(defRect, ref part.SkipChance, FloatRange.ZeroToOne, $"Skip chance: {100f * part.SkipChance:F0}%");
                 if (isChildOfOne)
-                    Widgets.HorizontalSlider(
-                        defRect,
-                        ref part.ChoiceChance,
-                        FloatRange.ZeroToOne,
-                        $"Weight: {100f * part.ChoiceChance:F0}%"
-                    );
+                    Widgets.HorizontalSlider(defRect, ref part.ChoiceChance, FloatRange.ZeroToOne, $"Weight: {100f * part.ChoiceChance:F0}%");
             }
 
             clone.x += 220;
@@ -1792,12 +1378,7 @@ public class PawnKindEditUI : Window
         if (active)
         {
             float fieldVal = field!.Value;
-            Widgets.HorizontalSlider(
-                rect,
-                ref fieldVal,
-                FloatRange.ZeroToOne,
-                $"Chance: {100f * field:F0}% (default: {100f * defaultValue:F0}%)"
-            );
+            Widgets.HorizontalSlider(rect, ref fieldVal, FloatRange.ZeroToOne, $"Chance: {100f * field:F0}% (default: {100f * defaultValue:F0}%)");
             field = fieldVal;
         }
         else
@@ -1807,14 +1388,7 @@ public class PawnKindEditUI : Window
         }
     }
 
-    private void DrawEnumSelector<T>(
-        Rect rect,
-        bool active,
-        T? field,
-        T defaultValue,
-        Action<T> apply,
-        Func<T, string> makeName = null
-    )
+    private void DrawEnumSelector<T>(Rect rect, bool active, T? field, T defaultValue, Action<T> apply, Func<T, string> makeName = null)
         where T : struct
     {
         string Name(T t)
@@ -1843,15 +1417,7 @@ public class PawnKindEditUI : Window
         FloatMenuUtility.MakeMenu(values, e => Name((T)e), e => () => apply((T)e));
     }
 
-    private void DrawDefSelector<T>(
-        Rect rect,
-        bool active,
-        IEnumerable<T> defs,
-        T field,
-        T defaultValue,
-        Action<T> apply,
-        Func<T, string> makeName = null
-    )
+    private void DrawDefSelector<T>(Rect rect, bool active, IEnumerable<T> defs, T field, T defaultValue, Action<T> apply, Func<T, string> makeName = null)
         where T : Def
     {
         if (
@@ -1865,10 +1431,7 @@ public class PawnKindEditUI : Window
             )
         )
             return;
-        List<MenuItemBase> items = CustomFloatMenu.MakeItems(
-            defs,
-            d => new MenuItemText(d, Name(d), TryGetIcon(d, out Color c), c, d.description)
-        );
+        List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, Name(d), TryGetIcon(d, out Color c), c, d.description));
         CustomFloatMenu.Open(
             items,
             raw =>
@@ -1887,35 +1450,17 @@ public class PawnKindEditUI : Window
 
     private void DrawItemQuality(Rect rect, bool active, QualityCategory _)
     {
-        DrawEnumSelector(
-            rect,
-            active,
-            Current.ItemQuality,
-            Current.Def.itemQuality,
-            q => Current.ItemQuality = q
-        );
+        DrawEnumSelector(rect, active, Current.ItemQuality, Current.Def.itemQuality, q => Current.ItemQuality = q);
     }
 
     private void DrawGender(Rect rect, bool active, Gender defaultValue)
     {
-        DrawEnumSelector(
-            rect,
-            active,
-            Current.ForcedGender,
-            Current.Def.fixedGender ?? defaultValue,
-            q => Current.ForcedGender = q
-        );
+        DrawEnumSelector(rect, active, Current.ForcedGender, Current.Def.fixedGender ?? defaultValue, q => Current.ForcedGender = q);
     }
 
     private void DrawWeaponQuality(Rect rect, bool active, QualityCategory _)
     {
-        DrawEnumSelector(
-            rect,
-            active,
-            Current.ForcedWeaponQuality,
-            Current.Def.forceWeaponQuality ?? QualityCategory.Normal,
-            q => Current.ForcedWeaponQuality = q
-        );
+        DrawEnumSelector(rect, active, Current.ForcedWeaponQuality, Current.Def.forceWeaponQuality ?? QualityCategory.Normal, q => Current.ForcedWeaponQuality = q);
     }
 
     private void DrawApparelColor(Rect rect, bool active, Color def)
@@ -2012,9 +1557,7 @@ public class PawnKindEditUI : Window
         if (active)
         {
             ref string minAgeBuffer = ref buffers[bufferIndex++];
-            int minGenerationAge = Current.MinGenerationAge.GetValueOrDefault(
-                Current.Def.minGenerationAge
-            );
+            int minGenerationAge = Current.MinGenerationAge.GetValueOrDefault(Current.Def.minGenerationAge);
             minAgeBuffer ??= minGenerationAge.ToString();
             Widgets.IntEntry(rect, ref minGenerationAge, ref minAgeBuffer);
             Current.MinGenerationAge = minGenerationAge;
@@ -2031,9 +1574,7 @@ public class PawnKindEditUI : Window
         if (active)
         {
             ref string maxAgeBuffer = ref buffers[bufferIndex++];
-            int maxGenerationAge = Current.MinGenerationAge.GetValueOrDefault(
-                Current.Def.maxGenerationAge
-            );
+            int maxGenerationAge = Current.MinGenerationAge.GetValueOrDefault(Current.Def.maxGenerationAge);
             maxAgeBuffer ??= maxGenerationAge.ToString();
             Widgets.IntEntry(rect, ref maxGenerationAge, ref maxAgeBuffer);
             Current.MaxGenerationAge = maxGenerationAge;
@@ -2057,14 +1598,10 @@ public class PawnKindEditUI : Window
         }
         else
         {
-            DefModExtension ancientsExtension = VFEAncientsReflectionHelper.FindVEAncientsExtension(
-                Current.Def
-            );
+            DefModExtension ancientsExtension = VFEAncientsReflectionHelper.FindVEAncientsExtension(Current.Def);
             string defaultValue = "NA";
             if (ancientsExtension != null)
-                defaultValue = VFEAncientsReflectionHelper
-                    .NumRandomSuperpowersField.Value?.GetValue(ancientsExtension)
-                    ?.ToString();
+                defaultValue = VFEAncientsReflectionHelper.NumRandomSuperpowersField.Value?.GetValue(ancientsExtension)?.ToString();
 
             string txt = Current.IsGlobal ? "---" : $"[Default] {defaultValue}";
             Widgets.Label(rect.GetCentered(txt), txt);
@@ -2074,8 +1611,7 @@ public class PawnKindEditUI : Window
     private void DrawNumVFEAncientsSuperWeaknesses(Rect rect, bool active, int _)
     {
         if (numVFEAncientsWeaknessesBuffer == null && active)
-            numVFEAncientsWeaknessesBuffer =
-                Current.NumVFEAncientsSuperWeaknesses?.ToString() ?? "";
+            numVFEAncientsWeaknessesBuffer = Current.NumVFEAncientsSuperWeaknesses?.ToString() ?? "";
 
         if (active)
         {
@@ -2085,15 +1621,10 @@ public class PawnKindEditUI : Window
         }
         else
         {
-            DefModExtension ancientsExtension = VFEAncientsReflectionHelper.FindVEAncientsExtension(
-                Current.Def
-            );
+            DefModExtension ancientsExtension = VFEAncientsReflectionHelper.FindVEAncientsExtension(Current.Def);
             string defaultValue = "NA";
             if (ancientsExtension != null)
-                defaultValue = VFEAncientsReflectionHelper
-                    .VfeAncientsExtensionType.Value?.GetField("numRandomWeaknesses")
-                    ?.GetValue(ancientsExtension)
-                    ?.ToString();
+                defaultValue = VFEAncientsReflectionHelper.VfeAncientsExtensionType.Value?.GetField("numRandomWeaknesses")?.GetValue(ancientsExtension)?.ToString();
 
             string txt = Current.IsGlobal ? "---" : $"[Default] {defaultValue}";
             Widgets.Label(rect.GetCentered(txt), txt);
@@ -2102,77 +1633,34 @@ public class PawnKindEditUI : Window
 
     private void DrawTechTags(Rect rect, bool active, List<string> defaultTags)
     {
-        DrawStringList(
-            rect,
-            active,
-            ref scrolls[scrollIndex++],
-            Current.TechHediffTags,
-            Current.Def.techHediffsTags,
-            AllTechHediffTags
-        );
+        DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.TechHediffTags, Current.Def.techHediffsTags, AllTechHediffTags);
     }
 
     private void DrawDisallowedTechTags(Rect rect, bool active, List<string> defaultTags)
     {
-        DrawStringList(
-            rect,
-            active,
-            ref scrolls[scrollIndex++],
-            Current.TechHediffDisallowedTags,
-            Current.Def.techHediffsDisallowTags,
-            AllTechHediffTags
-        );
+        DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.TechHediffDisallowedTags, Current.Def.techHediffsDisallowTags, AllTechHediffTags);
     }
 
     private void DrawApparelTags(Rect rect, bool active, List<string> defaultTags)
     {
         if (!AllApparelTags.Contains("UNUSED"))
             AllApparelTags.Add("UNUSED");
-        DrawStringList(
-            rect,
-            active,
-            ref scrolls[scrollIndex++],
-            Current.ApparelTags,
-            Current.Def.apparelTags,
-            AllApparelTags
-        );
+        DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.ApparelTags, Current.Def.apparelTags, AllApparelTags);
     }
 
     private void DrawDisallowedApparelTags(Rect rect, bool active, List<string> defaultTags)
     {
-        DrawStringList(
-            rect,
-            active,
-            ref scrolls[scrollIndex++],
-            Current.ApparelDisallowedTags,
-            Current.Def.apparelDisallowTags,
-            AllApparelTags
-        );
+        DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.ApparelDisallowedTags, Current.Def.apparelDisallowTags, AllApparelTags);
     }
 
     private void DrawRequiredApparel(Rect rect, bool active, List<ThingDef> defaultReq)
     {
-        DrawDefList(
-            rect,
-            active,
-            ref scrolls[scrollIndex++],
-            Current.ApparelRequired,
-            Current.Def.apparelRequired,
-            AllApparel,
-            false
-        );
+        DrawDefList(rect, active, ref scrolls[scrollIndex++], Current.ApparelRequired, Current.Def.apparelRequired, AllApparel, false);
     }
 
     private void DrawWeaponTags(Rect rect, bool active, List<string> defaultTags)
     {
-        DrawStringList(
-            rect,
-            active,
-            ref scrolls[scrollIndex++],
-            Current.WeaponTags,
-            Current.Def.weaponTags,
-            AllWeaponsTags
-        );
+        DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.WeaponTags, Current.Def.weaponTags, AllWeaponsTags);
     }
 
     private void DrawBodyTypes(Rect rect, bool active, List<BodyTypeDef> defaultBodyTypes)
@@ -2185,27 +1673,13 @@ public class PawnKindEditUI : Window
             defaultBodyTypes,
             AllBodyTypes,
             false,
-            d => new MenuItemText(
-                d,
-                (string)d.LabelCap ?? d.defName,
-                TryGetIcon(d, out Color c),
-                c,
-                d.description
-            )
+            d => new MenuItemText(d, (string)d.LabelCap ?? d.defName, TryGetIcon(d, out Color c), c, d.description)
         );
     }
 
     private void DrawRequiredTech(Rect rect, bool active, List<ThingDef> defaultReq)
     {
-        DrawDefList(
-            rect,
-            active,
-            ref scrolls[scrollIndex++],
-            Current.TechRequired,
-            Current.Def.techHediffsRequired,
-            AllTech,
-            true
-        );
+        DrawDefList(rect, active, ref scrolls[scrollIndex++], Current.TechRequired, Current.Def.techHediffsRequired, AllTech, true);
     }
 
     private CustomFloatMenu DrawDefList<T>(
@@ -2236,19 +1710,7 @@ public class PawnKindEditUI : Window
             CustomFloatMenu toReturn = null;
             if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "Add new..."))
             {
-                List<MenuItemBase> items = CustomFloatMenu.MakeItems(
-                    allThings,
-                    makeItems
-                    ?? (
-                        d => new MenuItemText(
-                            d,
-                            d.LabelCap,
-                            TryGetIcon(d, out Color c),
-                            c,
-                            d.description
-                        )
-                    )
-                );
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(allThings, makeItems ?? (d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description)));
                 toReturn = CustomFloatMenu.Open(
                     items,
                     raw =>
@@ -2315,38 +1777,17 @@ public class PawnKindEditUI : Window
 
     private void DrawApparelMoney(Rect rect, bool active, FloatRange defaultRange)
     {
-        DrawFloatRange(
-            rect,
-            active,
-            ref Current.ApparelMoney,
-            Current.Def.apparelMoney,
-            ref buffers[bufferIndex++],
-            ref buffers[bufferIndex++]
-        );
+        DrawFloatRange(rect, active, ref Current.ApparelMoney, Current.Def.apparelMoney, ref buffers[bufferIndex++], ref buffers[bufferIndex++]);
     }
 
     private void DrawTechMoney(Rect rect, bool active, FloatRange defaultRange)
     {
-        DrawFloatRange(
-            rect,
-            active,
-            ref Current.TechMoney,
-            Current.Def.techHediffsMoney,
-            ref buffers[bufferIndex++],
-            ref buffers[bufferIndex++]
-        );
+        DrawFloatRange(rect, active, ref Current.TechMoney, Current.Def.techHediffsMoney, ref buffers[bufferIndex++], ref buffers[bufferIndex++]);
     }
 
     private void DrawWeaponMoney(Rect rect, bool active, FloatRange defaultRange)
     {
-        DrawFloatRange(
-            rect,
-            active,
-            ref Current.WeaponMoney,
-            Current.Def.weaponMoney,
-            ref buffers[bufferIndex++],
-            ref buffers[bufferIndex++]
-        );
+        DrawFloatRange(rect, active, ref Current.WeaponMoney, Current.Def.weaponMoney, ref buffers[bufferIndex++], ref buffers[bufferIndex++]);
     }
 
     private void DrawVPERandomAbilities(Rect rect, bool active, bool _)
@@ -2359,12 +1800,8 @@ public class PawnKindEditUI : Window
             bool value =
                 Current.VEPsycastRandomAbilities
                 ?? (
-                    VEPsycastsReflectionHelper.FindVEPsycastsExtension(Current.Def)
-                        is { } psycastsExtension
-                    && VEPsycastsReflectionHelper.GiveRandomAbilitiesField.Value?.GetValue(
-                            psycastsExtension
-                        )
-                        is true
+                    VEPsycastsReflectionHelper.FindVEPsycastsExtension(Current.Def) is { } psycastsExtension
+                    && VEPsycastsReflectionHelper.GiveRandomAbilitiesField.Value?.GetValue(psycastsExtension) is true
                 );
             Widgets.CheckboxLabeled(rect, "GiveRandomAbilities", ref value);
             Current.VEPsycastRandomAbilities = value;
@@ -2386,10 +1823,8 @@ public class PawnKindEditUI : Window
             int value =
                 Current.VEPsycastLevel
                 ?? (
-                    VEPsycastsReflectionHelper.FindVEPsycastsExtension(Current.Def)
-                        is { } psycastsExtension
-                    && VEPsycastsReflectionHelper.LevelField.Value?.GetValue(psycastsExtension)
-                        is int i
+                    VEPsycastsReflectionHelper.FindVEPsycastsExtension(Current.Def) is { } psycastsExtension
+                    && VEPsycastsReflectionHelper.LevelField.Value?.GetValue(psycastsExtension) is int i
                         ? i
                         : 1
                 );
@@ -2407,29 +1842,14 @@ public class PawnKindEditUI : Window
     {
         if (
             VEPsycastsReflectionHelper.FindVEPsycastsExtension(Current.Def) is { } psycastsExtension
-            && VEPsycastsReflectionHelper.StatUpgradePointsField.Value?.GetValue(psycastsExtension)
-                is IntRange ir
+            && VEPsycastsReflectionHelper.StatUpgradePointsField.Value?.GetValue(psycastsExtension) is IntRange ir
         )
             defaultRange = ir;
 
-        DrawIntRange(
-            rect,
-            active,
-            ref Current.VEPsycastStatPoints,
-            defaultRange,
-            ref buffers[bufferIndex++],
-            ref buffers[bufferIndex++]
-        );
+        DrawIntRange(rect, active, ref Current.VEPsycastStatPoints, defaultRange, ref buffers[bufferIndex++], ref buffers[bufferIndex++]);
     }
 
-    private void DrawIntRange(
-        Rect rect,
-        bool active,
-        ref IntRange? current,
-        IntRange defaultRange,
-        ref string buffer,
-        ref string buffer2
-    )
+    private void DrawIntRange(Rect rect, bool active, ref IntRange? current, IntRange defaultRange, ref string buffer, ref string buffer2)
     {
         if (active)
         {
@@ -2457,14 +1877,7 @@ public class PawnKindEditUI : Window
         }
     }
 
-    private void DrawFloatRange(
-        Rect rect,
-        bool active,
-        ref FloatRange? current,
-        FloatRange defaultRange,
-        ref string buffer,
-        ref string buffer2
-    )
+    private void DrawFloatRange(Rect rect, bool active, ref FloatRange? current, FloatRange defaultRange, ref string buffer, ref string buffer2)
     {
         if (active)
         {
@@ -2492,13 +1905,7 @@ public class PawnKindEditUI : Window
         }
     }
 
-    private void DrawColorList(
-        Rect rect,
-        bool active,
-        ref Vector2 scroll,
-        IList<Color> current,
-        IList<Color> defaultColors
-    )
+    private void DrawColorList(Rect rect, bool active, ref Vector2 scroll, IList<Color> current, IList<Color> defaultColors)
     {
         string MakeString(IList<Color> list)
         {
@@ -2575,14 +1982,7 @@ public class PawnKindEditUI : Window
         }
     }
 
-    private void DrawStringList(
-        Rect rect,
-        bool active,
-        ref Vector2 scroll,
-        IList<string> current,
-        IList<string> defaultTags,
-        IEnumerable<string> allTags
-    )
+    private void DrawStringList(Rect rect, bool active, ref Vector2 scroll, IList<string> current, IList<string> defaultTags, IEnumerable<string> allTags)
     {
         string MakeString(IList<string> list)
         {
@@ -2599,10 +1999,7 @@ public class PawnKindEditUI : Window
         {
             if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "Add new..."))
             {
-                List<MenuItemBase> items = CustomFloatMenu.MakeItems(
-                    allTags,
-                    t => new MenuItemText(t, t)
-                );
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(allTags, t => new MenuItemText(t, t));
                 CustomFloatMenu.Open(
                     items,
                     raw =>
@@ -2647,25 +2044,13 @@ public class PawnKindEditUI : Window
     }
 
     // Generic, takes T and T?
-    private void DrawOverride<T>(
-        Listing_Standard ui,
-        T defaultValue,
-        ref T? field,
-        string label,
-        Action<Rect, bool, T> drawContent,
-        float height = 32
-    )
+    private void DrawOverride<T>(Listing_Standard ui, T defaultValue, ref T? field, string label, Action<Rect, bool, T> drawContent, float height = 32)
         where T : struct
     {
         ui.Label($"<b>{label}</b>");
         Rect rect = ui.GetRect(height);
         bool active = field != null;
-        if (
-            Widgets.ButtonText(
-                new Rect(rect.x, rect.y, 120, 32),
-                $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"
-            )
-        )
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
         {
             if (active)
                 field = null;
@@ -2685,25 +2070,13 @@ public class PawnKindEditUI : Window
     }
 
     // Generic, takes T and T
-    private void DrawOverride<T>(
-        Listing_Standard ui,
-        T defaultValue,
-        ref T field,
-        string label,
-        Action<Rect, bool, T> drawContent,
-        float height = 32
-    )
+    private void DrawOverride<T>(Listing_Standard ui, T defaultValue, ref T field, string label, Action<Rect, bool, T> drawContent, float height = 32)
         where T : class
     {
         ui.Label($"<b>{label}</b>");
         Rect rect = ui.GetRect(height);
         bool active = field != null;
-        if (
-            Widgets.ButtonText(
-                new Rect(rect.x, rect.y, 120, 32),
-                $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"
-            )
-        )
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
         {
             if (active)
                 field = null;
@@ -2723,26 +2096,13 @@ public class PawnKindEditUI : Window
     }
 
     // For lists, takes T and T
-    private void DrawOverride<T>(
-        Listing_Standard ui,
-        T defaultValue,
-        ref T field,
-        string label,
-        Action<Rect, bool, T> drawContent,
-        float height = 32,
-        bool cloneDefault = true
-    )
+    private void DrawOverride<T>(Listing_Standard ui, T defaultValue, ref T field, string label, Action<Rect, bool, T> drawContent, float height = 32, bool cloneDefault = true)
         where T : IList
     {
         ui.Label($"<b>{label}</b>");
         Rect rect = ui.GetRect(height);
         bool active = field != null;
-        if (
-            Widgets.ButtonText(
-                new Rect(rect.x, rect.y, 120, 32),
-                $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"
-            )
-        )
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
         {
             if (active)
             {
@@ -2750,10 +2110,7 @@ public class PawnKindEditUI : Window
             }
             else
             {
-                field = (T)
-                    Activator.CreateInstance(
-                        typeof(List<>).MakeGenericType(typeof(T).GenericTypeArguments)
-                    );
+                field = (T)Activator.CreateInstance(typeof(List<>).MakeGenericType(typeof(T).GenericTypeArguments));
                 if (cloneDefault && defaultValue != null)
                     foreach (object value in defaultValue)
                         field.Add(value);

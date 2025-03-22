@@ -20,6 +20,7 @@ public static class ApparelGenPatch
     private static List<SpecRequirementEdit> pool3 = [];
     private static List<SpecRequirementEdit> pool4 = [];
     private static List<HairDef> hairs = [];
+    private static List<BeardDef> beards = [];
     private static List<Color> hairColors = [];
     private static int edits;
     private static bool anyForceNaked = false;
@@ -39,6 +40,7 @@ public static class ApparelGenPatch
         pool3.Clear();
         pool4.Clear();
         hairs.Clear();
+        beards.Clear();
         hairColors.Clear();
         edits = 0;
 
@@ -54,11 +56,7 @@ public static class ApparelGenPatch
         if (anyForceOnlySelected)
         {
             List<Apparel> enumerable =
-                pawn.apparel?.WornApparel?.Where(a =>
-                        !apparelRequired.Contains(a.def)
-                        && !(a.def?.apparel?.tags ?? []).Any(t => apparelTagsAllowed.Contains(t))
-                    )
-                    .ToList() ?? [];
+                pawn.apparel?.WornApparel?.Where(a => !apparelRequired.Contains(a.def) && !(a.def?.apparel?.tags ?? []).Any(t => apparelTagsAllowed.Contains(t))).ToList() ?? [];
             foreach (Apparel a in enumerable)
             {
                 ModCore.Debug(a.def.LabelCap + "Destroyed");
@@ -70,14 +68,17 @@ public static class ApparelGenPatch
             ForceGiveClothes(pawn);
 
         HairDef hair = GetForcedHair();
+        BeardDef beard = GetForcedBeard();
         Color? color = GetForcedHairColor();
         if (pawn.story == null)
             return;
+        if (beard != null && pawn.style != null && pawn.style.beardDef != beard)
+            pawn.style.beardDef = beard;
         if (hair != null)
             pawn.story.hairDef = hair;
         if (color != null)
             pawn.story.HairColor = color.Value;
-        pawn.Drawer?.renderer?.SetAllGraphicsDirty();
+        pawn.style?.Notify_StyleItemChanged();
     }
 
     private static void ForceGiveClothes(Pawn pawn)
@@ -111,6 +112,9 @@ public static class ApparelGenPatch
     {
         if (edit.CustomHair != null)
             hairs.AddRange(edit.CustomHair);
+
+        if (edit.CustomBeards != null)
+            beards.AddRange(edit.CustomBeards);
 
         if (edit.CustomHairColors != null)
             hairColors.AddRange(edit.CustomHairColors);
@@ -152,9 +156,7 @@ public static class ApparelGenPatch
                     pool4.Add(item);
                     break;
                 default:
-                    Log.Warning(
-                        $"Unknown selection mode '{item.SelectionMode} for '{item.Thing.LabelCap}'"
-                    );
+                    Log.Warning($"Unknown selection mode '{item.SelectionMode} for '{item.Thing.LabelCap}'");
                     break;
             }
     }
@@ -168,27 +170,19 @@ public static class ApparelGenPatch
             if (Rand.Chance(item.SelectionChance))
                 yield return item;
 
-        SpecRequirementEdit selected = pool1
-            .Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true)
-            .RandomElementByWeightWithFallback(i => i.SelectionChance);
+        SpecRequirementEdit selected = pool1.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool2
-            .Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true)
-            .RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = pool2.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool3
-            .Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true)
-            .RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = pool3.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool4
-            .Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true)
-            .RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = pool4.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
     }
@@ -198,9 +192,7 @@ public static class ApparelGenPatch
         Thing thing = ThingMaker.MakeThing(spec.Thing, spec.Material);
         if (thing == null)
         {
-            ModCore.Error(
-                $"Failed to generate a '{spec.Thing.LabelCap}' made out of '{spec.Material?.LabelCap ?? "<nothing>"}'."
-            );
+            ModCore.Error($"Failed to generate a '{spec.Thing.LabelCap}' made out of '{spec.Material?.LabelCap ?? "<nothing>"}'.");
             return null;
         }
 
@@ -215,9 +207,7 @@ public static class ApparelGenPatch
             thing.SetStyleDef(spec.Style);
 
         if (spec.Quality != null)
-            thing
-                .TryGetComp<CompQuality>()
-                ?.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
+            thing.TryGetComp<CompQuality>()?.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
 
         if (spec.Color != default)
             thing.SetColor(spec.Color, false);
@@ -241,6 +231,16 @@ public static class ApparelGenPatch
         hairs.RemoveAll(h => h == null);
         hairs.RemoveDuplicates((a, b) => a == b);
         return hairs.Count > 0 ? hairs.RandomElement() : null;
+    }
+
+    private static BeardDef GetForcedBeard()
+    {
+        if (beards.Count == 0)
+            return null;
+
+        beards.RemoveAll(h => h == null);
+        beards.RemoveDuplicates((a, b) => a == b);
+        return beards.Count > 0 ? beards.RandomElement() : null;
     }
 
     private static Color? GetForcedHairColor()

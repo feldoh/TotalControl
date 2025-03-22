@@ -21,33 +21,28 @@ public class Dialog_FactionLoadout : Window
     {
         int presetHeight = (Preset.LoadedPresets.Count + 1) * 30;
         int restHeight = 300; // Adjust this value as needed
-        
+
         float scrollViewHeight = presetHeight + restHeight;
-        
+
         Rect viewRect = new Rect(0, 0, inRect.width - 20, scrollViewHeight);
-        Rect viewPortRect = new Rect(0, 30, inRect.width, inRect.height-70);
+        Rect viewPortRect = new Rect(0, 30, inRect.width, inRect.height - 70);
         scrollPosition = GUI.BeginScrollView(viewPortRect, scrollPosition, viewRect);
         Listing_Standard ui = new Listing_Standard();
-        
-        try{
-            
+
+        try
+        {
             ui.Begin(viewRect);
-            
+
             ui.Label("FactionLoadout_Settings_FactionPresetDesc".Translate());
             ui.GapLine();
-            
-            
+
             ui.CheckboxLabeled(
                 "FactionLoadout_Settings_VanillaRestrictions".Translate(),
                 ref MySettings.VanillaRestrictions,
                 "FactionLoadout_Settings_VanillaRestrictionsDesc".Translate()
             );
             ui.GapLine();
-            ui.CheckboxLabeled(
-                "FactionLoadout_Settings_Verbose".Translate(),
-                ref MySettings.VerboseLogging,
-                "FactionLoadout_Settings_VerboseDesc".Translate()
-            );
+            ui.CheckboxLabeled("FactionLoadout_Settings_Verbose".Translate(), ref MySettings.VerboseLogging, "FactionLoadout_Settings_VerboseDesc".Translate());
             ui.CheckboxLabeled(
                 "FactionLoadout_Settings_PatchKindInRequests".Translate(),
                 ref MySettings.PatchKindInRequests,
@@ -69,16 +64,14 @@ public class Dialog_FactionLoadout : Window
 
                 GUI.color = active ? Color.green : Color.red;
                 bool currentActive = active;
-                Widgets.CheckboxLabeled(area, "FactionLoadout_Active".Translate().CapitalizeFirst(), ref active,
-                    placeCheckboxNearText: true);
+                Widgets.CheckboxLabeled(area, "FactionLoadout_Active".Translate().CapitalizeFirst(), ref active, placeCheckboxNearText: true);
                 if (currentActive != active)
                     MySettings.ActivePreset = active ? preset.GUID : null;
 
                 GUI.color = Color.white;
                 area.x += 90;
                 GUI.color = deleteMode ? Color.red : Color.white;
-                if (Widgets.ButtonText(area,
-                        deleteMode ? "Delete".Translate().CapitalizeFirst() : "FactionLoadout_Edit".Translate().CapitalizeFirst()))
+                if (Widgets.ButtonText(area, deleteMode ? "Delete".Translate().CapitalizeFirst() : "FactionLoadout_Edit".Translate().CapitalizeFirst()))
                 {
                     if (!deleteMode)
                     {
@@ -125,9 +118,8 @@ public class Dialog_FactionLoadout : Window
             ui.End();
             GUI.EndScrollView();
         }
-
     }
-    
+
     public override void PostClose()
     {
         base.PostClose();

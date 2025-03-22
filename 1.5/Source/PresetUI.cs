@@ -56,10 +56,7 @@ public class PresetUI : Window
         ui.Begin(inRect);
 
         Rect rect = ui.GetRect(50);
-        Widgets.Label(
-            rect,
-            $"<size=34><b>Preset: <color=#cf9af5>{Current.Name}</color></b></size>"
-        );
+        Widgets.Label(rect, $"<size=34><b>Preset: <color=#cf9af5>{Current.Name}</color></b></size>");
 
         Rect buttonsRect = ui.GetRect(32);
 
@@ -98,9 +95,7 @@ public class PresetUI : Window
         // Missing faction handling.
         if (Current.HasMissingFactions())
         {
-            ui.Label(
-                "<color=red><b>WARNING:</b> This preset has missing factions, probably because they are added by a mod that is not loaded:</color>"
-            );
+            ui.Label("<color=red><b>WARNING:</b> This preset has missing factions, probably because they are added by a mod that is not loaded:</color>");
             ui.Label("<b>Missing factions</b>");
             ui.GapLine();
             foreach (string str in Current.GetMissingFactionAndModNames())
@@ -117,11 +112,7 @@ public class PresetUI : Window
         ui.Label($"<b>This preset edits {Current.factionChanges.Count} factions:</b>");
         ui.Gap();
 
-        Widgets.BeginScrollView(
-            ui.GetRect(200),
-            ref scroll,
-            new Rect(0, 0, inRect.width - 20, Current.factionChanges.Count * (28 * 2 + 10))
-        );
+        Widgets.BeginScrollView(ui.GetRect(200), ref scroll, new Rect(0, 0, inRect.width - 20, Current.factionChanges.Count * (28 * 2 + 10)));
 
         Listing_Standard oldUI = ui;
         ui = new Listing_Standard();
@@ -157,12 +148,7 @@ public class PresetUI : Window
                 if (Widgets.ButtonText(area, "EDIT"))
                     FactionEditUI.OpenEditor(item);
                 area.x += 90;
-                Widgets.CheckboxLabeled(
-                    area,
-                    "Enabled",
-                    ref item.Active,
-                    placeCheckboxNearText: true
-                );
+                Widgets.CheckboxLabeled(area, "Enabled", ref item.Active, placeCheckboxNearText: true);
             }
 
             ui.GapLine(10);
@@ -175,9 +161,7 @@ public class PresetUI : Window
         ui.Gap();
         if (ui.ButtonText("Add new faction edit..."))
         {
-            List<FactionDef> raw = DefDatabase<FactionDef>.AllDefsListForReading.Where(f =>
-                !Current.HasEditFor(f)
-            ).ToList();
+            List<FactionDef> raw = DefDatabase<FactionDef>.AllDefsListForReading.Where(f => !Current.HasEditFor(f)).ToList();
             if (!Current.HasEditFor(Preset.SpecialCreepjoinerFaction) && !raw.Any(f => f.defName == Preset.SpecialCreepjoinerFaction.defName))
             {
                 raw.Add(Preset.SpecialCreepjoinerFaction);
@@ -188,13 +172,7 @@ public class PresetUI : Window
             }
             List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                 raw,
-                f => new MenuItemText(
-                    f,
-                    $"{f.LabelCap} ({f.defName})",
-                    PawnKindEditUI.TryGetIcon(f, out Color c),
-                    c,
-                    f.description
-                )
+                f => new MenuItemText(f, $"{f.LabelCap} ({f.defName})", PawnKindEditUI.TryGetIcon(f, out Color c), c, f.description)
             );
 
             CustomFloatMenu.Open(
