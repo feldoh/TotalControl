@@ -11,6 +11,8 @@ namespace FactionLoadout;
 [HotSwappable]
 public class FactionEditUI : Window
 {
+    public static string BaselinerDefName = "Baseliner";
+
     public readonly FactionEdit Current;
 
     private readonly List<PawnKindEdit> bin = new();
@@ -123,24 +125,24 @@ public class FactionEditUI : Window
         if (ModsConfig.BiotechActive && Current.Faction?.Def != Preset.SpecialWildManFaction)
         {
             ui.GapLine();
-            ui.CheckboxLabeled("<b>Edit Xenotype spawn rates:</b>", ref Current.OverrideFactionXenotypes);
+            ui.CheckboxLabeled($"<b>{"FactionLoadout_EditXenoSpawnRates".Translate()}:</b>", ref Current.OverrideFactionXenotypes);
             if (Current.OverrideFactionXenotypes)
             {
-                var toDelete = new List<XenotypeDef>();
+                List<string> toDelete = [];
                 if (Current.xenotypeChances.NullOrEmpty() && Current.OverrideFactionXenotypes)
                 {
                     Current.xenotypeChances =
-                        Current.Faction?.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype, x => x.chance) ?? new Dictionary<XenotypeDef, float>();
-                    if (!Current.xenotypeChances.ContainsKey(XenotypeDefOf.Baseliner))
-                        Current.xenotypeChances.Add(XenotypeDefOf.Baseliner, Current.Faction?.Def?.xenotypeSet?.BaselinerChance ?? 1f);
+                        Current.Faction?.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype.defName, x => x.chance) ?? new Dictionary<string, float>();
+                    if (!Current.xenotypeChances.ContainsKey(BaselinerDefName))
+                        Current.xenotypeChances.Add(BaselinerDefName, Current.Faction?.Def?.xenotypeSet?.BaselinerChance ?? 1f);
                 }
 
-                Current.xenotypeChances[XenotypeDefOf.Baseliner] = Math.Max(0f, 1f - Current.xenotypeChances.Sum(x => x.Key == XenotypeDefOf.Baseliner ? 0 : x.Value));
+                Current.xenotypeChances[BaselinerDefName] = Math.Max(0f, 1f - Current.xenotypeChances.Sum(x => x.Key == BaselinerDefName ? 0 : x.Value));
 
-                foreach (XenotypeDef key in Current.xenotypeChances.Keys.ToList())
+                foreach (string key in Current.xenotypeChances.Keys.ToList())
                     Current.xenotypeChances[key] = UIHelpers.SliderLabeledWithDelete(
                         ui,
-                        $"{key.LabelCap}: {Current.xenotypeChances[key].ToStringPercent()}",
+                        $"{DefDatabase<XenotypeDef>.GetNamedSilentFail(key)?.LabelCap ?? key}: {Current.xenotypeChances[key].ToStringPercent()}",
                         Current.xenotypeChances[key],
                         0f,
                         1f,
@@ -150,20 +152,39 @@ public class FactionEditUI : Window
                         }
                     );
 
-                foreach (XenotypeDef delete in toDelete)
+                foreach (string delete in toDelete)
                     Current.xenotypeChances.Remove(delete);
 
-                if (ui.ButtonText("Add new..."))
+                if (ui.ButtonText("FactionLoadout_AddNewByDefName".Translate()))
                 {
-                    var floatMenuList = new List<FloatMenuOption>();
+                    // Add a new xenotype by def name only, allows adding options without the mod loaded.
+                    Find.WindowStack.Add(
+                        new Dialog_TextEntry(
+                            "FactionLoadout_AddNewByDefNameDesc".Translate(),
+                            defName =>
+                            {
+                                if (Current.xenotypeChances.ContainsKey(defName))
+                                {
+                                    Messages.Message("FactionLoadout_DuplicateListItem".Translate(defName), MessageTypeDefOf.RejectInput);
+                                    return;
+                                }
+                                Current.xenotypeChances[defName] = 0.1f;
+                            }
+                        )
+                    );
+                }
+                // Show a list of xenotypes that can be added, much nicer than going by name but requires biotech
+                if (ModLister.BiotechInstalled && ui.ButtonText("FactionLoadout_AddNew".Translate()))
+                {
+                    List<FloatMenuOption> floatMenuList = [];
                     foreach (XenotypeDef def in DefDatabase<XenotypeDef>.AllDefs)
-                        if (!Current.xenotypeChances.ContainsKey(def))
+                        if (!Current.xenotypeChances.ContainsKey(def.defName))
                             floatMenuList.Add(
                                 new FloatMenuOption(
                                     def.LabelCap,
                                     delegate
                                     {
-                                        Current.xenotypeChances[def] = 0.1f;
+                                        Current.xenotypeChances[def.defName] = 0.1f;
                                     }
                                 )
                             );
@@ -174,6 +195,7 @@ public class FactionEditUI : Window
             else
             {
                 Current.xenotypeChances.Clear();
+                Current.xenotypeChancesByDef.Clear();
             }
         }
 
@@ -382,7 +404,7 @@ public class FactionEditUI : Window
                     ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos,
                     Name = clonedFac.fixedName,
                     relations = Find
-                        .FactionManager.AllFactionsVisible.Select(otherFaction => new FactionRelation()
+                        .FactionManager.AllFactionsVisible.Select(otherFaction => new FactionRelation
                         {
                             other = otherFaction,
                             baseGoodwill = 0,
@@ -466,5 +488,51 @@ public class FactionEditUI : Window
                 DefDatabase<SpecialThingFilterDef>.GetNamed("AllowRotten")
             }
         );
+    }
+}
+
+public class Dialog_TextEntry : Window
+{
+    private string message;
+    private string input;
+    private Action<string> onConfirm;
+
+    public Dialog_TextEntry(string message, Action<string> onConfirm)
+    {
+        this.message = message;
+        this.onConfirm = onConfirm;
+        input = string.Empty;
+        doCloseX = true;
+        closeOnAccept = false;
+        closeOnCancel = true;
+    }
+
+    public override Vector2 InitialSize
+    {
+        get
+        {
+            Vector2 size = Text.CalcSize(message);
+            size.x += 100;
+            size.y *= 7;
+            return size;
+        }
+    }
+
+    public override void DoWindowContents(Rect inRect)
+    {
+        Listing_Standard listingStandard = new();
+        listingStandard.Begin(inRect);
+        listingStandard.Label(message);
+        input = listingStandard.TextEntry(input);
+        if (listingStandard.ButtonText("Accept".Translate()))
+        {
+            onConfirm?.Invoke(input);
+            Close();
+        }
+        if (listingStandard.ButtonText("Cancel".Translate()))
+        {
+            Close();
+        }
+        listingStandard.End();
     }
 }

@@ -1053,18 +1053,18 @@ public class PawnKindEditUI : Window
             return;
 
         ui.Label("<b>Xenotype spawn rates:</b>");
-        List<XenotypeDef> toDelete = [];
-        if (Current.ForcedXenotypeChances is null)
+        List<string> toDelete = [];
+        if (Current.ForcedXenotypeChances.NullOrEmpty())
         {
-            Current.ForcedXenotypeChances = Current.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype, x => x.chance) ?? new Dictionary<XenotypeDef, float>();
-            if (!Current.ForcedXenotypeChances.ContainsKey(XenotypeDefOf.Baseliner))
-                Current.ForcedXenotypeChances.Add(XenotypeDefOf.Baseliner, Current.Def?.xenotypeSet?.BaselinerChance ?? 1f);
+            Current.ForcedXenotypeChances = Current.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype.defName, x => x.chance) ?? new Dictionary<string, float>();
+            if (!Current.ForcedXenotypeChances.ContainsKey(FactionEditUI.BaselinerDefName))
+                Current.ForcedXenotypeChances.Add(FactionEditUI.BaselinerDefName, Current.Def?.xenotypeSet?.BaselinerChance ?? 1f);
         }
 
-        foreach (XenotypeDef key in Current.ForcedXenotypeChances.Keys.ToList())
+        foreach (string key in Current.ForcedXenotypeChances.Keys.ToList())
             Current.ForcedXenotypeChances[key] = UIHelpers.SliderLabeledWithDelete(
                 ui,
-                $"{key.LabelCap}: {Current.ForcedXenotypeChances[key].ToStringPercent()}",
+                $"{DefDatabase<XenotypeDef>.GetNamedSilentFail(key)?.LabelCap ?? key}: {Current.ForcedXenotypeChances[key].ToStringPercent()}",
                 Current.ForcedXenotypeChances[key],
                 0f,
                 1f,
@@ -1074,20 +1074,20 @@ public class PawnKindEditUI : Window
                 }
             );
 
-        foreach (XenotypeDef delete in toDelete)
+        foreach (string delete in toDelete)
             Current.ForcedXenotypeChances.Remove(delete);
 
         if (!ui.ButtonText("Add new..."))
             return;
         List<FloatMenuOption> floatMenuList = [];
         foreach (XenotypeDef def in DefDatabase<XenotypeDef>.AllDefs)
-            if (!Current.ForcedXenotypeChances.ContainsKey(def))
+            if (!Current.ForcedXenotypeChances.ContainsKey(def.defName))
                 floatMenuList.Add(
                     new FloatMenuOption(
                         def.LabelCap,
                         delegate
                         {
-                            Current.ForcedXenotypeChances[def] = 0.1f;
+                            Current.ForcedXenotypeChances[def.defName] = 0.1f;
                         }
                     )
                 );

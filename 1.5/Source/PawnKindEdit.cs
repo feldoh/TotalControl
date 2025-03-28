@@ -119,7 +119,8 @@ public class PawnKindEdit : IExposable
     public List<Color> CustomHairColors = null;
     public bool DeletedOrClosed;
     public List<ForcedHediff> ForcedHediffs = null;
-    public Dictionary<XenotypeDef, float> ForcedXenotypeChances = new();
+    public Dictionary<string, float> ForcedXenotypeChances = new();
+    public Dictionary<XenotypeDef, float> ForcedXenotypeChanceDefs = new();
     public Gender? ForcedGender = null;
     public SimpleCurve RaidCommonalityFromPointsCurve = SimpleCurve.Empty();
     public SimpleCurve RaidLootValueFromPointsCurve = SimpleCurve.Empty();
@@ -194,10 +195,17 @@ public class PawnKindEdit : IExposable
         Scribe_Collections.Look(ref CustomHair, "customHair", LookMode.Def);
         Scribe_Collections.Look(ref CustomHairColors, "customHairColors");
         Scribe_Collections.Look(ref ForcedHediffs, "forcedHediffs", LookMode.Deep);
-        Scribe_Collections.Look(ref ForcedXenotypeChances, "forcedXenotypeChances", LookMode.Def, LookMode.Value);
+        Scribe_Collections.Look(ref ForcedXenotypeChances, "forcedXenotypeChances", LookMode.Value, LookMode.Value);
         Scribe_Deep.Look(ref RaidLootValueFromPointsCurve, "raidLootValueFromPointsCurve");
         Scribe_Deep.Look(ref RaidCommonalityFromPointsCurve, "raidCommonalityFromPointsCurve");
         Scribe_Values.Look(ref UnwaveringlyLoyalChance, "unwaveringlyLoyalChance");
+        if (Scribe.mode == LoadSaveMode.PostLoadInit)
+        {
+            ForcedXenotypeChanceDefs = ForcedXenotypeChances
+                .Select(kvp => new Pair<XenotypeDef, float>(DefDatabase<XenotypeDef>.GetNamedSilentFail(kvp.Key), kvp.Value))
+                .Where(c => c.first != null)
+                .ToDictionary(kvp => kvp.first, kvp => kvp.second);
+        }
 
         bool isFake = NameMaker == FakeRulePack;
         if (isFake)
@@ -377,13 +385,13 @@ public class PawnKindEdit : IExposable
             ModCore.Debug($"Adding forced hediffs {hediffExtension.forcedHediffs?.Select(h => h.HediffDef?.defName).ToCommaList() ?? "None"} to {def.defName}");
         }
 
-        if (ModsConfig.BiotechActive && def.RaceProps.Humanlike && ForceSpecificXenos && (ForcedXenotypeChances?.Count ?? 0) >= 1)
+        if (ModsConfig.BiotechActive && def.RaceProps.Humanlike && ForceSpecificXenos && (ForcedXenotypeChanceDefs?.Count ?? 0) >= 1)
         {
             def.useFactionXenotypes = false;
             def.xenotypeSet ??= new XenotypeSet();
             def.xenotypeSet.xenotypeChances ??= [];
             def.xenotypeSet.xenotypeChances.Clear();
-            foreach (KeyValuePair<XenotypeDef, float> rate in ForcedXenotypeChances ?? [])
+            foreach (KeyValuePair<XenotypeDef, float> rate in ForcedXenotypeChanceDefs ?? [])
                 def.xenotypeSet.xenotypeChances.Add(new XenotypeChance(rate.Key, rate.Value));
         }
 

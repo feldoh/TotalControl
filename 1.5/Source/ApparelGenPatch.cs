@@ -78,7 +78,14 @@ public static class ApparelGenPatch
             pawn.story.hairDef = hair;
         if (color != null)
             pawn.story.HairColor = color.Value;
-        pawn.style?.Notify_StyleItemChanged();
+        if (ModLister.IdeologyInstalled)
+        {
+            pawn.style?.Notify_StyleItemChanged();
+        }
+        else
+        {
+            pawn.Drawer?.renderer?.SetAllGraphicsDirty();
+        }
     }
 
     private static void ForceGiveClothes(Pawn pawn)

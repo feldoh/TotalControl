@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using RimWorld;
 using Verse;
 
@@ -18,7 +19,8 @@ public class FactionEdit : IExposable
 
     public DefRef<FactionDef> Faction = new();
     public List<PawnKindEdit> KindEdits = [];
-    public Dictionary<XenotypeDef, float> xenotypeChances = [];
+    public Dictionary<string, float> xenotypeChances = [];
+    public Dictionary<XenotypeDef, float> xenotypeChancesByDef = [];
     public bool OverrideFactionXenotypes = false;
 
     public static PawnKindDef GetReplacementForPawnKind(FactionDef faction, PawnKindDef original)
@@ -49,10 +51,40 @@ public class FactionEdit : IExposable
         Scribe_Deep.Look(ref Faction, "faction");
         Scribe_Values.Look(ref TechLevel, "techLevel");
         Scribe_Collections.Look(ref KindEdits, "kindEdits", LookMode.Deep);
-        Scribe_Collections.Look(ref xenotypeChances, "xenotypeChances", LookMode.Def, LookMode.Value);
+        Scribe_Collections.Look(ref xenotypeChances, "xenotypeChances", LookMode.Value, LookMode.Value);
+        if (Scribe.mode == LoadSaveMode.Saving)
+            MaterializeXenotypeChances();
         Scribe_Values.Look(ref OverrideFactionXenotypes, "overrideFactionXenotypes", false);
-        if (Scribe.mode == LoadSaveMode.PostLoadInit && !xenotypeChances.NullOrEmpty())
+        if (Scribe.mode != LoadSaveMode.PostLoadInit)
+            return;
+
+        MaterializeXenotypeChances();
+        if (!(xenotypeChances.NullOrEmpty() && xenotypeChancesByDef.NullOrEmpty()))
             OverrideFactionXenotypes = true;
+    }
+
+    /**
+     * Can't trust XenotypeDefs to actually exist, so we would like to stick to names.
+     * So we need to update the actual defs from the names.
+     */
+    public void MaterializeXenotypeChances(bool replace = false)
+    {
+        if (replace)
+            xenotypeChancesByDef.Clear();
+        if (ModLister.BiotechInstalled && !xenotypeChances.NullOrEmpty())
+        {
+            xenotypeChances.Do(pair =>
+            {
+                if (DefDatabase<XenotypeDef>.GetNamedSilentFail(pair.Key) is { } def)
+                {
+                    xenotypeChancesByDef[def] = pair.Value;
+                }
+                else
+                {
+                    ModCore.Log($"XenotypeDef '{pair.Key}' not found while processing edit for '{Faction.DefName}', skipping.");
+                }
+            });
+        }
     }
 
     public static void TweakAllPawnKinds(FactionDef def, Func<PawnKindDef, PawnKindDef> func)
@@ -189,12 +221,12 @@ public class FactionEdit : IExposable
             if (editor?.Apply(safeKind, global) is { } newKind && newKind != safeKind)
                 safeKind = newKind;
 
-            if (ModsConfig.BiotechActive && (xenotypeChances?.Count ?? 0) >= 1 && (!editor?.ForceSpecificXenos ?? false) && safeKind.RaceProps.Humanlike)
+            if (ModsConfig.BiotechActive && (xenotypeChancesByDef?.Count ?? 0) >= 1 && (!editor?.ForceSpecificXenos ?? false) && safeKind.RaceProps.Humanlike)
             {
                 safeKind.xenotypeSet ??= new XenotypeSet();
                 safeKind.xenotypeSet.xenotypeChances ??= [];
                 safeKind.xenotypeSet.xenotypeChances.Clear();
-                foreach (KeyValuePair<XenotypeDef, float> rate in xenotypeChances ?? [])
+                foreach (KeyValuePair<XenotypeDef, float> rate in xenotypeChancesByDef ?? [])
                     safeKind.xenotypeSet.xenotypeChances.Add(new XenotypeChance(rate.Key, rate.Value));
             }
 
@@ -212,11 +244,11 @@ public class FactionEdit : IExposable
                 ReplaceKind(def, kind, safeKind);
         }
 
-        if (!ModsConfig.BiotechActive || xenotypeChances == null || xenotypeChances.Count < 1)
+        if (!ModsConfig.BiotechActive || xenotypeChancesByDef.NullOrEmpty())
             return;
         def.xenotypeSet ??= new XenotypeSet();
         def.xenotypeSet?.xenotypeChances?.Clear();
-        foreach (KeyValuePair<XenotypeDef, float> rate in xenotypeChances)
+        foreach (KeyValuePair<XenotypeDef, float> rate in xenotypeChancesByDef)
             def.xenotypeSet?.xenotypeChances?.Add(new XenotypeChance(rate.Key, rate.Value));
     }
 

@@ -40,4 +40,9 @@
     <FactionLoadout_NotOverriden_WithDefault>Not Overriden ({0})</FactionLoadout_NotOverriden_WithDefault>
     <Undefined>Undefined</Undefined>
 
+    <FactionLoadout_EditXenoSpawnRates>Edit Xenotype spawn rates</FactionLoadout_EditXenoSpawnRates>
+    <FactionLoadout_AddNew>Add new...</FactionLoadout_AddNew>
+    <FactionLoadout_AddNewByDefName>Add new by def name...</FactionLoadout_AddNewByDefName>
+    <FactionLoadout_AddNewByDefNameDesc>Enter def name of xenotype to add:</FactionLoadout_AddNewByDefNameDesc>
+    <FactionLoadout_DuplicateListItem>{0} already exists in the list</FactionLoadout_DuplicateListItem>
 </LanguageData>

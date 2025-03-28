@@ -52,6 +52,26 @@ public class DebugTools
                         action = () =>
                         {
                             Pawn pawn = PawnGenerator.GeneratePawn(pawnKindDef, faction);
+                            foreach (XenotypeChance xenotypeSetXenotypeChance in faction.def.xenotypeSet.xenotypeChances)
+                            {
+                                ModCore.Log($"{xenotypeSetXenotypeChance.xenotype.defName} chance: {xenotypeSetXenotypeChance.chance}");
+                            }
+
+                            // gen 100 times and print % of each defname
+                            Dictionary<string, int> xenotypeCount = new();
+                            for (int i = 0; i < 100; i++)
+                            {
+                                faction.def.xenotypeSet.xenotypeChances.TryRandomElementByWeight(x => x.chance, out XenotypeChance xenotypeChance);
+                                if (xenotypeCount.ContainsKey(xenotypeChance.xenotype.defName))
+                                {
+                                    xenotypeCount[xenotypeChance.xenotype.defName]++;
+                                }
+                                else
+                                {
+                                    xenotypeCount[xenotypeChance.xenotype.defName] = 1;
+                                }
+                            }
+
                             GenSpawn.Spawn(pawn, UI.MouseCell(), Find.CurrentMap);
                             DebugToolsSpawning.PostPawnSpawn(pawn);
                         }
