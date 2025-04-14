@@ -14,7 +14,7 @@
 
     <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">../../../../</RimworldPath>
     <RimworldPath Condition=" '$(RIMWORLD_PATH)' != '' ">$(RIMWORLD_PATH)</RimworldPath>
-      
+
     <ModsPath Condition=" '$(STEAM_MODS_PATH)' == '' AND Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/../../workshop/content/294100</ModsPath>
     <ModsPath Condition=" '$(STEAM_MODS_PATH)' == '' AND !Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/Mods</ModsPath>
     <ModsPath Condition=" '$(STEAM_MODS_PATH)' != '' ">$(STEAM_MODS_PATH)/294100</ModsPath>

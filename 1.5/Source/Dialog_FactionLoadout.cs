@@ -12,6 +12,8 @@ public class Dialog_FactionLoadout : Window
     public Dialog_FactionLoadout()
     {
         doCloseButton = true;
+        closeOnAccept = true;
+        closeOnCancel = true;
         doCloseX = true;
         forcePause = true;
         absorbInputAroundWindow = true;
@@ -66,7 +68,10 @@ public class Dialog_FactionLoadout : Window
                 bool currentActive = active;
                 Widgets.CheckboxLabeled(area, "FactionLoadout_Active".Translate().CapitalizeFirst(), ref active, placeCheckboxNearText: true);
                 if (currentActive != active)
+                {
                     MySettings.ActivePreset = active ? preset.GUID : null;
+                    ModCore.Settings.Write();
+                }
 
                 GUI.color = Color.white;
                 area.x += 90;
@@ -124,6 +129,6 @@ public class Dialog_FactionLoadout : Window
     {
         base.PostClose();
         Find.WindowStack.WindowOfType<PresetUI>()?.Close();
-        ModCore.Settings.ExposeData();
+        ModCore.Settings.Write();
     }
 }
