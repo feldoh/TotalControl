@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>TotalControlVEPsycastsCompat</RootNamespace>
+        <AssemblyName>TotalControlVEPsycastsCompat</AssemblyName>
+        <TargetFramework>net48</TargetFramework>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+        <LangVersion>preview</LangVersion>
+        <PackageId>TotalControlVEPsycastsCompat</PackageId>
+
+        <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">../../../../../../</RimworldPath>
+        <RimworldPath Condition=" '$(RIMWORLD_PATH)' != '' ">$(RIMWORLD_PATH)</RimworldPath>
+
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' == '' AND Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/../../workshop/content/294100</ModPath>
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' == '' AND !Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/Mods</ModPath>
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' != '' ">$(STEAM_MODS_PATH)/294100</ModPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>portable</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>../../../../Compatibility/VEPsycasts/1.6/Assemblies</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugType>none</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>../../../../Compatibility/VEPsycasts/1.6/Assemblies</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="System" />
+        <Reference Include="System.Core" />
+        <Reference Include="System.Xml" />
+    </ItemGroup>
+
+    <Choose>
+        <When Condition="Exists('$(RimworldPath)/RimWorldWin64_Data/Managed/Assembly-CSharp.dll')">
+            <ItemGroup>
+                <Reference Include="Assembly-CSharp">
+                    <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath>
+                    <Private>False</Private>
+                </Reference>
+                <Reference Include="UnityEngine.CoreModule">
+                    <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+                    <Private>False</Private>
+                </Reference>
+            </ItemGroup>
+        </When>
+    </Choose>
+
+    <ItemGroup>
+        <Reference Include="VanillaPsycastsExpanded">
+            <HintPath>$(ModPath)/2842502659/1.6/Assemblies/VanillaPsycastsExpanded.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="VFECore">
+            <HintPath>$(ModPath)/2023507013/1.6/Assemblies/VEF.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+
+    <!-- The below condition will check if you've defined a reference called "Assembly-CSharp" and if that reference exists on disk.
+        If that reference does not exist, it will add Krafs Rimworld Ref to the project. If it does exist, Krafs won't be added
+        as a reference. This basically means that Krafs is treated as a fallback if Assembly-CSharp is not found -->
+    <ItemGroup Condition="'@(Reference->WithMetadataValue('Identity', 'Assembly-CSharp')->Metadata('HintPath')->Exists())' == ''">
+        <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6-*" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Lib.Harmony" Version="2.2.2" />
+    </ItemGroup>
+
+
+</Project>

@@ -1,0 +1,156 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <LangVersion>preview</LangVersion>
+    <RootNamespace>FactionLoadout</RootNamespace>
+    <AssemblyName>FactionLoadout</AssemblyName>
+    <OutputPath>../Assemblies/</OutputPath>
+    <ZipFilePath>../../$(AssemblyName).zip</ZipFilePath>
+    <ReleasePath>../../Release</ReleasePath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <SteamModsPath>$(RIMWORLD_STEAM_MODS_PATH)</SteamModsPath>
+
+    <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">../../../../</RimworldPath>
+    <RimworldPath Condition=" '$(RIMWORLD_PATH)' != '' ">$(RIMWORLD_PATH)</RimworldPath>
+
+    <ModsPath Condition=" '$(STEAM_MODS_PATH)' == '' AND Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/../../workshop/content/294100</ModsPath>
+    <ModsPath Condition=" '$(STEAM_MODS_PATH)' == '' AND !Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/Mods</ModsPath>
+    <ModsPath Condition=" '$(STEAM_MODS_PATH)' != '' ">$(STEAM_MODS_PATH)/294100</ModsPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <Optimize>false</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <ReleaseFiles Include="../../*.xml;../../*.md;../../LICENSE;../../1.*/**" Exclude="../../1.*/Source/**;../../1.*/Assemblies/**">
+      <Link>Files/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </ReleaseFiles>
+    <AboutFiles Include="../../About/**;">
+      <Link>Files/About/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </AboutFiles>
+    <CommonFiles Include="../../Common/**">
+      <Link>Files/Common/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </CommonFiles>
+    <ReleaseAssemblies Include="../../1.*/Assemblies/*.dll;../../Compatibilit*/**" Exclude="../../1.*/Assemblies/0Harmony.dll">
+      <Link>Files/Assemblies/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </ReleaseAssemblies>
+    <GitMeta Include="../../.git*">
+      <Link>Files/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </GitMeta>
+  </ItemGroup>
+  <Choose>
+    <When Condition="Exists('$(RimworldPath)/RimWorldWin64_Data/Managed/Assembly-CSharp-firstpass.dll')">
+      <ItemGroup>
+        <Reference Include="Assembly-CSharp-firstpass">
+          <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/Assembly-CSharp-firstpass.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Assembly-CSharp">
+          <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine">
+          <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule">
+          <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.InputModule">
+          <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.InputModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.TextRenderingModule">
+          <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UIModule">
+          <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.UIModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UI">
+          <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.UI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UIElementsModule">
+          <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.UIElementsModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.IMGUIModule">
+          <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.InputLegacyModule">
+          <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.InputLegacyModule.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="Krafs.Rimworld.Ref">
+          <Version>1.6-*</Version>
+        </PackageReference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+  <ItemGroup>
+    <PackageReference Include="Krafs.Publicizer" Version="2.2.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Lib.Harmony" Version="2.2.2">
+      <ExcludeAssets>runtime</ExcludeAssets>
+      <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <Publicize Include="Assembly-CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Compatibility/**" />
+  </ItemGroup>
+  <Target Name="CleanAssemblies" AfterTargets="Clean">
+    <RemoveDir Directories="$(OutputPath)" Condition="Exists('$(OutputPath)')" />
+  </Target>
+  <Target Name="CleanRelease" AfterTargets="Clean">
+    <RemoveDir Directories="$(ReleasePath)" Condition="Exists('$(ReleasePath)')" />
+    <Delete Files="$(ZipFilePath)" Condition="Exists('$(ZipFilePath)')" />
+  </Target>
+
+  <!-- Add A step to the build to run csharpier on build -->
+  <Target Name="CheckCsharpier" BeforeTargets="Build">
+    <Exec Command="dotnet csharpier --version" IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="ExitCode"/>
+    </Exec>
+  </Target>
+
+  <Target Name="FormatCode" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Release' And '$(ExitCode)' == '0' " DependsOnTargets="CheckCsharpier">
+    <Exec Command="dotnet csharpier ." />
+  </Target>
+
+  <Target Name="PostBuild" AfterTargets="Build" Condition=" '$(Configuration)' == 'Release' " DependsOnTargets="CleanRelease">
+    <MakeDir Directories="$(ReleasePath)" />
+    <Copy SourceFiles="@(ReleaseFiles)" DestinationFiles="@(ReleaseFiles->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(ReleaseAssemblies)" DestinationFiles="@(ReleaseAssemblies->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(AboutFiles)" DestinationFolder="$(ReleasePath)/About" />
+    <Copy SourceFiles="@(CommonFiles)" DestinationFiles="@(CommonFiles->'$(ReleasePath)/Common/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <ZipDirectory DestinationFile="$(ZipFilePath)" SourceDirectory="$(ReleasePath)" Overwrite="true" />
+    <ItemGroup>
+      <ReleaseFolder Include="$(ReleasePath)/**" />
+    </ItemGroup>
+    <RemoveDir Condition="Exists('$(SteamModsPath)') And Exists('$(SteamModsPath)/$(AssemblyName)')" Directories="$(SteamModsPath)/$(AssemblyName)" ContinueOnError="true"/>
+    <Copy Condition="Exists('$(SteamModsPath)') And !Exists('$(SteamModsPath)/$(AssemblyName)')" SourceFiles="@(ReleaseFolder)" DestinationFiles="@(ReleaseFolder->'$(SteamModsPath)/$(AssemblyName)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+</Project>
