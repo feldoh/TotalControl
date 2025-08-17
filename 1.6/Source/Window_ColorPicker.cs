@@ -11,8 +11,8 @@ public class Window_ColorPicker : Dialog_ColorPickerBase
 {
     public Action<Color> selectAction;
 
-    public static Widgets.ColorComponents visibleColorTextfields = Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat;
-    public static Widgets.ColorComponents editableColorTextfields = Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat;
+    public static Widgets.ColorComponents visibleColorTextfields = Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat | Widgets.ColorComponents.Value;
+    public static Widgets.ColorComponents editableColorTextfields = Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat | Widgets.ColorComponents.Value;
 
     public override Vector2 InitialSize => new(600f, 480f);
     public override bool ShowDarklight => false;
