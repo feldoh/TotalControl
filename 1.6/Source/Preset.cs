@@ -124,6 +124,15 @@ namespace FactionLoadout
                 DefDatabase<FactionDef>.Add(SpecialWildManFaction);
         }
 
+        public static void SetupRelationsForFaction(Faction faction)
+        {
+            foreach (Faction other in Find.FactionManager.AllFactionsListForReading)
+            {
+                if (faction != other)
+                    faction.TryMakeInitialRelationsWith(other);
+            }
+        }
+
         public bool HasMissingFactions()
         {
             foreach (var item in factionChanges)

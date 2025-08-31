@@ -3,7 +3,10 @@ using Verse;
 
 namespace FactionLoadout;
 
-public class ForcedHediffModExtension : DefModExtension
+public class ForcedHediffModExtension : ForcedExtrasModExtension;
+
+public class ForcedExtrasModExtension : DefModExtension
 {
     public List<ForcedHediff> forcedHediffs = [];
+    public List<ForcedGene> forcedGenes = [];
 }

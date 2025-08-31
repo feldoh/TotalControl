@@ -23,6 +23,7 @@ public class PawnKindEditUI : Window
     private static List<ThingDef> AllHumanlikeRaces;
     private static List<PawnKindDef> AllAnimalKindDefs;
     private static List<RulePackDef> AllRulePackDefs;
+    private static List<GeneDef> AllGeneDefs;
 
     private static List<string> AllPowerDefs;
 
@@ -68,9 +69,10 @@ public class PawnKindEditUI : Window
         HashSet<PawnKindDef> allAnimalKindDefs = new(1024);
         HashSet<RulePackDef> allRulePackDefs = new(1024);
         HashSet<BodyTypeDef> allBodyTypeDefs = new(32);
+        HashSet<GeneDef> allGeneDefs = new(1024);
 
         foreach (PawnKindDef def in DefDatabase<PawnKindDef>.AllDefsListForReading)
-            if (def.RaceProps.Animal && def.RaceProps.packAnimal)
+            if (def.RaceProps is { Animal: true, packAnimal: true })
                 allAnimalKindDefs.Add(def);
 
         foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
@@ -115,6 +117,8 @@ public class PawnKindEditUI : Window
         allBodyTypeDefs.AddRange(DefDatabase<BodyTypeDef>.AllDefsListForReading);
         allRulePackDefs.AddRange(DefDatabase<RulePackDef>.AllDefsListForReading);
 
+        allGeneDefs.AddRange(DefDatabase<GeneDef>.AllDefsListForReading);
+
         AllTechHediffTags = [.. techTags];
         AllTechHediffTags.Sort();
 
@@ -143,10 +147,13 @@ public class PawnKindEditUI : Window
         AllAnimalKindDefs.Sort((a, b) => ((string)a.LabelCap).CompareTo(b.LabelCap));
 
         AllBodyTypes = [.. allBodyTypeDefs];
-        AllBodyTypes.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, StringComparison.Ordinal));
+        AllBodyTypes.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, StringComparison.InvariantCulture));
 
         AllRulePackDefs = [.. allRulePackDefs];
         AllRulePackDefs.Sort((a, b) => string.Compare(a.defName, b.defName, StringComparison.InvariantCulture));
+
+        AllGeneDefs = [.. allGeneDefs];
+        AllGeneDefs.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, StringComparison.InvariantCulture));
 
         PopulateVFEAncientsObjects();
     }
@@ -1001,6 +1008,102 @@ public class PawnKindEditUI : Window
         }
     }
 
+    private void DrawSpecificGenes(Listing_Standard ui, ref List<ForcedGene> edits, string label, Func<GeneDef, bool> geneFilter, GeneDef defaultGeneDef)
+    {
+        float height = edits == null ? 32 : 340;
+
+        ui.Label($"<b>{label}</b>");
+        Rect rect = ui.GetRect(height);
+        bool active = edits != null;
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        {
+            edits = active ? null : [];
+            active = !active;
+        }
+
+        Rect content = new(rect.x + 122, rect.y, ui.ColumnWidth - 124, rect.height - 30);
+        Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
+        content = content.ExpandedBy(-2);
+
+        ref Vector2 scroll = ref scrolls[scrollIndex++];
+        if (active)
+        {
+            Widgets.BeginScrollView(content, ref scroll, new Rect(0, 0, 100, 320 * edits.Count - 10));
+            Listing_Standard tempUI = new();
+            tempUI.Begin(new Rect(0, 0, content.width - 20, 320 * edits.Count));
+            DrawSpecificGeneContent(tempUI, geneFilter, edits);
+            tempUI.End();
+            Widgets.EndScrollView();
+            content.y += content.height + 5;
+            content.height = 28;
+            content.width = 250;
+            if (Widgets.ButtonText(content, "<b>Add New</b>"))
+                edits.Add(new ForcedGene { GeneDef = defaultGeneDef });
+        }
+        else
+        {
+            string text = "[Default] <i>None</i>";
+            GUI.enabled = false;
+            Widgets.Label(content.GetCentered(text), text);
+            GUI.enabled = true;
+        }
+
+        ui.Gap();
+    }
+
+    private void DrawSpecificGeneContent(Listing_Standard tempUI, Func<GeneDef, bool> geneFilter, List<ForcedGene> edits)
+    {
+        bool active = edits != null;
+        if (!active)
+            return;
+
+        for (int i = 0; i < edits.Count; i++)
+        {
+            ForcedGene item = edits[i];
+
+            if (item?.GeneDef == null)
+                continue;
+
+            Rect area = tempUI.GetRect(150);
+            Widgets.DrawBoxSolidWithOutline(area, default, Color.white * 0.75f);
+
+            Rect delete = new(area.xMax - 105, area.y + 5, 100, 20);
+            GUI.color = Color.red;
+            if (Widgets.ButtonText(delete, "<b>REMOVE</b>"))
+            {
+                edits.RemoveAt(i);
+                i--;
+            }
+
+            GUI.color = Color.white;
+
+            tempUI.Gap(2);
+            Rect geneRect = new(area.x + 5, area.y + 5, 250, 25);
+            if (Widgets.ButtonText(geneRect, item.GeneDef.LabelCap))
+            {
+                IEnumerable<GeneDef> defs = DefDatabase<GeneDef>.AllDefsListForReading.Where(geneFilter);
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, $"{d.LabelCap} ({d.defName})", TryGetIcon(d, out Color c), c, d.description));
+                CustomFloatMenu.Open(
+                    items,
+                    raw =>
+                    {
+                        GeneDef a = raw.GetPayload<GeneDef>();
+                        item.GeneDef = a;
+                    }
+                );
+            }
+
+            Rect xenogeneRect = new(area.x + 10, area.y + 40, area.width - 10, 30);
+            Widgets.CheckboxLabeled(xenogeneRect, "Xenogene", ref item.xenogene);
+            Rect forceActiveRect = new(area.x + 10, area.y + 70, area.width - 10, 30);
+            Widgets.CheckboxLabeled(forceActiveRect, "Force Active", ref item.forceActive);
+            Rect geneChanceRect = new(area.x + 10, area.y + 100, area.width - 10, 30);
+            Widgets.Label(geneChanceRect.LeftPart(0.7f), $"Chance to Apply: ({item.chance.ToStringPercent()})");
+            Widgets.TextFieldPercent(geneChanceRect.RightPart(0.29f), ref item.chance, ref buffers[bufferIndex++]);
+            tempUI.Gap(3);
+        }
+    }
+
     private void DrawImplantsAndBionicsTab(Listing_Standard ui)
     {
         DrawOverride(ui, DefaultKind.techHediffsMoney, ref Current.TechMoney, "Implants & Bionics Value", DrawTechMoney);
@@ -1048,6 +1151,8 @@ public class PawnKindEditUI : Window
 
     private void DrawXenotypeTab(Listing_Standard ui)
     {
+        DrawSpecificGenes(ui, ref Current.ForcedGenes, "Required Genes (advanced)", t => true, AllGeneDefs.First());
+
         DrawForceSpecificXenos(ui);
         if (!Current.ForceSpecificXenos)
             return;

@@ -27,7 +27,7 @@ public static class PawnGenPatchCore
     [HarmonyPostfix]
     public static void Postfix(Pawn __result, PawnGenerationRequest request)
     {
-        if (__result?.kindDef?.GetModExtension<ForcedHediffModExtension>() is not { } ext)
+        if ((__result?.kindDef?.GetModExtension<ForcedExtrasModExtension>() ?? __result?.kindDef?.GetModExtension<ForcedHediffModExtension>()) is not { } ext)
             return;
 
         foreach (ForcedHediff forcedHediff in ext.forcedHediffs)
@@ -47,6 +47,25 @@ public static class PawnGenPatchCore
                 {
                     Hediff hediff = HediffMaker.MakeHediff(forcedHediff.HediffDef, __result, validParts?.Pop());
                     __result.health.AddHediff(hediff);
+                }
+            }
+        }
+
+        foreach (ForcedGene forcedGene in ext.forcedGenes)
+        {
+            if (forcedGene.GeneDef == null || !Rand.Chance(forcedGene.chance))
+                continue;
+
+            Gene newGene = __result.genes?.AddGene(forcedGene.GeneDef, xenogene: false);
+            if (forcedGene.forceActive && newGene != null)
+            {
+                newGene.OverrideBy(null);
+                foreach (Gene gene in __result.genes.GenesListForReading)
+                {
+                    if (gene != newGene && gene.def.ConflictsWith(newGene.def))
+                    {
+                        __result.genes.RemoveGene(gene);
+                    }
                 }
             }
         }

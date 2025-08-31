@@ -64,7 +64,9 @@ public class FactionEditUI : Window
     private void DestroyPawns()
     {
         foreach (Pawn pawn in pawns)
-            pawn?.Destroy();
+        {
+            pawn?.Discard(true);
+        }
 
         pawns.Clear();
     }
@@ -364,7 +366,7 @@ public class FactionEditUI : Window
                                     ?? new List<object>();
                                 list.Clear();
                                 list.Add(p);
-                                typeof(ITab_Pawn_Gear).GetMethod("FillTab", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(new ITab_Pawn_Gear(), new object[] { });
+                                typeof(ITab_Pawn_Gear).GetMethod("FillTab", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(new ITab_Pawn_Gear(), []);
                                 list.Clear();
                             }
                         );
@@ -411,12 +413,18 @@ public class FactionEditUI : Window
                             kind = FactionRelationKind.Neutral
                         })
                         .ToList(),
-                    temporary = true
+                    temporary = true,
+                    deactivated = true
                 };
 
             ThingIDPatch.Active = _ThingIDPatch;
             IdeoUtilityPatch.Active = true;
             FactionUtilityPawnGenPatch.Active = true;
+            foreach (Faction other in Find.FactionManager.AllFactionsListForReading)
+            {
+                if (faction != other)
+                    faction.TryMakeInitialRelationsWith(other);
+            }
 
             foreach (PawnKindDef item in FactionEdit.GetAllPawnKinds(clonedFac))
                 try
@@ -441,6 +449,8 @@ public class FactionEditUI : Window
                     pawns.Add(null);
                 }
 
+            Find.FactionManager.Remove(faction);
+
             ThingIDPatch.Active = false;
             FactionLeaderPatch.Active = false;
             FactionUtilityPawnGenPatch.Active = false;
@@ -448,7 +458,6 @@ public class FactionEditUI : Window
         }
 
         GUI.enabled = true;
-
         ui.End();
     }
 
@@ -480,13 +489,13 @@ public class FactionEditUI : Window
             filterState,
             Current.ApparelStuffFilter,
             forceHideHitPointsConfig: true,
-            forceHiddenFilters: new[]
-            {
+            forceHiddenFilters:
+            [
                 SpecialThingFilterDefOf.AllowDeadmansApparel,
                 SpecialThingFilterDefOf.AllowNonDeadmansApparel,
                 SpecialThingFilterDefOf.AllowFresh,
                 DefDatabase<SpecialThingFilterDef>.GetNamed("AllowRotten")
-            }
+            ]
         );
     }
 }

@@ -57,7 +57,17 @@ public class PawnKindEdit : IExposable
             return fallbackFactionDef;
         }
 
-        return def == PawnKindDefOf.WildMan ? Preset.SpecialWildManFaction : fallbackFactionDef;
+        if (def == PawnKindDefOf.WildMan)
+        {
+            return Preset.SpecialWildManFaction;
+        }
+
+        if (def is CreepJoinerFormKindDef)
+        {
+            return Preset.SpecialCreepjoinerFaction;
+        }
+
+        return fallbackFactionDef;
     }
 
     private static void AddActiveEdit(PawnKindDef def, PawnKindEdit edit)
@@ -119,6 +129,7 @@ public class PawnKindEdit : IExposable
     public List<Color> CustomHairColors = null;
     public bool DeletedOrClosed;
     public List<ForcedHediff> ForcedHediffs = null;
+    public List<ForcedGene> ForcedGenes = null;
     public Dictionary<string, float> ForcedXenotypeChances = new();
     public Dictionary<XenotypeDef, float> ForcedXenotypeChanceDefs = new();
     public Gender? ForcedGender = null;
@@ -195,6 +206,7 @@ public class PawnKindEdit : IExposable
         Scribe_Collections.Look(ref CustomHair, "customHair", LookMode.Def);
         Scribe_Collections.Look(ref CustomHairColors, "customHairColors");
         Scribe_Collections.Look(ref ForcedHediffs, "forcedHediffs", LookMode.Deep);
+        Scribe_Collections.Look(ref ForcedGenes, "forcedGenes", LookMode.Deep);
         Scribe_Collections.Look(ref ForcedXenotypeChances, "forcedXenotypeChances", LookMode.Value, LookMode.Value);
         Scribe_Deep.Look(ref RaidLootValueFromPointsCurve, "raidLootValueFromPointsCurve");
         Scribe_Deep.Look(ref RaidCommonalityFromPointsCurve, "raidCommonalityFromPointsCurve");
@@ -372,17 +384,31 @@ public class PawnKindEdit : IExposable
 
         def.modExtensions ??= [];
 
+        ForcedExtrasModExtension extrasExtension = null;
         if (ForcedHediffs is { Count: > 0 })
         {
-            ForcedHediffModExtension hediffExtension = def.GetModExtension<ForcedHediffModExtension>();
-            if (hediffExtension == null)
+            extrasExtension = def.GetModExtension<ForcedExtrasModExtension>() ?? def.GetModExtension<ForcedHediffModExtension>();
+            if (extrasExtension == null)
             {
-                hediffExtension = new ForcedHediffModExtension();
-                def.modExtensions.Add(hediffExtension);
+                extrasExtension = new ForcedExtrasModExtension();
+                def.modExtensions.Add(extrasExtension);
             }
 
-            hediffExtension.forcedHediffs.AddRange(ForcedHediffs);
-            ModCore.Debug($"Adding forced hediffs {hediffExtension.forcedHediffs?.Select(h => h.HediffDef?.defName).ToCommaList() ?? "None"} to {def.defName}");
+            extrasExtension.forcedHediffs.AddRange(ForcedHediffs);
+            ModCore.Debug($"Adding forced hediffs {extrasExtension.forcedHediffs?.Select(h => h.HediffDef?.defName).ToCommaList() ?? "None"} to {def.defName}");
+        }
+
+        if (ForcedGenes is { Count: > 0 })
+        {
+            extrasExtension ??= def.GetModExtension<ForcedExtrasModExtension>();
+            if (extrasExtension == null)
+            {
+                extrasExtension = new ForcedExtrasModExtension();
+                def.modExtensions.Add(extrasExtension);
+            }
+
+            extrasExtension.forcedGenes.AddRange(ForcedGenes);
+            ModCore.Debug($"Adding forced genes {extrasExtension.forcedGenes?.Select(h => h.GeneDef?.defName).ToCommaList() ?? "None"} to {def.defName}");
         }
 
         if (ModsConfig.BiotechActive && def.RaceProps.Humanlike && ForceSpecificXenos && (ForcedXenotypeChanceDefs?.Count ?? 0) >= 1)
