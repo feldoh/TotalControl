@@ -172,11 +172,6 @@ public class PawnKindEditUI : Window
         AllPowerDefs.Sort();
     }
 
-    private static void DrawRegionTitle(Listing_Standard ui, string title)
-    {
-        ui.GapLine(26);
-        Widgets.Label(ui.GetRect(42), $"<size=26><b><color=#73fff2>{title}</color></b></size>");
-    }
 
     public readonly PawnKindEdit Current;
 
@@ -272,6 +267,13 @@ public class PawnKindEditUI : Window
                     tabs.Add(new Tab("VE Psycasts", DrawPsycastsTab));
                 if (ModsConfig.BiotechActive)
                     tabs.Add(new Tab("Xenotypes", DrawXenotypeTab));
+
+                // Let registered modules contribute their own tabs.
+                foreach (ITotalControlModule module in ModuleRegistry.Modules)
+                {
+                    if (module.IsActive)
+                        module.AddTabs(Current, DefaultKind, tabs);
+                }
             }
         }
 
@@ -2233,22 +2235,4 @@ public class PawnKindEditUI : Window
         ui.Gap();
     }
 
-    private class Tab
-    {
-        public readonly string Name;
-
-        private readonly Action<Listing_Standard> draw;
-
-        public Tab(string name, Action<Listing_Standard> draw)
-        {
-            Name = name;
-            this.draw = draw;
-        }
-
-        public void Draw(Listing_Standard ui)
-        {
-            DrawRegionTitle(ui, Name);
-            draw?.Invoke(ui);
-        }
-    }
 }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Xml;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -159,6 +160,12 @@ public class PawnKindEdit : IExposable
      */
     private PawnKindEdit globalEdit = null;
 
+    /// <summary>
+    /// Raw InnerXml for module sub-nodes whose module is not currently registered/active.
+    /// Preserved across save/load so users don't lose module config when a dependency is absent.
+    /// </summary>
+    private Dictionary<string, string> preservedModuleXml;
+
     public PawnKindEdit() { }
 
     public PawnKindEdit(PawnKindDef def)
@@ -241,6 +248,119 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref VEPsycastLevel, "vePsycastLevel");
         Scribe_Values.Look(ref VEPsycastStatPoints, "vePsycastStatPoints");
         Scribe_Values.Look(ref VEPsycastRandomAbilities, "vePsycastRandomAbilities");
+
+        // Module system
+        ExposeModuleData();
+    }
+
+    /// <summary>
+    /// Delegates serialization to registered modules and preserves XML for absent modules.
+    /// Each module gets its own named child node inside a &lt;modules&gt; element.
+    /// Unrecognized child nodes (from modules not currently loaded) are stored as raw XML
+    /// and written back on save to prevent data loss.
+    /// </summary>
+    private void ExposeModuleData()
+    {
+        IReadOnlyList<ITotalControlModule> modules = ModuleRegistry.Modules;
+
+        if (Scribe.mode == LoadSaveMode.LoadingVars)
+        {
+            XmlNode modulesNode = Scribe.loader.curXmlParent?["modules"];
+            if (modulesNode == null)
+                return;
+
+            foreach (XmlNode child in modulesNode.ChildNodes)
+            {
+                ITotalControlModule module = ModuleRegistry.GetModule(child.Name);
+                if (module is { IsActive: true })
+                {
+                    // Position the Scribe cursor inside this module's node and let it deserialize.
+                    XmlNode previousParent = Scribe.loader.curXmlParent;
+                    Scribe.loader.curXmlParent = child;
+                    try
+                    {
+                        module.ExposeData(this);
+                    }
+                    catch (Exception e)
+                    {
+                        ModCore.Error($"Error loading module data for '{module.ModuleName}' (key: {module.ModuleKey})", e);
+                    }
+                    Scribe.loader.curXmlParent = previousParent;
+                }
+                else
+                {
+                    // Module not registered or not active — preserve the raw XML for re-saving.
+                    preservedModuleXml ??= new Dictionary<string, string>();
+                    preservedModuleXml[child.Name] = child.InnerXml;
+                    ModCore.Debug($"Preserving module data for absent module '{child.Name}'");
+                }
+            }
+        }
+        else if (Scribe.mode == LoadSaveMode.Saving)
+        {
+            // Determine if there's anything to write.
+            bool hasActiveModules = modules.Any(m => m.IsActive);
+            bool hasPreserved = preservedModuleXml is { Count: > 0 };
+
+            if (!hasActiveModules && !hasPreserved)
+                return;
+
+            Scribe.saver.EnterNode("modules");
+            try
+            {
+                // Write data for each active module.
+                foreach (ITotalControlModule module in modules)
+                {
+                    if (!module.IsActive)
+                        continue;
+                    Scribe.saver.EnterNode(module.ModuleKey);
+                    try
+                    {
+                        module.ExposeData(this);
+                    }
+                    catch (Exception e)
+                    {
+                        ModCore.Error($"Error saving module data for '{module.ModuleName}' (key: {module.ModuleKey})", e);
+                    }
+                    Scribe.saver.ExitNode();
+                }
+
+                // Write back preserved XML for absent modules.
+                if (preservedModuleXml != null)
+                {
+                    HashSet<string> activeKeys = new(modules.Where(m => m.IsActive).Select(m => m.ModuleKey));
+                    foreach (KeyValuePair<string, string> kvp in preservedModuleXml)
+                    {
+                        if (activeKeys.Contains(kvp.Key))
+                            continue; // Module is now active and wrote its own data above.
+                        Scribe.saver.writer.WriteStartElement(kvp.Key);
+                        Scribe.saver.writer.WriteRaw(kvp.Value);
+                        Scribe.saver.writer.WriteEndElement();
+                    }
+                }
+            }
+            finally
+            {
+                Scribe.saver.ExitNode();
+            }
+        }
+        else if (Scribe.mode == LoadSaveMode.PostLoadInit)
+        {
+            // Give modules a chance to run post-load initialization.
+            foreach (ITotalControlModule module in modules)
+            {
+                if (!module.IsActive)
+                    continue;
+                try
+                {
+                    module.ExposeData(this);
+                }
+                catch (Exception e)
+                {
+                    ModCore.Error($"Error in post-load init for module '{module.ModuleName}' (key: {module.ModuleKey})", e);
+                }
+            }
+        }
     }
 
     private void ReplaceMaybe<T>(ref T field, T maybe)
@@ -425,6 +545,21 @@ public class PawnKindEdit : IExposable
             return def; // Animals can't have powers
         ApplyVFEAncientsEdits(def);
         ApplyVEPsycastsEdits(def);
+
+        // Delegate to registered modules.
+        foreach (ITotalControlModule module in ModuleRegistry.Modules)
+        {
+            if (!module.IsActive)
+                continue;
+            try
+            {
+                module.Apply(this, def, global);
+            }
+            catch (Exception e)
+            {
+                ModCore.Error($"Error applying module '{module.ModuleName}' (key: {module.ModuleKey}) to {def.defName}", e);
+            }
+        }
 
         globalEdit = null;
         return def;
