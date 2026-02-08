@@ -122,8 +122,8 @@ public class PawnKindEdit : IExposable
     public Dictionary<string, float> ForcedXenotypeChances = new();
     public Dictionary<XenotypeDef, float> ForcedXenotypeChanceDefs = new();
     public Gender? ForcedGender = null;
-    public SimpleCurve RaidCommonalityFromPointsCurve = SimpleCurve.Empty();
-    public SimpleCurve RaidLootValueFromPointsCurve = SimpleCurve.Empty();
+    public SimpleCurve RaidCommonalityFromPointsCurve = null;
+    public SimpleCurve RaidLootValueFromPointsCurve = null;
     public RulePackDef NameMaker = null;
     public RulePackDef NameMakerFemale = null;
     public float? UnwaveringlyLoyalChance = null;
