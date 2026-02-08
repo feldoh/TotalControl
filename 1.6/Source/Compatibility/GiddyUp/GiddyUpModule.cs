@@ -34,10 +34,11 @@ public class GiddyUpModule : ITotalControlModule
     // Per-PawnKindEdit data storage
     private static readonly Dictionary<PawnKindEdit, GiddyUpData> dataStore = new();
 
-    // Cached reflection references
+    // Cached reflection references — CustomMounts extension
     private static Type customMountsType;
     private static FieldInfo mountChanceField;
     private static FieldInfo possibleMountsField;
+
 
     public void Initialize()
     {
@@ -54,6 +55,7 @@ public class GiddyUpModule : ITotalControlModule
 
         if (mountChanceField == null || possibleMountsField == null)
             ModCore.Warn("GiddyUp module: Could not resolve CustomMounts fields via reflection.");
+
     }
 
     public static GiddyUpData GetData(PawnKindEdit edit)
@@ -126,22 +128,21 @@ public class GiddyUpModule : ITotalControlModule
         if (mountChance != null)
             mountChanceField.SetValue(extension, mountChance.Value);
 
-        if (possibleMounts is { Count: > 0 })
-        {
-            // Convert defName strings to PawnKindDef keys
-            Dictionary<PawnKindDef, int> resolved = new();
-            foreach (KeyValuePair<string, int> kvp in possibleMounts)
-            {
-                PawnKindDef kindDef = DefDatabase<PawnKindDef>.GetNamedSilentFail(kvp.Key);
-                if (kindDef != null)
-                    resolved[kindDef] = kvp.Value;
-                else
-                    ModCore.Warn($"GiddyUp module: Could not resolve PawnKindDef '{kvp.Key}' for mount.");
-            }
+        if (possibleMounts is not { Count: > 0 }) return;
 
-            if (resolved.Count > 0)
-                possibleMountsField.SetValue(extension, resolved);
+        // Convert defName strings to PawnKindDef keys
+        Dictionary<PawnKindDef, int> resolved = new();
+        foreach (KeyValuePair<string, int> kvp in possibleMounts)
+        {
+            PawnKindDef kindDef = DefDatabase<PawnKindDef>.GetNamedSilentFail(kvp.Key);
+            if (kindDef != null)
+                resolved[kindDef] = kvp.Value;
+            else
+                ModCore.Warn($"GiddyUp module: Could not resolve PawnKindDef '{kvp.Key}' for mount.");
         }
+
+        if (resolved.Count > 0)
+            possibleMountsField.SetValue(extension, resolved);
     }
 
     public void AddTabs(PawnKindEdit edit, PawnKindDef defaultKind, List<Tab> tabs)
@@ -150,26 +151,56 @@ public class GiddyUpModule : ITotalControlModule
         if (defaultKind.RaceProps.Animal)
             return;
 
-        tabs.Add(new Tab("GiddyUp_Mounts".Translate(), ui => DrawMountsTab(ui, edit)));
+        tabs.Add(new Tab("GiddyUp_Mounts".Translate(), ui => DrawMountsTab(ui, edit, defaultKind)));
     }
 
-    private void DrawMountsTab(Listing_Standard ui, PawnKindEdit edit)
+    /// <summary>
+    /// Read the existing CustomMounts extension from a PawnKindDef (if any).
+    /// Returns the mount chance and possible mounts dictionary, or nulls if not present.
+    /// </summary>
+    private void ReadDefaults(PawnKindDef def, out int? defMountChance, out Dictionary<PawnKindDef, int> defPossibleMounts)
+    {
+        defMountChance = null;
+        defPossibleMounts = null;
+
+        if (customMountsType == null || def?.modExtensions == null)
+            return;
+
+        DefModExtension ext = def.modExtensions.FirstOrDefault(e => e.GetType() == customMountsType);
+        if (ext == null)
+            return;
+
+        if (mountChanceField != null)
+        {
+            int val = (int)mountChanceField.GetValue(ext);
+            if (val != 0)
+                defMountChance = val;
+        }
+
+        if (possibleMountsField == null) return;
+
+        defPossibleMounts = possibleMountsField.GetValue(ext) as Dictionary<PawnKindDef, int>;
+        if (defPossibleMounts is { Count: 0 })
+            defPossibleMounts = null;
+    }
+
+    private void DrawMountsTab(Listing_Standard ui, PawnKindEdit edit, PawnKindDef defaultKind)
     {
         GiddyUpData data = GetOrCreateData(edit);
 
-        // Mount Chance
+        // Read existing defaults from the def's CustomMounts extension (if any)
+        ReadDefaults(defaultKind, out int? defMountChance, out Dictionary<PawnKindDef, int> defPossibleMounts);
+
+        // --- Mount Chance ---
         Rect chanceRect = ui.GetRect(Text.LineHeight + 4);
         Rect labelRect = chanceRect.LeftHalf();
         Rect fieldRect = chanceRect.RightHalf();
 
         bool hasChance = data.MountChance != null;
-        string chanceLabel = hasChance
-            ? $"Mount Chance: {data.MountChance}%"
-            : "Mount Chance: (default)";
-        Widgets.Label(labelRect, chanceLabel);
-
         if (hasChance)
         {
+            Widgets.Label(labelRect, $"Mount Chance: {data.MountChance}%");
+
             Rect sliderRect = fieldRect.LeftPart(0.7f);
             Rect clearRect = fieldRect.RightPart(0.25f);
             int val = data.MountChance.Value;
@@ -181,19 +212,40 @@ public class GiddyUpModule : ITotalControlModule
         }
         else
         {
+            string defaultLabel = defMountChance != null
+                ? $"Mount Chance: (default: {defMountChance}%)"
+                : "Mount Chance: (default)";
+            Widgets.Label(labelRect, defaultLabel);
+
             if (Widgets.ButtonText(fieldRect.LeftPart(0.4f), "Override"))
-                data.MountChance = 50;
+                data.MountChance = defMountChance ?? 50;
         }
 
         ui.GapLine();
 
-        // Possible Mounts header
-        Widgets.Label(ui.GetRect(Text.LineHeight + 4), "<b>Possible Mounts</b> (animal → weight)");
+        // --- Possible Mounts ---
+        Widgets.Label(ui.GetRect(Text.LineHeight + 4), "<b>Possible Mounts</b> (animal \u2192 weight)");
         ui.Gap(4);
+
+        // Show def defaults if the user hasn't overridden and the def has custom mounts
+        if (defPossibleMounts is { Count: > 0 } && (data.PossibleMounts == null || data.PossibleMounts.Count == 0))
+        {
+            GUI.color = Color.gray;
+            Text.Font = GameFont.Tiny;
+            Widgets.Label(ui.GetRect(Text.LineHeight), "Def defaults:");
+            Text.Font = GameFont.Small;
+            foreach (KeyValuePair<PawnKindDef, int> kvp in defPossibleMounts)
+            {
+                Rect row = ui.GetRect(Text.LineHeight);
+                Widgets.Label(row, $"  {kvp.Key.LabelCap}  (weight {kvp.Value})");
+            }
+            GUI.color = Color.white;
+            ui.Gap(4);
+        }
 
         data.PossibleMounts ??= new Dictionary<string, int>();
 
-        // List existing mounts
+        // List existing user-configured mounts
         string toRemove = null;
         foreach (KeyValuePair<string, int> kvp in data.PossibleMounts)
         {
