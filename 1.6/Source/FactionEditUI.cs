@@ -21,7 +21,7 @@ public class FactionEditUI : Window
     private int framesSinceF;
     private readonly List<Pawn> pawns = new();
     private readonly HashSet<PawnKindDef> tempKinds = new();
-    private bool _ThingIDPatch = true;
+    private bool _ThingIDPatch = false;
 
     public FactionEditUI(FactionEdit fac)
     {
@@ -326,7 +326,7 @@ public class FactionEditUI : Window
         }
         else
         {
-            ui.CheckboxLabeled("Thing ID Patch", ref _ThingIDPatch);
+            ui.CheckboxLabeled("Thing ID Patch", ref _ThingIDPatch, "Turn on to save thing IDs");
             ui.Gap(20);
             Rect total = ui.GetRect(inRect.height - ui.CurHeight - 32);
             int count = pawns.Count;

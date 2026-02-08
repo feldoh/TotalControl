@@ -45,4 +45,9 @@
     <FactionLoadout_AddNewByDefName>Add new by def name...</FactionLoadout_AddNewByDefName>
     <FactionLoadout_AddNewByDefNameDesc>Enter def name of xenotype to add:</FactionLoadout_AddNewByDefNameDesc>
     <FactionLoadout_DuplicateListItem>{0} already exists in the list</FactionLoadout_DuplicateListItem>
+
+    <!-- GiddyUp Module -->
+    <GiddyUp_Mounts>GiddyUp Mounts</GiddyUp_Mounts>
+    <FactionLoadout_AddMount>Add mount...</FactionLoadout_AddMount>
+    <FactionLoadout_ClearMounts>Clear all mounts</FactionLoadout_ClearMounts>
 </LanguageData>

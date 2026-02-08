@@ -1,0 +1,89 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>TotalControlGiddyUpCompat</RootNamespace>
+        <AssemblyName>TotalControlGiddyUpCompat</AssemblyName>
+        <TargetFramework>net48</TargetFramework>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+        <LangVersion>preview</LangVersion>
+        <PackageId>TotalControlGiddyUpCompat</PackageId>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+        <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">../../../../../../</RimworldPath>
+        <RimworldPath Condition=" '$(RIMWORLD_PATH)' != '' ">$(RIMWORLD_PATH)</RimworldPath>
+
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' == '' AND Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/../../workshop/content/294100</ModPath>
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' == '' AND !Exists('$(RimworldPath)/../../workshop/content/294100')">$(RimworldPath)/Mods</ModPath>
+        <ModPath Condition=" '$(STEAM_MODS_PATH)' != '' ">$(STEAM_MODS_PATH)/294100</ModPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>portable</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>../../../../Compatibility/GiddyUp/1.6/Assemblies</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugType>none</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>../../../../Compatibility/GiddyUp/1.6/Assemblies</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="System" />
+        <Reference Include="System.Core" />
+        <Reference Include="System.Xml" />
+    </ItemGroup>
+
+    <Choose>
+        <When Condition="Exists('$(RimworldPath)/RimWorldWin64_Data/Managed/Assembly-CSharp.dll')">
+            <ItemGroup>
+                <Reference Include="Assembly-CSharp">
+                    <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath>
+                    <Private>False</Private>
+                </Reference>
+                <Reference Include="UnityEngine.CoreModule">
+                    <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+                    <Private>False</Private>
+                </Reference>
+                <Reference Include="UnityEngine.IMGUIModule">
+                    <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
+                    <Private>False</Private>
+                </Reference>
+                <Reference Include="UnityEngine.TextRenderingModule">
+                    <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
+                    <Private>False</Private>
+                </Reference>
+            </ItemGroup>
+        </When>
+    </Choose>
+
+    <!-- Reference to core FactionLoadout assembly -->
+    <ItemGroup>
+        <Reference Include="FactionLoadout">
+            <HintPath>../../../Assemblies/FactionLoadout.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+
+    <!-- Krafs fallback for RimWorld references -->
+    <ItemGroup Condition="'@(Reference->WithMetadataValue('Identity', 'Assembly-CSharp')->Metadata('HintPath')->Exists())' == ''">
+        <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6-*" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Lib.Harmony" Version="2.2.2">
+            <ExcludeAssets>runtime</ExcludeAssets>
+            <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+</Project>
