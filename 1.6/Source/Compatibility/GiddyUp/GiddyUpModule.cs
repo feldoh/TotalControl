@@ -29,7 +29,7 @@ public class GiddyUpModule : ITotalControlModule
 
     public string ModuleKey => "giddyUp";
     public string ModuleName => "GiddyUp Mounts";
-    public bool IsActive => ModLister.GetActiveModWithIdentifier(GiddyUpPackageId) is not null;
+    public bool IsActive => ModsConfig.IsActive(GiddyUpPackageId);
 
     // Per-PawnKindEdit data storage
     private static readonly Dictionary<PawnKindEdit, GiddyUpData> dataStore = new();

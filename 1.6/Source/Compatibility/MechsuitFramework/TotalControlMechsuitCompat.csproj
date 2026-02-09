@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <RootNamespace>TotalControlGiddyUpCompat</RootNamespace>
-        <AssemblyName>TotalControlGiddyUpCompat</AssemblyName>
+        <RootNamespace>TotalControlMechsuitCompat</RootNamespace>
+        <AssemblyName>TotalControlMechsuitCompat</AssemblyName>
         <TargetFramework>net48</TargetFramework>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
         <LangVersion>preview</LangVersion>
-        <PackageId>TotalControlGiddyUpCompat</PackageId>
+        <PackageId>TotalControlMechsuitCompat</PackageId>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 
         <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">../../../../../../</RimworldPath>
@@ -22,7 +22,7 @@
         <DebugSymbols>true</DebugSymbols>
         <DebugType>portable</DebugType>
         <Optimize>false</Optimize>
-        <OutputPath>../../../../Compatibility/GiddyUp/1.6/Assemblies</OutputPath>
+        <OutputPath>../../../../Compatibility/MechsuitFramework/1.6/Assemblies</OutputPath>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
@@ -31,7 +31,7 @@
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <DebugType>none</DebugType>
         <Optimize>true</Optimize>
-        <OutputPath>../../../../Compatibility/GiddyUp/1.6/Assemblies</OutputPath>
+        <OutputPath>../../../../Compatibility/MechsuitFramework/1.6/Assemblies</OutputPath>
         <DefineConstants>TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
@@ -73,16 +73,21 @@
         </ProjectReference>
     </ItemGroup>
 
+    <!-- Reference to MechsuitFramework (Exosuit) assembly — Steam workshop ID 3352894993 -->
+    <ItemGroup>
+        <Reference Include="Exosuit">
+            <HintPath>$(ModPath)/3352894993/1.6/Assemblies/Exosuit.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+
     <!-- Krafs fallback for RimWorld references -->
     <ItemGroup Condition="'@(Reference->WithMetadataValue('Identity', 'Assembly-CSharp')->Metadata('HintPath')->Exists())' == ''">
         <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6-*" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Lib.Harmony" Version="2.2.2">
-            <ExcludeAssets>runtime</ExcludeAssets>
-            <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
+        <PackageReference Include="Lib.Harmony" Version="2.2.2" />
     </ItemGroup>
 
 </Project>

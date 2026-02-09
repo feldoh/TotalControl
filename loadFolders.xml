@@ -16,5 +16,6 @@
 		<li>1.6</li>
 		<li IfModActive="vanillaexpanded.vpsycastse">Compatibility/VEPsycasts/1.6</li>
 		<li IfModActive="Owlchemist.GiddyUp">Compatibility/GiddyUp/1.6</li>
+		<li IfModActive="Aoba.Exosuit.Framework">Compatibility/MechsuitFramework/1.6</li>
 	</v1.6>
 </loadFolders>
