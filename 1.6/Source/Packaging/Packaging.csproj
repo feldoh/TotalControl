@@ -1,0 +1,85 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+        This project exists solely to sequence the release packaging (zip + Steam copy)
+        AFTER all other projects have finished building. It produces no assembly of its own.
+    -->
+
+    <PropertyGroup>
+        <TargetFramework>net48</TargetFramework>
+        <OutputPath>bin/packaging</OutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+        <NoWarn>CS2008</NoWarn>
+
+        <ZipFilePath>../../../FactionLoadout.zip</ZipFilePath>
+        <ReleasePath>../../../Release</ReleasePath>
+        <SteamModsPath>$(RIMWORLD_STEAM_MODS_PATH)</SteamModsPath>
+        <AssemblyName>FactionLoadout</AssemblyName>
+    </PropertyGroup>
+
+    <!-- Depend on all real projects so this runs last -->
+    <ItemGroup>
+        <ProjectReference Include="../FactionLoadout.csproj">
+            <Private>false</Private>
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
+        <ProjectReference Include="../Compatibility/GiddyUp/TotalControlGiddyUpCompat.csproj">
+            <Private>false</Private>
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
+        <ProjectReference Include="../Compatibility/MechsuitFramework/TotalControlMechsuitCompat.csproj">
+            <Private>false</Private>
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
+        <ProjectReference Include="../Compatibility/VECore/TotalControlVEPsycastsCompat.csproj">
+            <Private>false</Private>
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
+    </ItemGroup>
+
+    <!-- No source files — this project compiles nothing -->
+    <ItemGroup>
+        <Compile Remove="**" />
+    </ItemGroup>
+
+    <Target Name="CleanRelease" AfterTargets="Clean">
+        <RemoveDir Directories="$(ReleasePath)" Condition="Exists('$(ReleasePath)')" />
+        <Delete Files="$(ZipFilePath)" Condition="Exists('$(ZipFilePath)')" />
+    </Target>
+
+    <!--
+        PackageRelease: assemble the Release folder, zip it, and optionally copy to Steam.
+
+        IMPORTANT: All file globs are inside the target (not static ItemGroups) so they
+        evaluate at execution time — AFTER dependency projects have built their DLLs.
+        Static ItemGroups evaluate at project parse time, before any builds run.
+    -->
+    <Target Name="PackageRelease" AfterTargets="Build" Condition=" '$(Configuration)' == 'Release' ">
+        <ItemGroup>
+            <ReleaseFiles Include="../../../*.xml;../../../*.md;../../../LICENSE;../../../1.*/**" Exclude="../../../1.*/Source/**;../../../1.*/Assemblies/**" />
+            <AboutFiles Include="../../../About/**" />
+            <CommonFiles Include="../../../Common/**" />
+            <ReleaseAssemblies Include="../../../1.*/Assemblies/*.dll;../../../Compatibilit*/**" Exclude="../../../1.*/Assemblies/0Harmony.dll" />
+            <GitMeta Include="../../../.git*" />
+        </ItemGroup>
+
+        <RemoveDir Directories="$(ReleasePath)" Condition="Exists('$(ReleasePath)')" />
+        <MakeDir Directories="$(ReleasePath)" />
+        <Copy SourceFiles="@(ReleaseFiles)" DestinationFiles="@(ReleaseFiles->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
+        <Copy SourceFiles="@(ReleaseAssemblies)" DestinationFiles="@(ReleaseAssemblies->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
+        <Copy SourceFiles="@(AboutFiles)" DestinationFolder="$(ReleasePath)/About" />
+        <Copy SourceFiles="@(CommonFiles)" DestinationFiles="@(CommonFiles->'$(ReleasePath)/Common/%(RecursiveDir)%(Filename)%(Extension)')" />
+        <Copy SourceFiles="@(GitMeta)" DestinationFiles="@(GitMeta->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
+        <ZipDirectory DestinationFile="$(ZipFilePath)" SourceDirectory="$(ReleasePath)" Overwrite="true" />
+
+        <ItemGroup>
+            <ReleaseFolder Include="$(ReleasePath)/**" />
+        </ItemGroup>
+        <RemoveDir Condition="Exists('$(SteamModsPath)') And Exists('$(SteamModsPath)/$(AssemblyName)')" Directories="$(SteamModsPath)/$(AssemblyName)" ContinueOnError="true"/>
+        <Copy Condition="Exists('$(SteamModsPath)') And !Exists('$(SteamModsPath)/$(AssemblyName)')" SourceFiles="@(ReleaseFolder)" DestinationFiles="@(ReleaseFolder->'$(SteamModsPath)/$(AssemblyName)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    </Target>
+
+</Project>

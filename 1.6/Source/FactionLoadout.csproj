@@ -6,11 +6,8 @@
     <RootNamespace>FactionLoadout</RootNamespace>
     <AssemblyName>FactionLoadout</AssemblyName>
     <OutputPath>../Assemblies/</OutputPath>
-    <ZipFilePath>../../$(AssemblyName).zip</ZipFilePath>
-    <ReleasePath>../../Release</ReleasePath>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <SteamModsPath>$(RIMWORLD_STEAM_MODS_PATH)</SteamModsPath>
 
     <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">../../../../</RimworldPath>
     <RimworldPath Condition=" '$(RIMWORLD_PATH)' != '' ">$(RIMWORLD_PATH)</RimworldPath>
@@ -29,23 +26,6 @@
     <DebugSymbols>false</DebugSymbols>
     <Optimize>true</Optimize>
   </PropertyGroup>
-  <ItemGroup>
-    <ReleaseFiles Include="../../*.xml;../../*.md;../../LICENSE;../../1.*/**" Exclude="../../1.*/Source/**;../../1.*/Assemblies/**">
-      <Link>Files/%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </ReleaseFiles>
-    <AboutFiles Include="../../About/**;">
-      <Link>Files/About/%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </AboutFiles>
-    <CommonFiles Include="../../Common/**">
-      <Link>Files/Common/%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </CommonFiles>
-    <ReleaseAssemblies Include="../../1.*/Assemblies/*.dll;../../Compatibilit*/**" Exclude="../../1.*/Assemblies/0Harmony.dll">
-      <Link>Files/Assemblies/%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </ReleaseAssemblies>
-    <GitMeta Include="../../.git*">
-      <Link>Files/%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </GitMeta>
-  </ItemGroup>
   <Choose>
     <When Condition="Exists('$(RimworldPath)/RimWorldWin64_Data/Managed/Assembly-CSharp-firstpass.dll')">
       <ItemGroup>
@@ -124,11 +104,6 @@
   <Target Name="CleanAssemblies" AfterTargets="Clean">
     <RemoveDir Directories="$(OutputPath)" Condition="Exists('$(OutputPath)')" />
   </Target>
-  <Target Name="CleanRelease" AfterTargets="Clean">
-    <RemoveDir Directories="$(ReleasePath)" Condition="Exists('$(ReleasePath)')" />
-    <Delete Files="$(ZipFilePath)" Condition="Exists('$(ZipFilePath)')" />
-  </Target>
-
   <!-- Add A step to the build to run csharpier on build -->
   <Target Name="CheckCsharpier" BeforeTargets="Build">
     <Exec Command="dotnet csharpier --version" IgnoreExitCode="true">
@@ -138,19 +113,5 @@
 
   <Target Name="FormatCode" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Release' And '$(ExitCode)' == '0' " DependsOnTargets="CheckCsharpier">
     <Exec Command="dotnet csharpier ." />
-  </Target>
-
-  <Target Name="PostBuild" AfterTargets="Build" Condition=" '$(Configuration)' == 'Release' " DependsOnTargets="CleanRelease">
-    <MakeDir Directories="$(ReleasePath)" />
-    <Copy SourceFiles="@(ReleaseFiles)" DestinationFiles="@(ReleaseFiles->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
-    <Copy SourceFiles="@(ReleaseAssemblies)" DestinationFiles="@(ReleaseAssemblies->'$(ReleasePath)/%(RecursiveDir)%(Filename)%(Extension)')" />
-    <Copy SourceFiles="@(AboutFiles)" DestinationFolder="$(ReleasePath)/About" />
-    <Copy SourceFiles="@(CommonFiles)" DestinationFiles="@(CommonFiles->'$(ReleasePath)/Common/%(RecursiveDir)%(Filename)%(Extension)')" />
-    <ZipDirectory DestinationFile="$(ZipFilePath)" SourceDirectory="$(ReleasePath)" Overwrite="true" />
-    <ItemGroup>
-      <ReleaseFolder Include="$(ReleasePath)/**" />
-    </ItemGroup>
-    <RemoveDir Condition="Exists('$(SteamModsPath)') And Exists('$(SteamModsPath)/$(AssemblyName)')" Directories="$(SteamModsPath)/$(AssemblyName)" ContinueOnError="true"/>
-    <Copy Condition="Exists('$(SteamModsPath)') And !Exists('$(SteamModsPath)/$(AssemblyName)')" SourceFiles="@(ReleaseFolder)" DestinationFiles="@(ReleaseFolder->'$(SteamModsPath)/$(AssemblyName)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 </Project>
