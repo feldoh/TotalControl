@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
-using FactionLoadout.HarmonyPatches;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -294,6 +293,7 @@ public class PawnKindEdit : IExposable
                     {
                         ModCore.Error($"Error loading module data for '{module.ModuleName}' (key: {module.ModuleKey})", e);
                     }
+
                     Scribe.loader.curXmlParent = previousParent;
                 }
                 else
@@ -331,6 +331,7 @@ public class PawnKindEdit : IExposable
                     {
                         ModCore.Error($"Error saving module data for '{module.ModuleName}' (key: {module.ModuleKey})", e);
                     }
+
                     Scribe.saver.ExitNode();
                 }
 
@@ -675,20 +676,22 @@ public class PawnKindEdit : IExposable
     }
 
     /// <summary>
-    /// Applies backstory exclusions at the def level where possible:
-    /// - Category exclusions are injected into filter exclude lists.
-    /// - Specific def exclusions are removed from fixed backstory lists.
-    /// - When specific defs are excluded, precomputed candidate lists are built and stored
-    ///   on a <see cref="BackstoryExclusionExtension"/> so that
-    ///   <see cref="HarmonyPatches.BackstoryGenPatch"/> can swap backstories cheaply at
-    ///   generation time without scanning the entire DefDatabase per pawn.
+    /// Applies backstory exclusions at the def level:
+    /// <list type="bullet">
+    ///   <item>Category exclusions are injected into filter exclude lists.</item>
+    ///   <item>Specific def exclusions are removed from fixed backstory lists.</item>
+    ///   <item>When specific defs are excluded for a given slot, the categories for that slot
+    ///         are resolved into concrete <see cref="BackstoryDef"/> entries (minus exclusions)
+    ///         and written into the corresponding fixed backstory list. This lets vanilla's
+    ///         <c>GiveShuffledBioTo</c> pick from the fixed list directly, avoiding any need
+    ///         for a Harmony patch at generation time. Slots without specific def exclusions
+    ///         are left untouched, so vanilla's category-based selection still applies.</item>
+    /// </list>
     /// </summary>
     private void ApplyBackstoryExclusions(PawnKindDef def)
     {
         bool hasExcludedCategories = ExcludedBackstoryCategories is { Count: > 0 };
         bool hasExcludedDefs = ExcludedBackstories is { Count: > 0 };
-
-        if (!hasExcludedCategories && !hasExcludedDefs) return;
 
         // Inject excluded categories into all existing filters as exclude entries.
         if (hasExcludedCategories)
@@ -699,6 +702,7 @@ public class PawnKindEdit : IExposable
                 {
                     return;
                 }
+
                 foreach (BackstoryCategoryFilter filter in filters)
                 {
                     filter.exclude ??= [];
@@ -716,91 +720,114 @@ public class PawnKindEdit : IExposable
             InjectExcludes(def.backstoryFilters);
         }
 
-        // For specific def exclusions: remove from fixed lists and precompute replacement
-        // candidate lists keyed by slot, filtered to the def's active categories.
-        if (hasExcludedDefs)
+        if (!hasExcludedDefs) return;
+
+        // Partition excluded defs by slot so we only resolve categories for affected slots.
+        HashSet<BackstoryDef> excludedChild = [];
+        HashSet<BackstoryDef> excludedAdult = [];
+        foreach (DefRef<BackstoryDef> defRef in ExcludedBackstories)
         {
-            HashSet<BackstoryDef> excluded = new(ExcludedBackstories.Where(r => r.HasValue).Select(r => r.Def));
-            if (excluded.Count == 0)
+            switch (defRef?.Def?.slot)
             {
-                return;
-            }
-
-            // Remove excluded defs from fixed lists to reduce the chance of needing a reroll.
-            def.fixedChildBackstories?.RemoveAll(b => excluded.Contains(b));
-            def.fixedAdultBackstories?.RemoveAll(b => excluded.Contains(b));
-
-            // Collect all active categories from the def's filters so we only precompute
-            // candidates that vanilla would actually consider for this pawn kind.
-            HashSet<string> activeCategories = [];
-            List<BackstoryCategoryFilter> activeFilters = def.backstoryFiltersOverride ?? def.backstoryFilters;
-            if (activeFilters != null)
-            {
-                foreach (BackstoryCategoryFilter filter in activeFilters)
-                {
-                    if (!filter.categories.NullOrEmpty())
-                    {
-                        foreach (string cat in filter.categories)
-                        {
-                            activeCategories.Add(cat);
-                        }
-                    }
-                    if (!filter.categoriesChildhood.NullOrEmpty())
-                    {
-                        foreach (string cat in filter.categoriesChildhood)
-                        {
-                            activeCategories.Add(cat);
-                        }
-                    }
-                    if (!filter.categoriesAdulthood.NullOrEmpty())
-                    {
-                        foreach (string cat in filter.categoriesAdulthood)
-                        {
-                            activeCategories.Add(cat);
-                        }
-                    }
-                }
-            }
-
-            List<BackstoryDef> validChild = [];
-            List<BackstoryDef> validAdult = [];
-            foreach (BackstoryDef bs in DefDatabase<BackstoryDef>.AllDefsListForReading)
-            {
-                if (!bs.shuffleable || excluded.Contains(bs))
+                case BackstorySlot.Childhood:
+                    excludedChild.Add(defRef.Def);
+                    break;
+                case BackstorySlot.Adulthood:
+                    excludedAdult.Add(defRef.Def);
+                    break;
+                default:
                     continue;
-                if (bs.spawnCategories == null)
-                    continue;
-                bool matchesCategory = activeCategories.Count == 0
-                    || bs.spawnCategories.Any(c => activeCategories.Contains(c));
-                if (!matchesCategory)
-                    continue;
-                if (bs.slot == BackstorySlot.Childhood)
-                {
-                    validChild.Add(bs);
-                }
-                else
-                {
-                    validAdult.Add(bs);
-                }
             }
-
-            def.modExtensions ??= [];
-            BackstoryExclusionExtension ext = def.GetModExtension<BackstoryExclusionExtension>();
-            if (ext == null)
-            {
-                ext = new BackstoryExclusionExtension();
-                def.modExtensions.Add(ext);
-            }
-
-            ext.excludedDefs = excluded;
-            ext.validChildhood = validChild.Count > 0 ? validChild : null;
-            ext.validAdulthood = validAdult.Count > 0 ? validAdult : null;
-
-            ModCore.Debug(
-                $"Backstory exclusions for {def.defName}: {excluded.Count} excluded, "
-                + $"{validChild.Count} valid childhood, {validAdult.Count} valid adulthood candidates precomputed."
-            );
         }
+
+        // Always remove excluded defs from existing fixed lists regardless.
+        if (excludedChild.Count > 0) def.fixedChildBackstories?.RemoveAll(b => excludedChild.Contains(b));
+        if (excludedAdult.Count > 0) def.fixedAdultBackstories?.RemoveAll(b => excludedAdult.Contains(b));
+
+        // Collect the active categories per slot from the def's filters.
+        // "categories" applies to both slots; "categoriesChildhood"/"categoriesAdulthood" are slot-specific.
+        HashSet<string> childCategories = [];
+        HashSet<string> adultCategories = [];
+        List<BackstoryCategoryFilter> activeFilters = def.backstoryFiltersOverride ?? def.backstoryFilters;
+        if (activeFilters != null)
+        {
+            foreach (BackstoryCategoryFilter filter in activeFilters)
+            {
+                if (!filter.categories.NullOrEmpty())
+                {
+                    foreach (string cat in filter.categories)
+                    {
+                        childCategories.Add(cat);
+                        adultCategories.Add(cat);
+                    }
+                }
+
+                if (!filter.categoriesChildhood.NullOrEmpty())
+                {
+                    foreach (string cat in filter.categoriesChildhood)
+                    {
+                        childCategories.Add(cat);
+                    }
+                }
+
+                if (!filter.categoriesAdulthood.NullOrEmpty())
+                {
+                    foreach (string cat in filter.categoriesAdulthood)
+                    {
+                        adultCategories.Add(cat);
+                    }
+                }
+            }
+        }
+
+        // For each slot that has excluded defs, resolve categories into concrete defs
+        // and populate the fixed backstory list so vanilla picks from it directly.
+        if (excludedChild.Count > 0) ResolveBackstoryCategories(def, BackstorySlot.Childhood, childCategories, excludedChild);
+        if (excludedAdult.Count > 0) ResolveBackstoryCategories(def, BackstorySlot.Adulthood, adultCategories, excludedAdult);
+    }
+
+    /// <summary>
+    /// Resolves backstory categories into concrete <see cref="BackstoryDef"/> entries for a given slot,
+    /// excluding any defs in <paramref name="excluded"/>, then writes them into the corresponding
+    /// fixed backstory list on the def. Existing entries in the fixed list are preserved.
+    /// </summary>
+    private static void ResolveBackstoryCategories(
+        PawnKindDef def,
+        BackstorySlot slot,
+        HashSet<string> categories,
+        HashSet<BackstoryDef> excluded)
+    {
+        // Build the set of existing fixed entries to avoid duplicates.
+        List<BackstoryDef> fixedList = slot == BackstorySlot.Childhood
+            ? def.fixedChildBackstories
+            : def.fixedAdultBackstories;
+        HashSet<BackstoryDef> existing = fixedList != null ? [..fixedList] : [];
+
+        List<BackstoryDef> resolved = [];
+        resolved.AddRange(from bs in DefDatabase<BackstoryDef>.AllDefsListForReading
+            where bs.slot == slot && bs.shuffleable && !excluded.Contains(bs) && !existing.Contains(bs)
+            where bs.spawnCategories != null
+            where categories.Count <= 0 || bs.spawnCategories.Any(categories.Contains)
+            select bs);
+
+        switch (slot)
+        {
+            case BackstorySlot.Childhood:
+                def.fixedChildBackstories ??= [];
+                def.fixedChildBackstories.AddRange(resolved);
+                break;
+            case BackstorySlot.Adulthood:
+                def.fixedAdultBackstories ??= [];
+                def.fixedAdultBackstories.AddRange(resolved);
+                break;
+            default:
+                return;
+        }
+
+        ModCore.Debug(
+            $"Backstory exclusions for {def.defName} ({slot}): "
+            + $"{excluded.Count} excluded, {resolved.Count} resolved from categories into fixed list."
+        );
     }
 
     public bool AppliesTo(PawnKindDef def)
