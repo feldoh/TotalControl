@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
+using FactionLoadout.HarmonyPatches;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -140,6 +141,14 @@ public class PawnKindEdit : IExposable
     public RulePackDef NameMakerFemale = null;
     public float? UnwaveringlyLoyalChance = null;
 
+    // Backstory
+    public List<BackstoryFilter> BackstoryFiltersOverride = null;
+    public List<DefRef<BackstoryDef>> FixedChildBackstories = null;
+    public List<DefRef<BackstoryDef>> FixedAdultBackstories = null;
+    public List<string> ExcludedBackstoryCategories = null;
+    public List<DefRef<BackstoryDef>> ExcludedBackstories = null;
+    public float? BackstoryCryptosleepCommonality = null;
+
     // VFE Ancients
     public int? NumVFEAncientsSuperPowers = null;
     public int? NumVFEAncientsSuperWeaknesses = null;
@@ -150,14 +159,6 @@ public class PawnKindEdit : IExposable
     public IntRange? VEPsycastStatPoints = null;
     public bool? VEPsycastRandomAbilities = null;
 
-    /**
-     * public List<AbilityDef> giveAbilities
-     * public HediffDef implantDef
-     * List<PathUnlockData> unlockedPaths
-     * |- public PsycasterPathDef path
-     * |- public IntRange unlockedAbilityLevelRange
-     * |- public IntRange unlockedAbilityCount
-     */
     private PawnKindEdit globalEdit = null;
 
     /// <summary>
@@ -238,6 +239,14 @@ public class PawnKindEdit : IExposable
         Scribe_Defs.Look(ref NameMakerFemale, "nameMakerFemale");
         if (isFake)
             NameMakerFemale = FakeRulePack;
+
+        // Backstory
+        Scribe_Collections.Look(ref BackstoryFiltersOverride, "backstoryFiltersOverride", LookMode.Deep);
+        Scribe_Collections.Look(ref FixedChildBackstories, "fixedChildBackstories", LookMode.Deep);
+        Scribe_Collections.Look(ref FixedAdultBackstories, "fixedAdultBackstories", LookMode.Deep);
+        Scribe_Collections.Look(ref ExcludedBackstoryCategories, "excludedBackstoryCategories");
+        Scribe_Collections.Look(ref ExcludedBackstories, "excludedBackstories", LookMode.Deep);
+        Scribe_Values.Look(ref BackstoryCryptosleepCommonality, "backstoryCryptosleepCommonality");
 
         // VFEAncients Compatibility
         Scribe_Values.Look(ref NumVFEAncientsSuperPowers, "numVFEAncientsSuperPowers");
@@ -410,6 +419,26 @@ public class PawnKindEdit : IExposable
         }
     }
 
+    private void ReplaceMaybeDefRefList<T>(ref List<T> field, List<DefRef<T>> maybe, bool tryAdd)
+        where T : Def, new()
+    {
+        if (maybe == null)
+            return;
+
+        List<T> resolved = maybe.Where(r => r.HasValue).Select(r => r.Def).ToList();
+
+        if (tryAdd && field != null)
+        {
+            foreach (T value in resolved)
+                if (!field.Contains(value))
+                    field.Add(value);
+        }
+        else
+        {
+            field = resolved;
+        }
+    }
+
     private void ReplaceMaybe(ref PawnInventoryOption inv, InventoryOptionEdit maybe)
     {
         if (maybe == null)
@@ -477,6 +506,21 @@ public class PawnKindEdit : IExposable
         ReplaceMaybeList(ref def.apparelDisallowTags, ApparelDisallowedTags, global?.ApparelDisallowedTags != null);
         ReplaceMaybeList(ref def.apparelRequired, ApparelRequired, global?.ApparelRequired != null);
         ReplaceMaybeList(ref def.techHediffsRequired, TechRequired, global?.TechRequired != null);
+
+        // Backstory filters override — BackstoryFilter extends BackstoryCategoryFilter, so cast directly.
+        if (BackstoryFiltersOverride is { Count: > 0 })
+        {
+            def.backstoryFiltersOverride = new List<BackstoryCategoryFilter>(BackstoryFiltersOverride);
+        }
+
+        ReplaceMaybe(ref def.backstoryCryptosleepCommonality, BackstoryCryptosleepCommonality);
+
+        // Fixed backstories — resolve DefRefs to actual defs, skipping missing ones.
+        ReplaceMaybeDefRefList(ref def.fixedChildBackstories, FixedChildBackstories, global?.FixedChildBackstories != null);
+        ReplaceMaybeDefRefList(ref def.fixedAdultBackstories, FixedAdultBackstories, global?.FixedAdultBackstories != null);
+
+        // Backstory exclusions: remove matching entries from all filter lists and fixed lists
+        ApplyBackstoryExclusions(def);
 
         bool removeFixedInventory = RemoveFixedInventory || global?.RemoveFixedInventory == true;
         if (removeFixedInventory)
@@ -628,6 +672,135 @@ public class PawnKindEdit : IExposable
             .Select(i => VFEAncientsReflectionHelper.GetPowerDefMethod.Value.Invoke(null, new object[] { i }))
             .Where(p => p != null)
             .DoIf(p => !powerList.Contains(p), p => powerList.Add(p));
+    }
+
+    /// <summary>
+    /// Applies backstory exclusions at the def level where possible:
+    /// - Category exclusions are injected into filter exclude lists.
+    /// - Specific def exclusions are removed from fixed backstory lists.
+    /// - When specific defs are excluded, precomputed candidate lists are built and stored
+    ///   on a <see cref="BackstoryExclusionExtension"/> so that
+    ///   <see cref="HarmonyPatches.BackstoryGenPatch"/> can swap backstories cheaply at
+    ///   generation time without scanning the entire DefDatabase per pawn.
+    /// </summary>
+    private void ApplyBackstoryExclusions(PawnKindDef def)
+    {
+        bool hasExcludedCategories = ExcludedBackstoryCategories is { Count: > 0 };
+        bool hasExcludedDefs = ExcludedBackstories is { Count: > 0 };
+
+        if (!hasExcludedCategories && !hasExcludedDefs) return;
+
+        // Inject excluded categories into all existing filters as exclude entries.
+        if (hasExcludedCategories)
+        {
+            void InjectExcludes(List<BackstoryCategoryFilter> filters)
+            {
+                if (filters == null)
+                {
+                    return;
+                }
+                foreach (BackstoryCategoryFilter filter in filters)
+                {
+                    filter.exclude ??= [];
+                    foreach (string cat in ExcludedBackstoryCategories)
+                    {
+                        if (!filter.exclude.Contains(cat))
+                        {
+                            filter.exclude.Add(cat);
+                        }
+                    }
+                }
+            }
+
+            InjectExcludes(def.backstoryFiltersOverride);
+            InjectExcludes(def.backstoryFilters);
+        }
+
+        // For specific def exclusions: remove from fixed lists and precompute replacement
+        // candidate lists keyed by slot, filtered to the def's active categories.
+        if (hasExcludedDefs)
+        {
+            HashSet<BackstoryDef> excluded = new(ExcludedBackstories.Where(r => r.HasValue).Select(r => r.Def));
+            if (excluded.Count == 0)
+            {
+                return;
+            }
+
+            // Remove excluded defs from fixed lists to reduce the chance of needing a reroll.
+            def.fixedChildBackstories?.RemoveAll(b => excluded.Contains(b));
+            def.fixedAdultBackstories?.RemoveAll(b => excluded.Contains(b));
+
+            // Collect all active categories from the def's filters so we only precompute
+            // candidates that vanilla would actually consider for this pawn kind.
+            HashSet<string> activeCategories = [];
+            List<BackstoryCategoryFilter> activeFilters = def.backstoryFiltersOverride ?? def.backstoryFilters;
+            if (activeFilters != null)
+            {
+                foreach (BackstoryCategoryFilter filter in activeFilters)
+                {
+                    if (!filter.categories.NullOrEmpty())
+                    {
+                        foreach (string cat in filter.categories)
+                        {
+                            activeCategories.Add(cat);
+                        }
+                    }
+                    if (!filter.categoriesChildhood.NullOrEmpty())
+                    {
+                        foreach (string cat in filter.categoriesChildhood)
+                        {
+                            activeCategories.Add(cat);
+                        }
+                    }
+                    if (!filter.categoriesAdulthood.NullOrEmpty())
+                    {
+                        foreach (string cat in filter.categoriesAdulthood)
+                        {
+                            activeCategories.Add(cat);
+                        }
+                    }
+                }
+            }
+
+            List<BackstoryDef> validChild = [];
+            List<BackstoryDef> validAdult = [];
+            foreach (BackstoryDef bs in DefDatabase<BackstoryDef>.AllDefsListForReading)
+            {
+                if (!bs.shuffleable || excluded.Contains(bs))
+                    continue;
+                if (bs.spawnCategories == null)
+                    continue;
+                bool matchesCategory = activeCategories.Count == 0
+                    || bs.spawnCategories.Any(c => activeCategories.Contains(c));
+                if (!matchesCategory)
+                    continue;
+                if (bs.slot == BackstorySlot.Childhood)
+                {
+                    validChild.Add(bs);
+                }
+                else
+                {
+                    validAdult.Add(bs);
+                }
+            }
+
+            def.modExtensions ??= [];
+            BackstoryExclusionExtension ext = def.GetModExtension<BackstoryExclusionExtension>();
+            if (ext == null)
+            {
+                ext = new BackstoryExclusionExtension();
+                def.modExtensions.Add(ext);
+            }
+
+            ext.excludedDefs = excluded;
+            ext.validChildhood = validChild.Count > 0 ? validChild : null;
+            ext.validAdulthood = validAdult.Count > 0 ? validAdult : null;
+
+            ModCore.Debug(
+                $"Backstory exclusions for {def.defName}: {excluded.Count} excluded, "
+                + $"{validChild.Count} valid childhood, {validAdult.Count} valid adulthood candidates precomputed."
+            );
+        }
     }
 
     public bool AppliesTo(PawnKindDef def)

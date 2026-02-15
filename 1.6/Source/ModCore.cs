@@ -116,6 +116,10 @@ public class ModCore : Mod
             AccessTools.Method(typeof(Pawn_GuestTracker), nameof(Pawn_GuestTracker.SetupRecruitable)),
             prefix: new HarmonyMethod(typeof(PawnGenPatchRecruitable), nameof(PawnGenPatchRecruitable.Prefix))
         );
+        harmony.Patch(
+            AccessTools.Method(typeof(PawnBioAndNameGenerator), nameof(PawnBioAndNameGenerator.GiveAppropriateBioAndNameTo)),
+            postfix: new HarmonyMethod(typeof(HarmonyPatches.BackstoryGenPatch), nameof(HarmonyPatches.BackstoryGenPatch.Postfix))
+        );
 
         if (MySettings.PatchKindInRequests)
         {

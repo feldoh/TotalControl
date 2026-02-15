@@ -25,6 +25,11 @@ public class PawnKindEditUI : Window
     private static List<RulePackDef> AllRulePackDefs;
     private static List<GeneDef> AllGeneDefs;
 
+    private static List<string> AllBackstoryCategories;
+    private static List<BackstoryDef> AllChildhoodBackstories;
+    private static List<BackstoryDef> AllAdulthoodBackstories;
+    private static List<BackstoryDef> AllBackstoryDefs;
+
     private static List<string> AllPowerDefs;
 
     public static Texture2D TryGetIcon(Def def, out Color color)
@@ -154,6 +159,33 @@ public class PawnKindEditUI : Window
 
         AllGeneDefs = [.. allGeneDefs];
         AllGeneDefs.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, StringComparison.InvariantCulture));
+
+        // Backstory categories and defs - discovered from the DefDatabase so mods are included.
+        HashSet<string> backstoryCategories = new(64);
+        List<BackstoryDef> childBackstories = new(256);
+        List<BackstoryDef> adultBackstories = new(256);
+        foreach (BackstoryDef bs in DefDatabase<BackstoryDef>.AllDefsListForReading)
+        {
+            if (bs.spawnCategories != null)
+                foreach (string cat in bs.spawnCategories)
+                    if (cat != null)
+                        backstoryCategories.Add(cat);
+
+            if (bs.slot == BackstorySlot.Childhood)
+                childBackstories.Add(bs);
+            else
+                adultBackstories.Add(bs);
+        }
+
+        AllBackstoryCategories = [.. backstoryCategories];
+        AllBackstoryCategories.Sort();
+
+        childBackstories.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, System.StringComparison.InvariantCulture));
+        adultBackstories.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, System.StringComparison.InvariantCulture));
+        AllChildhoodBackstories = childBackstories;
+        AllAdulthoodBackstories = adultBackstories;
+        AllBackstoryDefs = [.. childBackstories];
+        AllBackstoryDefs.AddRange(adultBackstories);
 
         PopulateVFEAncientsObjects();
     }
@@ -355,6 +387,350 @@ public class PawnKindEditUI : Window
         {
             // Human-likes can change race, global would include animals.
             DrawOverride(ui, DefaultKind.race, ref Current.Race, "Species", DrawRace);
+        }
+
+        // Backstory section
+        ui.GapLine();
+        ui.Label($"<size=18><b>{"FactionLoadout_Backstory_Section".Translate()}</b></size>");
+        ui.Gap(4);
+
+        DrawOverride(ui, DefaultKind.backstoryCryptosleepCommonality, ref Current.BackstoryCryptosleepCommonality, "FactionLoadout_Backstory_CryptosleepChance".Translate(), DrawCryptosleepCommonality);
+        DrawBackstoryFiltersOverride(ui);
+        DrawOverride(ui, null, ref Current.FixedChildBackstories, "FactionLoadout_Backstory_FixedChildhood".Translate(), DrawFixedChildBackstories, GetHeightFor(Current.FixedChildBackstories), false);
+        DrawOverride(ui, null, ref Current.FixedAdultBackstories, "FactionLoadout_Backstory_FixedAdulthood".Translate(), DrawFixedAdultBackstories, GetHeightFor(Current.FixedAdultBackstories), false);
+        DrawOverride(ui, null, ref Current.ExcludedBackstoryCategories, "FactionLoadout_Backstory_ExcludedCategories".Translate(), DrawExcludedBackstoryCategories, GetHeightFor(Current.ExcludedBackstoryCategories), false);
+        DrawOverride(ui, null, ref Current.ExcludedBackstories, "FactionLoadout_Backstory_Excluded".Translate(), DrawExcludedBackstories, GetHeightFor(Current.ExcludedBackstories), false);
+    }
+
+    // --- Backstory draw methods ---
+
+    private void DrawCryptosleepCommonality(Rect rect, bool active, float defaultValue)
+    {
+        if (active)
+        {
+            float value = Current.BackstoryCryptosleepCommonality ?? defaultValue;
+            value = Widgets.HorizontalSlider(rect, value, 0f, 1f, middleAlignment: true, $"{value:P0}");
+            Current.BackstoryCryptosleepCommonality = value;
+        }
+        else
+        {
+            string txt = Current.IsGlobal ? "---" : $"[Default] {defaultValue:P0}";
+            Widgets.Label(rect.GetCentered(txt), txt);
+        }
+    }
+
+    private void DrawBackstoryFiltersOverride(Listing_Standard ui)
+    {
+        List<BackstoryFilter> filters = Current.BackstoryFiltersOverride;
+        float height = filters == null ? 32 : Math.Max(32, 80 * filters.Count + 40);
+
+        ui.Label($"<b>{"FactionLoadout_Backstory_FiltersOverride".Translate()}</b>");
+        TooltipHandler.TipRegion(ui.GetRect(0), "FactionLoadout_Backstory_FiltersOverrideTooltip".Translate());
+        Rect rect = ui.GetRect(height);
+        bool active = filters != null;
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        {
+            if (active)
+            {
+                Current.BackstoryFiltersOverride = null;
+            }
+            else
+            {
+                Current.BackstoryFiltersOverride = [];
+                // Seed with existing def filters if available
+                if (!DefaultKind.backstoryFiltersOverride.NullOrEmpty())
+                {
+                    foreach (BackstoryCategoryFilter f in DefaultKind.backstoryFiltersOverride)
+                    {
+                        Current.BackstoryFiltersOverride.Add(new BackstoryFilter(f));
+                    }
+                }
+                else if (!DefaultKind.backstoryFilters.NullOrEmpty())
+                {
+                    foreach (BackstoryCategoryFilter f in DefaultKind.backstoryFilters)
+                    {
+                        Current.BackstoryFiltersOverride.Add(new BackstoryFilter(f));
+                    }
+                }
+            }
+
+            active = !active;
+        }
+
+        Rect content = new(rect.x + 122, rect.y, ui.ColumnWidth - 124, rect.height);
+        Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
+        content = content.ExpandedBy(-2);
+
+        ref Vector2 scroll = ref scrolls[scrollIndex++];
+        if (active)
+        {
+            filters = Current.BackstoryFiltersOverride;
+            DrawBackstoryFilterList(content, ref scroll, filters);
+            content.y += content.height + 5;
+            content.height = 28;
+            content.width = 250;
+            if (Widgets.ButtonText(content, $"<b>{"FactionLoadout_Backstory_AddFilter".Translate()}</b>"))
+            {
+                string defaultCat = AllBackstoryCategories.FirstOrDefault() ?? "Civil";
+                filters.Add(new BackstoryFilter { categories = [defaultCat], commonality = 1f });
+            }
+        }
+        else
+        {
+            string txt;
+            if (Current.IsGlobal)
+            {
+                txt = "---";
+            }
+            else
+            {
+                List<BackstoryCategoryFilter> defFilters = DefaultKind.backstoryFiltersOverride ?? DefaultKind.backstoryFilters;
+                if (defFilters.NullOrEmpty())
+                {
+                    txt = $"[Default] <i>{"FactionLoadout_None".Translate()}</i>";
+                }
+                else
+                {
+                    txt = "FactionLoadout_Backstory_FilterCount".Translate(defFilters.Count);
+                }
+            }
+
+            GUI.enabled = false;
+            Widgets.Label(content.GetCentered(txt), txt);
+            GUI.enabled = true;
+        }
+
+        ui.Gap();
+    }
+
+    private void DrawBackstoryFilterList(Rect rect, ref Vector2 scroll, List<BackstoryFilter> filters)
+    {
+        string noneLabel = $"<i>{"FactionLoadout_None".Translate()}</i>";
+        float itemHeight = 76;
+        Widgets.BeginScrollView(rect, ref scroll, new Rect(0, 0, rect.width - 20, itemHeight * filters.Count));
+
+        BackstoryFilter toRemove = null;
+        float y = 0;
+        foreach (BackstoryFilter filter in filters)
+        {
+            Rect itemRect = new(0, y, rect.width - 20, itemHeight - 4);
+            Widgets.DrawBoxSolidWithOutline(itemRect, Color.black * 0.3f, Color.white * 0.2f);
+            itemRect = itemRect.ContractedBy(4);
+
+            // Delete button
+            Rect deleteBtn = new(itemRect.xMax - 22, itemRect.y, 20, 20);
+            GUI.color = Color.red;
+            if (Widgets.ButtonText(deleteBtn, "X"))
+            {
+                toRemove = filter;
+            }
+            GUI.color = Color.white;
+
+            // Categories row
+            Rect catLabel = new(itemRect.x, itemRect.y, 80, 24);
+            Widgets.Label(catLabel, "FactionLoadout_Backstory_Categories".Translate());
+            Rect catValue = new(itemRect.x + 82, itemRect.y, itemRect.width - 110, 24);
+            string catStr = filter.categories.NullOrEmpty() ? noneLabel : string.Join(", ", filter.categories);
+            if (Widgets.ButtonText(catValue, catStr, drawBackground: false))
+            {
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(AllBackstoryCategories, t => new MenuItemText(t, t));
+                CustomFloatMenu.Open(
+                    items,
+                    raw =>
+                    {
+                        string cat = raw.GetPayload<string>();
+                        filter.categories ??= [];
+                        if (!filter.categories.Contains(cat))
+                        {
+                            filter.categories.Add(cat);
+                        }
+                    }
+                );
+            }
+
+            // Exclude row
+            Rect exLabel = new(itemRect.x, itemRect.y + 24, 80, 24);
+            Widgets.Label(exLabel, "FactionLoadout_Backstory_Exclude".Translate());
+            Rect exValue = new(itemRect.x + 82, itemRect.y + 24, itemRect.width - 110, 24);
+            string exStr = filter.exclude.NullOrEmpty() ? noneLabel : string.Join(", ", filter.exclude);
+            if (Widgets.ButtonText(exValue, exStr, drawBackground: false))
+            {
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(AllBackstoryCategories, t => new MenuItemText(t, t));
+                CustomFloatMenu.Open(
+                    items,
+                    raw =>
+                    {
+                        string cat = raw.GetPayload<string>();
+                        filter.exclude ??= [];
+                        if (!filter.exclude.Contains(cat))
+                        {
+                            filter.exclude.Add(cat);
+                        }
+                    }
+                );
+            }
+
+            // Commonality slider
+            Rect comLabel = new(itemRect.x, itemRect.y + 48, 80, 20);
+            Widgets.Label(comLabel, "FactionLoadout_Backstory_Weight".Translate());
+            Rect comSlider = new(itemRect.x + 82, itemRect.y + 48, itemRect.width - 110, 20);
+            filter.commonality = Widgets.HorizontalSlider(comSlider, filter.commonality, 0f, 5f, middleAlignment: true, $"{filter.commonality:F1}");
+
+            y += itemHeight;
+        }
+
+        Widgets.EndScrollView();
+
+        if (toRemove != null)
+        {
+            filters.Remove(toRemove);
+        }
+    }
+
+    private void DrawFixedChildBackstories(Rect rect, bool active, List<DefRef<BackstoryDef>> defaultList)
+    {
+        DrawDefRefList(
+            rect,
+            active,
+            ref scrolls[scrollIndex++],
+            Current.FixedChildBackstories,
+            DefaultKind.fixedChildBackstories,
+            AllChildhoodBackstories,
+            MakeBackstoryMenuItem
+        );
+    }
+
+    private void DrawFixedAdultBackstories(Rect rect, bool active, List<DefRef<BackstoryDef>> defaultList)
+    {
+        DrawDefRefList(
+            rect,
+            active,
+            ref scrolls[scrollIndex++],
+            Current.FixedAdultBackstories,
+            DefaultKind.fixedAdultBackstories,
+            AllAdulthoodBackstories,
+            MakeBackstoryMenuItem
+        );
+    }
+
+    private void DrawExcludedBackstoryCategories(Rect rect, bool active, List<string> defaultList)
+    {
+        DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.ExcludedBackstoryCategories, null, AllBackstoryCategories);
+    }
+
+    private void DrawExcludedBackstories(Rect rect, bool active, List<DefRef<BackstoryDef>> defaultList)
+    {
+        DrawDefRefList(
+            rect,
+            active,
+            ref scrolls[scrollIndex++],
+            Current.ExcludedBackstories,
+            null,
+            AllBackstoryDefs,
+            MakeBackstoryMenuItem
+        );
+    }
+
+    private static MenuItemBase MakeBackstoryMenuItem(BackstoryDef def)
+    {
+        string slotStr = def.slot == BackstorySlot.Childhood
+            ? "FactionLoadout_Backstory_SlotChild".Translate()
+            : "FactionLoadout_Backstory_SlotAdult".Translate();
+        return new MenuItemText(def, $"{slotStr} {def.LabelCap} ({def.modContentPack?.Name ?? "<no-mod>"})", tooltip: def.baseDesc);
+    }
+
+    /// <summary>
+    /// Draws a list of <see cref="DefRef{T}"/> entries with add/remove UI.
+    /// Displays missing defs (from removed mods) in red rather than silently dropping them.
+    /// </summary>
+    private void DrawDefRefList<T>(
+        Rect rect,
+        bool active,
+        ref Vector2 scroll,
+        IList<DefRef<T>> current,
+        IList<T> defaults,
+        IEnumerable<T> allDefs,
+        Func<T, MenuItemBase> makeItem = null
+    )
+        where T : Def, new()
+    {
+        string MakeDefaultString(IList<T> list)
+        {
+            if (list == null || list.Count == 0)
+            {
+                return $"<i>{"FactionLoadout_None".Translate()}</i>";
+            }
+            string raw = string.Join(", ", list.Select(d => d.LabelCap.ToString()));
+            if (raw.Length > 43)
+            {
+                raw = raw.Substring(0, 40) + "...";
+            }
+            return raw;
+        }
+
+        if (active)
+        {
+            if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "FactionLoadout_AddNew".Translate()))
+            {
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(allDefs, makeItem ?? (d => new MenuItemText(d, d.LabelCap)));
+                CustomFloatMenu.Open(
+                    items,
+                    raw =>
+                    {
+                        T def = raw.GetPayload<T>();
+                        // Prevent duplicates by defName
+                        if (current.All(r => r.DefName != def.defName))
+                        {
+                            current.Add(new DefRef<T>(def));
+                        }
+                    }
+                );
+            }
+
+            rect.yMin += 30;
+
+            Widgets.BeginScrollView(rect, ref scroll, new Rect(0, 0, 100, 26 * current.Count));
+            Rect curr = new(26, 3, 1000, 30);
+            Rect currButton = new(3, 3, 20, 20);
+
+            DefRef<T> toRemove = null;
+            foreach (DefRef<T> defRef in current)
+            {
+                GUI.color = Color.red;
+                if (Widgets.ButtonText(currButton, " X"))
+                {
+                    toRemove = defRef;
+                }
+
+                GUI.color = Color.white;
+                if (defRef.IsMissing)
+                {
+                    GUI.color = new Color(1f, 0.5f, 0.5f);
+                    Widgets.Label(curr, "FactionLoadout_DefRef_Missing".Translate(
+                        defRef.DefName,
+                        defRef.ModName ?? "FactionLoadout_DefRef_UnknownMod".Translate()));
+                    GUI.color = Color.white;
+                }
+                else if (defRef.HasValue)
+                {
+                    Widgets.Label(curr, (string)defRef.Def.LabelCap ?? defRef.DefName);
+                }
+
+                curr.y += 26;
+                currButton.y += 26;
+            }
+
+            Widgets.EndScrollView();
+
+            if (toRemove != null)
+            {
+                current.Remove(toRemove);
+            }
+        }
+        else
+        {
+            string txt = Current.IsGlobal ? "---" : $"[Default] {MakeDefaultString(defaults)}";
+            Widgets.Label(rect.GetCentered(txt), txt);
         }
     }
 
