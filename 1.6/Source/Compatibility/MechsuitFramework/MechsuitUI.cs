@@ -29,15 +29,15 @@ public static class MechsuitUI
         // --- Header ---
         ui.Label("<b>Exosuit Framework</b>");
         ui.GapLine();
-        ui.Label("Configure structure point (health) settings for exosuit pawns. "
-            + "Exosuit core apparel is assigned via the Apparel tab as normal.");
+        ui.Label("Configure structure point (health) settings for exosuit pawns. " + "Exosuit core apparel is assigned via the Apparel tab as normal.");
         ui.Gap(8);
 
         // --- Structure Point Range ---
         ui.Label("<b>Structure Point Range</b>");
         ui.Gap(2);
-        ui.Label("Controls the health multiplier applied to the exosuit core on spawn. "
-            + "For example, (0.8, 1.0) means spawned suits will have 80\u2013100% of their max health.");
+        ui.Label(
+            "Controls the health multiplier applied to the exosuit core on spawn. " + "For example, (0.8, 1.0) means spawned suits will have 80\u2013100% of their max health."
+        );
         ui.Gap(4);
 
         bool hasOverride = data.StructurePointRange != null;
@@ -74,9 +74,8 @@ public static class MechsuitUI
         else
         {
             Rect row = ui.GetRect(Text.LineHeight + 4);
-            string defaultLabel = defSPRange != null
-                ? $"Structure Points: (default: {defSPRange.Value.min:P0} \u2013 {defSPRange.Value.max:P0})"
-                : "Structure Points: (default: 100%)";
+            string defaultLabel =
+                defSPRange != null ? $"Structure Points: (default: {defSPRange.Value.min:P0} \u2013 {defSPRange.Value.max:P0})" : "Structure Points: (default: 100%)";
             Widgets.Label(row.LeftPart(0.65f), defaultLabel);
 
             if (Widgets.ButtonText(row.RightPart(0.25f), "Override"))

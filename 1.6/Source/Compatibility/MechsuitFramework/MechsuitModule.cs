@@ -65,9 +65,7 @@ public class MechsuitModule : ITotalControlModule
         Scribe_Values.Look(ref spMin, "structurePointMin", -1f);
         Scribe_Values.Look(ref spMax, "structurePointMax", -1f);
 
-        data.StructurePointRange = spMin >= 0f && spMax >= 0f
-            ? new FloatRange(spMin, spMax)
-            : null;
+        data.StructurePointRange = spMin >= 0f && spMax >= 0f ? new FloatRange(spMin, spMax) : null;
 
         // Clean up empty data
         if (Scribe.mode == LoadSaveMode.PostLoadInit)
@@ -99,10 +97,7 @@ public class MechsuitModule : ITotalControlModule
         // Resolve structure point range: specific edit > global > def default > (0.9, 1)
         MechsuitData data = GetData(edit);
         MechsuitData globalData = global != null ? GetData(global) : null;
-        FloatRange spRange = data?.StructurePointRange
-            ?? globalData?.StructurePointRange
-            ?? MechsuitUI.ReadDefStructurePointRange(def)
-            ?? new FloatRange(0.9f, 1f);
+        FloatRange spRange = data?.StructurePointRange ?? globalData?.StructurePointRange ?? MechsuitUI.ReadDefStructurePointRange(def) ?? new FloatRange(0.9f, 1f);
 
         // If the def already has a ModExtForceApparelGen, just update the structure point range.
         ModExtForceApparelGen existing = def.GetModExtension<ModExtForceApparelGen>();
@@ -114,17 +109,12 @@ public class MechsuitModule : ITotalControlModule
         }
 
         // Build and attach the extension so MechsuitFramework's PawnGenerator_Patch finds it.
-        ModExtForceApparelGen ext = new()
-        {
-            apparels = coreApparel,
-            StructurePointRange = spRange
-        };
+        ModExtForceApparelGen ext = new() { apparels = coreApparel, StructurePointRange = spRange };
 
         def.modExtensions ??= [];
         def.modExtensions.Add(ext);
 
-        ModCore.Debug($"Mechsuit module: Added ModExtForceApparelGen to {def.defName} with cores: "
-            + $"{coreApparel.Select(d => d.defName).ToCommaList()}, SP range: {spRange}");
+        ModCore.Debug($"Mechsuit module: Added ModExtForceApparelGen to {def.defName} with cores: " + $"{coreApparel.Select(d => d.defName).ToCommaList()}, SP range: {spRange}");
     }
 
     /// <summary>

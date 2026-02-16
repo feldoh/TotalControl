@@ -79,8 +79,7 @@ public class GiddyUpModule : ITotalControlModule
         def.modExtensions ??= [];
 
         // Find or create the CustomMounts extension
-        DefModExtension extension = def.modExtensions
-            .FirstOrDefault(e => e.GetType() == GiddyUpReflection.CustomMountsType);
+        DefModExtension extension = def.modExtensions.FirstOrDefault(e => e.GetType() == GiddyUpReflection.CustomMountsType);
         if (extension == null)
         {
             extension = AccessTools.CreateInstance(GiddyUpReflection.CustomMountsType) as DefModExtension;
@@ -95,7 +94,8 @@ public class GiddyUpModule : ITotalControlModule
         if (mountChance != null)
             GiddyUpReflection.MountChanceField.SetValue(extension, mountChance.Value);
 
-        if (possibleMounts is not { Count: > 0 }) return;
+        if (possibleMounts is not { Count: > 0 })
+            return;
 
         // Convert defName strings to PawnKindDef keys
         Dictionary<PawnKindDef, int> resolved = new();

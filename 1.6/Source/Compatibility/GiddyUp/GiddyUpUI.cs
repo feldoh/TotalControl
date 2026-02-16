@@ -17,10 +17,7 @@ public static class GiddyUpUI
     /// Read the existing CustomMounts extension from a PawnKindDef (if any).
     /// Returns the mount chance and possible mounts dictionary, or nulls if not present.
     /// </summary>
-    public static void ReadDefaults(
-        PawnKindDef def,
-        out int? defMountChance,
-        out Dictionary<PawnKindDef, int> defPossibleMounts)
+    public static void ReadDefaults(PawnKindDef def, out int? defMountChance, out Dictionary<PawnKindDef, int> defPossibleMounts)
     {
         defMountChance = null;
         defPossibleMounts = null;
@@ -43,7 +40,8 @@ public static class GiddyUpUI
                 defMountChance = val;
         }
 
-        if (possibleMountsField == null) return;
+        if (possibleMountsField == null)
+            return;
 
         defPossibleMounts = possibleMountsField.GetValue(ext) as Dictionary<PawnKindDef, int>;
         if (defPossibleMounts is { Count: 0 })
@@ -78,9 +76,7 @@ public static class GiddyUpUI
         }
         else
         {
-            string defaultLabel = defMountChance != null
-                ? $"Mount Chance: (default: {defMountChance}%)"
-                : "Mount Chance: (default)";
+            string defaultLabel = defMountChance != null ? $"Mount Chance: (default: {defMountChance}%)" : "Mount Chance: (default)";
             Widgets.Label(labelRect, defaultLabel);
 
             if (Widgets.ButtonText(fieldRect.LeftPart(0.4f), "Override"))
@@ -142,13 +138,16 @@ public static class GiddyUpUI
         if (ui.ButtonText("FactionLoadout_AddMount".Translate()))
         {
             // Show a float menu of all mountable animal PawnKindDefs
-            List<FloatMenuOption> options = DefDatabase<PawnKindDef>.AllDefsListForReading
-                .Where(k => k.RaceProps.Animal && !data.PossibleMounts.ContainsKey(k.defName))
+            List<FloatMenuOption> options = DefDatabase<PawnKindDef>
+                .AllDefsListForReading.Where(k => k.RaceProps.Animal && !data.PossibleMounts.ContainsKey(k.defName))
                 .OrderBy(k => k.LabelCap.Resolve())
-                .Select(k => new FloatMenuOption(k.LabelCap, () =>
-                {
-                    data.PossibleMounts[k.defName] = 100;
-                }))
+                .Select(k => new FloatMenuOption(
+                    k.LabelCap,
+                    () =>
+                    {
+                        data.PossibleMounts[k.defName] = 100;
+                    }
+                ))
                 .ToList();
 
             if (options.Count > 0)

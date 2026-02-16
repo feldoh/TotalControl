@@ -396,26 +396,25 @@ public class FactionEditUI : Window
             Current.Apply(clonedFac, false);
             DestroyPawns();
 
-            Faction faction =
-                new()
-                {
-                    def = clonedFac,
-                    loadID = -1,
-                    colorFromSpectrum = Rand.Range(0f, 1f),
-                    hidden = true,
-                    ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos,
-                    Name = clonedFac.fixedName,
-                    relations = Find
-                        .FactionManager.AllFactionsVisible.Select(otherFaction => new FactionRelation
-                        {
-                            other = otherFaction,
-                            baseGoodwill = 0,
-                            kind = FactionRelationKind.Neutral
-                        })
-                        .ToList(),
-                    temporary = true,
-                    deactivated = true
-                };
+            Faction faction = new()
+            {
+                def = clonedFac,
+                loadID = -1,
+                colorFromSpectrum = Rand.Range(0f, 1f),
+                hidden = true,
+                ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos,
+                Name = clonedFac.fixedName,
+                relations = Find
+                    .FactionManager.AllFactionsVisible.Select(otherFaction => new FactionRelation
+                    {
+                        other = otherFaction,
+                        baseGoodwill = 0,
+                        kind = FactionRelationKind.Neutral,
+                    })
+                    .ToList(),
+                temporary = true,
+                deactivated = true,
+            };
 
             ThingIDPatch.Active = _ThingIDPatch;
             IdeoUtilityPatch.Active = true;
@@ -438,7 +437,7 @@ public class FactionEditUI : Window
                             CanGeneratePawnRelations = false,
                             RelationWithExtraPawnChanceFactor = 0,
                             ColonistRelationChanceFactor = 0,
-                            ForceNoIdeo = true
+                            ForceNoIdeo = true,
                         }
                     );
                     pawns.Add(pawn);
@@ -494,7 +493,7 @@ public class FactionEditUI : Window
                 SpecialThingFilterDefOf.AllowDeadmansApparel,
                 SpecialThingFilterDefOf.AllowNonDeadmansApparel,
                 SpecialThingFilterDefOf.AllowFresh,
-                DefDatabase<SpecialThingFilterDef>.GetNamed("AllowRotten")
+                DefDatabase<SpecialThingFilterDef>.GetNamed("AllowRotten"),
             ]
         );
     }

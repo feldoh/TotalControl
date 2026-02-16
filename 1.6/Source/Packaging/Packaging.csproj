@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <!--
         This project exists solely to sequence the release packaging (zip + Steam copy)
         AFTER all other projects have finished building. It produces no assembly of its own.
@@ -78,8 +77,12 @@
         <ItemGroup>
             <ReleaseFolder Include="$(ReleasePath)/**" />
         </ItemGroup>
-        <RemoveDir Condition="Exists('$(SteamModsPath)') And Exists('$(SteamModsPath)/$(AssemblyName)')" Directories="$(SteamModsPath)/$(AssemblyName)" ContinueOnError="true"/>
-        <Copy Condition="Exists('$(SteamModsPath)') And !Exists('$(SteamModsPath)/$(AssemblyName)')" SourceFiles="@(ReleaseFolder)" DestinationFiles="@(ReleaseFolder->'$(SteamModsPath)/$(AssemblyName)/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+        <RemoveDir Condition="Exists('$(SteamModsPath)') And Exists('$(SteamModsPath)/$(AssemblyName)')" Directories="$(SteamModsPath)/$(AssemblyName)" ContinueOnError="true" />
+        <Copy
+            Condition="Exists('$(SteamModsPath)') And !Exists('$(SteamModsPath)/$(AssemblyName)')"
+            SourceFiles="@(ReleaseFolder)"
+            DestinationFiles="@(ReleaseFolder->'$(SteamModsPath)/$(AssemblyName)/%(RecursiveDir)%(Filename)%(Extension)')"
+            SkipUnchangedFiles="true"
+        />
     </Target>
-
 </Project>

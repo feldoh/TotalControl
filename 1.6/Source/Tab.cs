@@ -30,9 +30,6 @@ public class Tab
     private static void DrawRegionTitle(Listing_Standard ui, string title)
     {
         ui.GapLine(26);
-        Widgets.Label(
-            ui.GetRect(42),
-            $"<size=26><b><color=#73fff2>{title}</color></b></size>"
-        );
+        Widgets.Label(ui.GetRect(42), $"<size=26><b><color=#73fff2>{title}</color></b></size>");
     }
 }

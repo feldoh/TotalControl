@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <RootNamespace>TotalControlGiddyUpCompat</RootNamespace>
         <AssemblyName>TotalControlGiddyUpCompat</AssemblyName>
@@ -84,5 +83,4 @@
             <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
-
 </Project>

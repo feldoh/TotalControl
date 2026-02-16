@@ -22,7 +22,7 @@ namespace FactionLoadout
                 { "pawnGroupMakers", CloneGroupMakers },
                 { "basicMemberKind", CloneBasicMemberType },
                 { "fixedLeaderKinds", CloneLeaderKinds },
-                { "apparelStuffFilter", CloneThingFilter }
+                { "apparelStuffFilter", CloneThingFilter },
             };
             customKind = new Dictionary<string, Func<PawnKindDef, FieldInfo, object>>() { { "inventoryOptions", CloneInventory } };
 

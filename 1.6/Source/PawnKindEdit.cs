@@ -720,7 +720,8 @@ public class PawnKindEdit : IExposable
             InjectExcludes(def.backstoryFilters);
         }
 
-        if (!hasExcludedDefs) return;
+        if (!hasExcludedDefs)
+            return;
 
         // Partition excluded defs by slot so we only resolve categories for affected slots.
         HashSet<BackstoryDef> excludedChild = [];
@@ -741,8 +742,10 @@ public class PawnKindEdit : IExposable
         }
 
         // Always remove excluded defs from existing fixed lists regardless.
-        if (excludedChild.Count > 0) def.fixedChildBackstories?.RemoveAll(b => excludedChild.Contains(b));
-        if (excludedAdult.Count > 0) def.fixedAdultBackstories?.RemoveAll(b => excludedAdult.Contains(b));
+        if (excludedChild.Count > 0)
+            def.fixedChildBackstories?.RemoveAll(b => excludedChild.Contains(b));
+        if (excludedAdult.Count > 0)
+            def.fixedAdultBackstories?.RemoveAll(b => excludedAdult.Contains(b));
 
         // Collect the active categories per slot from the def's filters.
         // "categories" applies to both slots; "categoriesChildhood"/"categoriesAdulthood" are slot-specific.
@@ -782,8 +785,10 @@ public class PawnKindEdit : IExposable
 
         // For each slot that has excluded defs, resolve categories into concrete defs
         // and populate the fixed backstory list so vanilla picks from it directly.
-        if (excludedChild.Count > 0) ResolveBackstoryCategories(def, BackstorySlot.Childhood, childCategories, excludedChild);
-        if (excludedAdult.Count > 0) ResolveBackstoryCategories(def, BackstorySlot.Adulthood, adultCategories, excludedAdult);
+        if (excludedChild.Count > 0)
+            ResolveBackstoryCategories(def, BackstorySlot.Childhood, childCategories, excludedChild);
+        if (excludedAdult.Count > 0)
+            ResolveBackstoryCategories(def, BackstorySlot.Adulthood, adultCategories, excludedAdult);
     }
 
     /// <summary>
@@ -791,24 +796,20 @@ public class PawnKindEdit : IExposable
     /// excluding any defs in <paramref name="excluded"/>, then writes them into the corresponding
     /// fixed backstory list on the def. Existing entries in the fixed list are preserved.
     /// </summary>
-    private static void ResolveBackstoryCategories(
-        PawnKindDef def,
-        BackstorySlot slot,
-        HashSet<string> categories,
-        HashSet<BackstoryDef> excluded)
+    private static void ResolveBackstoryCategories(PawnKindDef def, BackstorySlot slot, HashSet<string> categories, HashSet<BackstoryDef> excluded)
     {
         // Build the set of existing fixed entries to avoid duplicates.
-        List<BackstoryDef> fixedList = slot == BackstorySlot.Childhood
-            ? def.fixedChildBackstories
-            : def.fixedAdultBackstories;
-        HashSet<BackstoryDef> existing = fixedList != null ? [..fixedList] : [];
+        List<BackstoryDef> fixedList = slot == BackstorySlot.Childhood ? def.fixedChildBackstories : def.fixedAdultBackstories;
+        HashSet<BackstoryDef> existing = fixedList != null ? [.. fixedList] : [];
 
         List<BackstoryDef> resolved = [];
-        resolved.AddRange(from bs in DefDatabase<BackstoryDef>.AllDefsListForReading
+        resolved.AddRange(
+            from bs in DefDatabase<BackstoryDef>.AllDefsListForReading
             where bs.slot == slot && bs.shuffleable && !excluded.Contains(bs) && !existing.Contains(bs)
             where bs.spawnCategories != null
             where categories.Count <= 0 || bs.spawnCategories.Any(categories.Contains)
-            select bs);
+            select bs
+        );
 
         switch (slot)
         {
@@ -824,10 +825,7 @@ public class PawnKindEdit : IExposable
                 return;
         }
 
-        ModCore.Debug(
-            $"Backstory exclusions for {def.defName} ({slot}): "
-            + $"{excluded.Count} excluded, {resolved.Count} resolved from categories into fixed list."
-        );
+        ModCore.Debug($"Backstory exclusions for {def.defName} ({slot}): " + $"{excluded.Count} excluded, {resolved.Count} resolved from categories into fixed list.");
     }
 
     public bool AppliesTo(PawnKindDef def)

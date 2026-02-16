@@ -180,8 +180,8 @@ public class PawnKindEditUI : Window
         AllBackstoryCategories = [.. backstoryCategories];
         AllBackstoryCategories.Sort();
 
-        childBackstories.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, System.StringComparison.InvariantCulture));
-        adultBackstories.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, System.StringComparison.InvariantCulture));
+        childBackstories.Sort((a, b) => string.Compare(BackstoryLabel(a), BackstoryLabel(b), System.StringComparison.InvariantCulture));
+        adultBackstories.Sort((a, b) => string.Compare(BackstoryLabel(a), BackstoryLabel(b), System.StringComparison.InvariantCulture));
         AllChildhoodBackstories = childBackstories;
         AllAdulthoodBackstories = adultBackstories;
         AllBackstoryDefs = [.. childBackstories];
@@ -203,7 +203,6 @@ public class PawnKindEditUI : Window
 
         AllPowerDefs.Sort();
     }
-
 
     public readonly PawnKindEdit Current;
 
@@ -392,14 +391,52 @@ public class PawnKindEditUI : Window
         // Backstory section
         ui.GapLine();
         ui.Label($"<size=18><b>{"FactionLoadout_Backstory_Section".Translate()}</b></size>");
-        ui.Gap(4);
+        ui.Gap(8);
 
-        DrawOverride(ui, DefaultKind.backstoryCryptosleepCommonality, ref Current.BackstoryCryptosleepCommonality, "FactionLoadout_Backstory_CryptosleepChance".Translate(), DrawCryptosleepCommonality);
+        DrawOverride(
+            ui,
+            DefaultKind.backstoryCryptosleepCommonality,
+            ref Current.BackstoryCryptosleepCommonality,
+            "FactionLoadout_Backstory_CryptosleepChance".Translate(),
+            DrawCryptosleepCommonality
+        );
         DrawBackstoryFiltersOverride(ui);
-        DrawOverride(ui, null, ref Current.FixedChildBackstories, "FactionLoadout_Backstory_FixedChildhood".Translate(), DrawFixedChildBackstories, GetHeightFor(Current.FixedChildBackstories), false);
-        DrawOverride(ui, null, ref Current.FixedAdultBackstories, "FactionLoadout_Backstory_FixedAdulthood".Translate(), DrawFixedAdultBackstories, GetHeightFor(Current.FixedAdultBackstories), false);
-        DrawOverride(ui, null, ref Current.ExcludedBackstoryCategories, "FactionLoadout_Backstory_ExcludedCategories".Translate(), DrawExcludedBackstoryCategories, GetHeightFor(Current.ExcludedBackstoryCategories), false);
-        DrawOverride(ui, null, ref Current.ExcludedBackstories, "FactionLoadout_Backstory_Excluded".Translate(), DrawExcludedBackstories, GetHeightFor(Current.ExcludedBackstories), false);
+        DrawOverride(
+            ui,
+            null,
+            ref Current.FixedChildBackstories,
+            "FactionLoadout_Backstory_FixedChildhood".Translate(),
+            DrawFixedChildBackstories,
+            GetHeightFor(Current.FixedChildBackstories),
+            false
+        );
+        DrawOverride(
+            ui,
+            null,
+            ref Current.FixedAdultBackstories,
+            "FactionLoadout_Backstory_FixedAdulthood".Translate(),
+            DrawFixedAdultBackstories,
+            GetHeightFor(Current.FixedAdultBackstories),
+            false
+        );
+        DrawOverride(
+            ui,
+            null,
+            ref Current.ExcludedBackstoryCategories,
+            "FactionLoadout_Backstory_ExcludedCategories".Translate(),
+            DrawExcludedBackstoryCategories,
+            GetHeightFor(Current.ExcludedBackstoryCategories),
+            false
+        );
+        DrawOverride(
+            ui,
+            null,
+            ref Current.ExcludedBackstories,
+            "FactionLoadout_Backstory_Excluded".Translate(),
+            DrawExcludedBackstories,
+            GetHeightFor(Current.ExcludedBackstories),
+            false
+        );
     }
 
     // --- Backstory draw methods ---
@@ -422,7 +459,9 @@ public class PawnKindEditUI : Window
     private void DrawBackstoryFiltersOverride(Listing_Standard ui)
     {
         List<BackstoryFilter> filters = Current.BackstoryFiltersOverride;
-        float height = filters == null ? 32 : Math.Max(32, 80 * filters.Count + 40);
+        // When inactive: 32 for the override toggle row.
+        // When active: 80 per filter entry + 33 for the "Add Filter" button (5px gap + 28px button).
+        float height = filters == null ? 32 : 80 * filters.Count + 33;
 
         ui.Label($"<b>{"FactionLoadout_Backstory_FiltersOverride".Translate()}</b>");
         TooltipHandler.TipRegion(ui.GetRect(0), "FactionLoadout_Backstory_FiltersOverrideTooltip".Translate());
@@ -596,7 +635,8 @@ public class PawnKindEditUI : Window
             Current.FixedChildBackstories,
             DefaultKind.fixedChildBackstories,
             AllChildhoodBackstories,
-            MakeBackstoryMenuItem
+            MakeBackstoryMenuItem,
+            BackstoryLabel
         );
     }
 
@@ -609,7 +649,8 @@ public class PawnKindEditUI : Window
             Current.FixedAdultBackstories,
             DefaultKind.fixedAdultBackstories,
             AllAdulthoodBackstories,
-            MakeBackstoryMenuItem
+            MakeBackstoryMenuItem,
+            BackstoryLabel
         );
     }
 
@@ -620,23 +661,19 @@ public class PawnKindEditUI : Window
 
     private void DrawExcludedBackstories(Rect rect, bool active, List<DefRef<BackstoryDef>> defaultList)
     {
-        DrawDefRefList(
-            rect,
-            active,
-            ref scrolls[scrollIndex++],
-            Current.ExcludedBackstories,
-            null,
-            AllBackstoryDefs,
-            MakeBackstoryMenuItem
-        );
+        DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.ExcludedBackstories, null, AllBackstoryDefs, MakeBackstoryMenuItem, BackstoryLabel);
     }
 
     private static MenuItemBase MakeBackstoryMenuItem(BackstoryDef def)
     {
-        string slotStr = def.slot == BackstorySlot.Childhood
-            ? "FactionLoadout_Backstory_SlotChild".Translate()
-            : "FactionLoadout_Backstory_SlotAdult".Translate();
-        return new MenuItemText(def, $"{slotStr} {def.LabelCap} ({def.modContentPack?.Name ?? "<no-mod>"})", tooltip: def.baseDesc);
+        string slotStr = def.slot == BackstorySlot.Childhood ? "FactionLoadout_Backstory_SlotChild".Translate() : "FactionLoadout_Backstory_SlotAdult".Translate();
+        string title = def.title.NullOrEmpty() ? def.defName : def.title;
+        return new MenuItemText(def, $"{slotStr} {title} ({def.modContentPack?.Name ?? "<no-mod>"})", tooltip: def.baseDesc);
+    }
+
+    private static string BackstoryLabel(BackstoryDef def)
+    {
+        return def.title.NullOrEmpty() ? (string)def.LabelCap ?? def.defName : def.title;
     }
 
     /// <summary>
@@ -650,17 +687,27 @@ public class PawnKindEditUI : Window
         IList<DefRef<T>> current,
         IList<T> defaults,
         IEnumerable<T> allDefs,
-        Func<T, MenuItemBase> makeItem = null
+        Func<T, MenuItemBase> makeItem = null,
+        Func<T, string> labelFunc = null
     )
         where T : Def, new()
     {
+        string GetLabel(T def)
+        {
+            if (labelFunc != null)
+            {
+                return labelFunc(def);
+            }
+            return (string)def.LabelCap ?? def.defName;
+        }
+
         string MakeDefaultString(IList<T> list)
         {
             if (list == null || list.Count == 0)
             {
                 return $"<i>{"FactionLoadout_None".Translate()}</i>";
             }
-            string raw = string.Join(", ", list.Select(d => d.LabelCap.ToString()));
+            string raw = string.Join(", ", list.Select(d => GetLabel(d)));
             if (raw.Length > 43)
             {
                 raw = raw.Substring(0, 40) + "...";
@@ -672,7 +719,7 @@ public class PawnKindEditUI : Window
         {
             if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "FactionLoadout_AddNew".Translate()))
             {
-                List<MenuItemBase> items = CustomFloatMenu.MakeItems(allDefs, makeItem ?? (d => new MenuItemText(d, d.LabelCap)));
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(allDefs, makeItem ?? (d => new MenuItemText(d, GetLabel(d))));
                 CustomFloatMenu.Open(
                     items,
                     raw =>
@@ -706,14 +753,12 @@ public class PawnKindEditUI : Window
                 if (defRef.IsMissing)
                 {
                     GUI.color = new Color(1f, 0.5f, 0.5f);
-                    Widgets.Label(curr, "FactionLoadout_DefRef_Missing".Translate(
-                        defRef.DefName,
-                        defRef.ModName ?? "FactionLoadout_DefRef_UnknownMod".Translate()));
+                    Widgets.Label(curr, "FactionLoadout_DefRef_Missing".Translate(defRef.DefName, defRef.ModName ?? "FactionLoadout_DefRef_UnknownMod".Translate()));
                     GUI.color = Color.white;
                 }
                 else if (defRef.HasValue)
                 {
-                    Widgets.Label(curr, (string)defRef.Def.LabelCap ?? defRef.DefName);
+                    Widgets.Label(curr, GetLabel(defRef.Def));
                 }
 
                 curr.y += 26;
@@ -1210,7 +1255,7 @@ public class PawnKindEditUI : Window
                 ApparelSelectionMode.FromPool2 => "Part of pool 2",
                 ApparelSelectionMode.FromPool3 => "Part of pool 3",
                 ApparelSelectionMode.FromPool4 => "Part of pool 4",
-                _ => ""
+                _ => "",
             };
 
             Rect modeLabel = modeBox;
@@ -1241,7 +1286,7 @@ public class PawnKindEditUI : Window
                         ApparelSelectionMode.FromPool2 => "Part of pool 2",
                         ApparelSelectionMode.FromPool3 => "Part of pool 3",
                         ApparelSelectionMode.FromPool4 => "Part of pool 4",
-                        _ => mode.ToString()
+                        _ => mode.ToString(),
                     };
                 }
 
@@ -1888,11 +1933,9 @@ public class PawnKindEditUI : Window
         if (
             !Widgets.ButtonText(
                 rect,
-                active
-                    ? Name(field.Value)
-                    : Current.IsGlobal
-                        ? "---"
-                        : $"[Default] {Name(defaultValue)}"
+                active ? Name(field.Value)
+                    : Current.IsGlobal ? "---"
+                    : $"[Default] {Name(defaultValue)}"
             )
         )
             return;
@@ -1906,11 +1949,9 @@ public class PawnKindEditUI : Window
         if (
             !Widgets.ButtonText(
                 rect,
-                active
-                    ? Name(field)
-                    : Current.IsGlobal
-                        ? "---"
-                        : $"[Default] {Name(defaultValue)}"
+                active ? Name(field)
+                    : Current.IsGlobal ? "---"
+                    : $"[Default] {Name(defaultValue)}"
             )
         )
             return;
@@ -1982,7 +2023,7 @@ public class PawnKindEditUI : Window
                         }
                     )
                     {
-                        grayOutIfOtherDialogOpen = false
+                        grayOutIfOtherDialogOpen = false,
                     }
                 );
         }
@@ -2610,5 +2651,4 @@ public class PawnKindEditUI : Window
         GUI.enabled = true;
         ui.Gap();
     }
-
 }

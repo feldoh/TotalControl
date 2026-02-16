@@ -14,8 +14,7 @@ public static class GiddyUpReflection
     public static FieldInfo MountChanceField { get; private set; }
     public static FieldInfo PossibleMountsField { get; private set; }
 
-    public static bool IsResolved =>
-        CustomMountsType != null && MountChanceField != null && PossibleMountsField != null;
+    public static bool IsResolved => CustomMountsType != null && MountChanceField != null && PossibleMountsField != null;
 
     public static void Resolve()
     {

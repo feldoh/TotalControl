@@ -40,10 +40,7 @@ public static class ModuleRegistry
 
         if (modules.Any(m => m.ModuleKey == module.ModuleKey))
         {
-            ModCore.Warn(
-                $"Duplicate module key '{module.ModuleKey}' from '{module.ModuleName}'. "
-                    + "A module with this key is already registered. Skipping."
-            );
+            ModCore.Warn($"Duplicate module key '{module.ModuleKey}' from '{module.ModuleName}'. " + "A module with this key is already registered. Skipping.");
             return;
         }
 
@@ -52,10 +49,7 @@ public static class ModuleRegistry
 
         if (initialized)
         {
-            ModCore.Warn(
-                $"Module '{module.ModuleName}' registered after InitializeAll() was called. "
-                    + "Data from already-loaded presets will not include this module's data."
-            );
+            ModCore.Warn($"Module '{module.ModuleName}' registered after InitializeAll() was called. " + "Data from already-loaded presets will not include this module's data.");
             module.Initialize();
         }
     }
