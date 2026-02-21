@@ -1,18 +1,17 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using FactionLoadout.Util;
 using RimWorld;
 using Verse;
 
 namespace FactionLoadout
 {
     [HotSwappable]
-    public class InventoryOptionEdit : IExposable
+    public class InventoryOptionEdit() : IExposable, IDeepCopyable<InventoryOptionEdit>
     {
         public static int GetSize(InventoryOptionEdit option)
         {
-            if (option == null)
-                return 0;
-
-            return option.GetSize();
+            return option?.GetSize() ?? 0;
         }
 
         public static int GetSize(PawnInventoryOption option)
@@ -23,36 +22,35 @@ namespace FactionLoadout
             int count = option.thingDef != null ? 1 : 0;
             if (option.subOptionsTakeAll != null)
             {
-                foreach (var item in option.subOptionsTakeAll)
-                {
-                    count += GetSize(item);
-                }
+                count += option.subOptionsTakeAll.Sum(GetSize);
             }
             if (option.subOptionsChooseOne != null)
             {
-                foreach (var item in option.subOptionsChooseOne)
-                {
-                    count += GetSize(item);
-                }
+                count += option.subOptionsChooseOne.Sum(GetSize);
             }
             return count;
         }
 
-        public ThingDef Thing;
+        public ThingDef Thing = ThingDefOf.WoodLog;
         public IntRange CountRange = IntRange.One;
         public float ChoiceChance = 1f;
         public float SkipChance;
 
-        public string BufferA,
-            BufferB;
+        public string BufferA, BufferB;
 
         public List<InventoryOptionEdit> SubOptionsTakeAll;
         public List<InventoryOptionEdit> SubOptionsChooseOne;
 
-        public InventoryOptionEdit()
-        {
-            Thing = ThingDefOf.WoodLog;
-        }
+        public InventoryOptionEdit DeepClone() =>
+            new()
+            {
+                Thing = Thing,
+                CountRange = CountRange,
+                ChoiceChance = ChoiceChance,
+                SkipChance = SkipChance,
+                SubOptionsTakeAll = SubOptionsTakeAll?.Select(o => o.DeepClone()).ToList(),
+                SubOptionsChooseOne = SubOptionsChooseOne?.Select(o => o.DeepClone()).ToList(),
+            };
 
         public InventoryOptionEdit(PawnInventoryOption option)
             : this()
@@ -60,70 +58,36 @@ namespace FactionLoadout
             if (option == null)
                 return;
 
-            this.Thing = option.thingDef;
-            this.CountRange = option.countRange;
-            this.ChoiceChance = option.choiceChance;
-            this.SkipChance = option.skipChance;
+            Thing = option.thingDef;
+            CountRange = option.countRange;
+            ChoiceChance = option.choiceChance;
+            SkipChance = option.skipChance;
 
-            if (option.subOptionsTakeAll?.Count > 0)
-            {
-                SubOptionsTakeAll = new List<InventoryOptionEdit>();
-                foreach (var thing in option.subOptionsTakeAll)
-                {
-                    SubOptionsTakeAll.Add(new InventoryOptionEdit(thing));
-                }
-            }
-            if (option.subOptionsChooseOne?.Count > 0)
-            {
-                SubOptionsChooseOne = new List<InventoryOptionEdit>();
-                foreach (var thing in option.subOptionsChooseOne)
-                {
-                    SubOptionsChooseOne.Add(new InventoryOptionEdit(thing));
-                }
-            }
+            SubOptionsTakeAll = option.subOptionsTakeAll is {Count: > 0} optsTakeAll ? optsTakeAll.Select(x => new InventoryOptionEdit(x)).ToList() : null;
+            SubOptionsChooseOne = option.subOptionsChooseOne is {Count: > 0} optsChooseOne ? optsChooseOne.Select(x => new InventoryOptionEdit(x)).ToList() : null;
         }
 
-        public PawnInventoryOption ConvertToVanilla()
-        {
-            var obj = new PawnInventoryOption();
-            obj.thingDef = Thing;
-            obj.choiceChance = ChoiceChance;
-            obj.skipChance = SkipChance;
-            obj.countRange = CountRange;
-
-            if (SubOptionsTakeAll?.Count > 0)
+        public PawnInventoryOption ConvertToVanilla() =>
+            new()
             {
-                obj.subOptionsTakeAll = new List<PawnInventoryOption>();
-                foreach (var item in SubOptionsTakeAll)
-                    obj.subOptionsTakeAll.Add(item.ConvertToVanilla());
-            }
-
-            if (SubOptionsChooseOne?.Count > 0)
-            {
-                obj.subOptionsChooseOne = new List<PawnInventoryOption>();
-                foreach (var item in SubOptionsChooseOne)
-                    obj.subOptionsChooseOne.Add(item.ConvertToVanilla());
-            }
-
-            return obj;
-        }
+                thingDef = Thing,
+                choiceChance = ChoiceChance,
+                skipChance = SkipChance,
+                countRange = CountRange,
+                subOptionsTakeAll = SubOptionsTakeAll is { Count: > 0 } ? SubOptionsTakeAll.Select(o => o.ConvertToVanilla()).ToList() : null,
+                subOptionsChooseOne = SubOptionsChooseOne is { Count: > 0 } ? SubOptionsChooseOne.Select(o => o.ConvertToVanilla()).ToList() : null
+            };
 
         public int GetSize()
         {
             int size = Thing != null ? 1 : 0;
             if (SubOptionsChooseOne != null)
             {
-                foreach (var item in SubOptionsChooseOne)
-                {
-                    size += item.GetSize();
-                }
+                size += SubOptionsChooseOne.Sum(item => item.GetSize());
             }
             if (SubOptionsTakeAll != null)
             {
-                foreach (var item in SubOptionsTakeAll)
-                {
-                    size += item.GetSize();
-                }
+                size += SubOptionsTakeAll.Sum(item => item.GetSize());
             }
             return size;
         }

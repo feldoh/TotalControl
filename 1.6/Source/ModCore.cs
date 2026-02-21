@@ -1,5 +1,7 @@
 ﻿using System;
-using System.Reflection;
+using FactionLoadout.Modules;
+using FactionLoadout.Patches;
+using FactionLoadout.UISupport;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;

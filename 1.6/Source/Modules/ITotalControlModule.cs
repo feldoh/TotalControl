@@ -1,7 +1,8 @@
 using System.Collections.Generic;
+using FactionLoadout.UISupport;
 using Verse;
 
-namespace FactionLoadout;
+namespace FactionLoadout.Modules;
 
 /// <summary>
 /// Interface for external modules that extend Total Control with support for additional mods.
@@ -69,4 +70,14 @@ public interface ITotalControlModule
     /// <param name="def">The PawnKindDef being modified.</param>
     /// <param name="global">The global PawnKindEdit for this faction, or null if none.</param>
     void Apply(PawnKindEdit edit, PawnKindDef def, PawnKindEdit global);
+
+    /// <summary>
+    /// Copy module-specific data from one PawnKindEdit to another during clipboard operations.
+    /// Called during copy/paste and deep clone. Implement as a no-op if this module has no
+    /// per-PawnKindEdit state to copy.
+    /// </summary>
+    /// <param name="source">The PawnKindEdit being copied from.</param>
+    /// <param name="dest">The PawnKindEdit being copied to.</param>
+    void CopyData(PawnKindEdit source, PawnKindEdit dest);
+
 }

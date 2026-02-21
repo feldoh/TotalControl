@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using RimWorld;
 
-namespace FactionLoadout;
+namespace FactionLoadout.Patches;
 
 [HarmonyPatch(typeof(FactionUtility), "HostileTo")]
 public static class FactionUtilityPawnGenPatch

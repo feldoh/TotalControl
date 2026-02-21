@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
+using FactionLoadout.Modules;
+using FactionLoadout.Util;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -86,13 +88,24 @@ public class PawnKindEdit : IExposable
             list.Add(edit);
     }
 
-    public PawnKindDef Def;
-    public bool IsGlobal = false;
-
     public FactionEdit ParentEdit
     {
         get { return Preset.LoadedPresets.SelectMany(preset => preset.factionChanges).FirstOrDefault(change => change.KindEdits.Contains(this)); }
     }
+
+
+    [NoCopy] public PawnKindDef Def;
+    [NoCopy] public bool IsGlobal = false;
+    [NoCopy] public bool DeletedOrClosed;
+    [NoCopy] public PawnKindEdit globalEdit = null; // transient runtime ref, set during Apply
+
+    /// <summary>
+    /// Raw InnerXml for module sub-nodes whose module is not currently registered/active.
+    /// Preserved across save/load so users don't lose module config when a dependency is absent.
+    /// Marked [NoCopy] because CopyModuleData handles this explicitly.
+    /// </summary>
+    [NoCopy]
+    public Dictionary<string, string> preservedModuleXml;
 
     public PawnKindDef ReplaceWith = null;
     public bool RenameDef = false;
@@ -128,7 +141,6 @@ public class PawnKindEdit : IExposable
     public List<BeardDef> CustomBeards = null;
     public List<BodyTypeDef> BodyTypes = null;
     public List<Color> CustomHairColors = null;
-    public bool DeletedOrClosed;
     public List<ForcedHediff> ForcedHediffs = null;
     public List<ForcedGene> ForcedGenes = null;
     public Dictionary<string, float> ForcedXenotypeChances = new();
@@ -157,14 +169,6 @@ public class PawnKindEdit : IExposable
     public int? VEPsycastLevel = null;
     public IntRange? VEPsycastStatPoints = null;
     public bool? VEPsycastRandomAbilities = null;
-
-    private PawnKindEdit globalEdit = null;
-
-    /// <summary>
-    /// Raw InnerXml for module sub-nodes whose module is not currently registered/active.
-    /// Preserved across save/load so users don't lose module config when a dependency is absent.
-    /// </summary>
-    private Dictionary<string, string> preservedModuleXml;
 
     public PawnKindEdit() { }
 
@@ -259,6 +263,105 @@ public class PawnKindEdit : IExposable
 
         // Module system
         ExposeModuleData();
+    }
+
+    // ── Reflection-based field enumeration (cached at static init time) ──
+
+    public static readonly FieldInfo[] CopyableFields = typeof(PawnKindEdit)
+        .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+        .Where(f => f.GetCustomAttribute<NoCopyAttribute>() == null)
+        .ToArray();
+
+    /// <summary>
+    /// Copies all user-configured data fields from <paramref name="source"/> into this edit.
+    /// Identity fields (<see cref="Def"/>, <see cref="IsGlobal"/>, etc.) are left untouched.
+    /// Module data is also copied.
+    /// </summary>
+    public void CopyFrom(PawnKindEdit source)
+    {
+        foreach (FieldInfo field in CopyableFields)
+            field.SetValue(this, DeepCopyValue(field.GetValue(source), field.FieldType));
+
+        CopyModuleData(source, this);
+    }
+
+    /// <summary>
+    /// Copies module data from <paramref name="source"/> into <paramref name="dest"/>.
+    /// Handles preserved XML for inactive modules and delegates to each active module's
+    /// <see cref="ITotalControlModule.CopyData"/> for its own per-edit state.
+    /// </summary>
+    public static void CopyModuleData(PawnKindEdit source, PawnKindEdit dest)
+    {
+        dest.preservedModuleXml = source.preservedModuleXml != null
+            ? new Dictionary<string, string>(source.preservedModuleXml)
+            : null;
+
+        foreach (ITotalControlModule module in ModuleRegistry.Modules)
+        {
+            if (!module.IsActive)
+                continue;
+            try
+            {
+                module.CopyData(source, dest);
+            }
+            catch (Exception e)
+            {
+                ModCore.Error($"Error copying module data for '{module.ModuleName}' (key: {module.ModuleKey})", e);
+            }
+        }
+    }
+
+    public static object DeepCopyValue(object value, Type type)
+    {
+        if (value == null)
+            return null;
+
+        // Types that know how to clone themselves.
+        // IDeepCopyable<out T> is covariant, so any IDeepCopyable<T> matches IDeepCopyable<object>.
+        if (value is IDeepCopyable<object> cloneable)
+            return cloneable.DeepClone();
+
+        // SimpleCurve has a copy constructor that takes IEnumerable<CurvePoint>.
+        if (value is SimpleCurve curve)
+            return new SimpleCurve(curve);
+
+        // Primitives, enums, strings, Def references — safe to assign directly.
+        if (type.IsPrimitive || type.IsEnum || type == typeof(string))
+            return value;
+        if (typeof(Def).IsAssignableFrom(type))
+            return value;
+
+        // Nullable<T> — the boxed struct is safe for simple value types.
+        if (Nullable.GetUnderlyingType(type) != null)
+            return value;
+
+        // Other value types (FloatRange, IntRange, Color, Vector2, …).
+        if (type.IsValueType)
+            return value;
+
+        // List<T>: deep-clone elements if they implement IDeepCopyable, otherwise shallow-copy.
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+        {
+            IList src = (IList)value;
+            IList dest = (IList)Activator.CreateInstance(type);
+            foreach (object item in src)
+                dest.Add(item is IDeepCopyable<object> c ? c.DeepClone() : item);
+            return dest;
+        }
+
+        // Dictionary<K,V> — shallow copy (keys/values are strings, Defs, or primitives).
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+        {
+            IDictionary src = (IDictionary)value;
+            IDictionary dest = (IDictionary)Activator.CreateInstance(type);
+            foreach (DictionaryEntry kvp in src)
+                dest.Add(kvp.Key, kvp.Value);
+            return dest;
+        }
+
+        // Fallback: shared reference. Log so we can catch missed types during dev.
+        ModCore.Warn($"[CopyFrom] Unhandled field type {type.FullName} — using shared reference. Implement IDeepCopyable<T> if deep copy is needed.");
+        return value;
     }
 
     /// <summary>

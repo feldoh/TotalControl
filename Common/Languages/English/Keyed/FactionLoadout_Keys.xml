@@ -73,4 +73,11 @@
     <GiddyUp_Mounts>GiddyUp Mounts</GiddyUp_Mounts>
     <FactionLoadout_AddMount>Add mount...</FactionLoadout_AddMount>
     <FactionLoadout_ClearMounts>Clear all mounts</FactionLoadout_ClearMounts>
+
+    <!-- Clipboard -->
+    <FactionLoadout_Clipboard_Copy>Copy</FactionLoadout_Clipboard_Copy>
+    <FactionLoadout_Clipboard_CopyTooltip>Copy all fields to clipboard</FactionLoadout_Clipboard_CopyTooltip>
+    <FactionLoadout_Clipboard_PasteAll>Paste All</FactionLoadout_Clipboard_PasteAll>
+    <FactionLoadout_Clipboard_PasteAllTooltip>Paste all fields from clipboard\n{0}</FactionLoadout_Clipboard_PasteAllTooltip>
+    <FactionLoadout_Clipboard_Empty>Clipboard is empty</FactionLoadout_Clipboard_Empty>
 </LanguageData>

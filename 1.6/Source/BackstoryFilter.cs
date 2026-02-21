@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FactionLoadout.Util;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -7,12 +8,14 @@ namespace FactionLoadout;
 
 /// <summary>
 /// Extends RimWorld's <see cref="BackstoryCategoryFilter"/> with <see cref="IExposable"/> support
-/// so it can be serialized in presets. Since it inherits directly, instances can be used anywhere
+/// so it can be serialised in presets. Since it inherits directly, instances can be used anywhere
 /// a <see cref="BackstoryCategoryFilter"/> is expected — no conversion needed.
 /// </summary>
-public class BackstoryFilter : BackstoryCategoryFilter, IExposable
+public class BackstoryFilter : BackstoryCategoryFilter, IExposable, IDeepCopyable<BackstoryFilter>
 {
     public BackstoryFilter() { }
+
+    public BackstoryFilter DeepClone() => new(this);
 
     public BackstoryFilter(BackstoryCategoryFilter source)
     {

@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using FactionLoadout.UISupport;
 using HarmonyLib;
 using Verse;
 
-namespace FactionLoadout;
+namespace FactionLoadout.Patches;
 
 [HarmonyPatch(typeof(OptionListingUtility))]
 public static class OptionListingUtility_Patch

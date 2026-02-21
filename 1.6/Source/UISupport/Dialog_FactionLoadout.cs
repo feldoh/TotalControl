@@ -2,7 +2,7 @@
 using UnityEngine;
 using Verse;
 
-namespace FactionLoadout;
+namespace FactionLoadout.UISupport;
 
 public class Dialog_FactionLoadout : Window
 {

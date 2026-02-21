@@ -4,7 +4,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 
-namespace FactionLoadout;
+namespace FactionLoadout.UISupport;
 
 [HotSwappable]
 public class Window_ColorPicker : Dialog_ColorPickerBase

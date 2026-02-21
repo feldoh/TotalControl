@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FactionLoadout.Util;
 using HarmonyLib;
 using RimWorld;
 using Verse;

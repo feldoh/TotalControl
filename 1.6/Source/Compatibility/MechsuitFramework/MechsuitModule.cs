@@ -2,7 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Exosuit;
 using FactionLoadout;
-using RimWorld;
+using FactionLoadout.Modules;
+using FactionLoadout.UISupport;
 using Verse;
 
 namespace TotalControlMechsuitCompat;
@@ -44,6 +45,15 @@ public class MechsuitModule : ITotalControlModule
             dataStore[edit] = data;
         }
         return data;
+    }
+
+    public void CopyData(PawnKindEdit source, PawnKindEdit dest)
+    {
+        MechsuitData data = GetData(source);
+        if (data == null)
+            return;
+
+        dataStore[dest] = new MechsuitData { StructurePointRange = data.StructurePointRange };
     }
 
     public void AddTabs(PawnKindEdit edit, PawnKindDef defaultKind, List<Tab> tabs)

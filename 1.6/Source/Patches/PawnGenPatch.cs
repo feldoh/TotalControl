@@ -5,7 +5,7 @@ using HarmonyLib;
 using RimWorld;
 using Verse;
 
-namespace FactionLoadout;
+namespace FactionLoadout.Patches;
 
 [HarmonyPatch(typeof(PawnGenerator), "GetBodyTypeFor")]
 public static class PawnGenPatchBodyTypeDef

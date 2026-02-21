@@ -2,7 +2,7 @@
 using System.IO;
 using Verse;
 
-namespace FactionLoadout
+namespace FactionLoadout.Util
 {
     [HotSwappable]
     public static class IO

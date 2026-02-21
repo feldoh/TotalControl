@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using FactionLoadout.Patches;
+using FactionLoadout.UISupport;
+using FactionLoadout.Util;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -222,6 +225,25 @@ public class FactionEditUI : Window
                 Find.WindowStack.Add(new PawnKindEditUI(edit));
 
             rect.x += 54;
+            if (Widgets.ButtonImageFitted(new Rect(rect.x, rect.y, 24, 24), TexButton.Copy))
+                PawnKindClipboard.Copy(edit);
+            TooltipHandler.TipRegion(new Rect(rect.x, rect.y, 24, 24), "FactionLoadout_Clipboard_CopyTooltip".Translate());
+
+            rect.x += 28;
+            if (PawnKindClipboard.HasData)
+            {
+                if (Widgets.ButtonImageFitted(new Rect(rect.x, rect.y, 24, 24), TexButton.Paste))
+                TooltipHandler.TipRegion(new Rect(rect.x, rect.y, 24, 24), "FactionLoadout_Clipboard_PasteAllTooltip".Translate(PawnKindClipboard.GetDescription()));
+            }
+            else
+            {
+                GUI.color = Color.gray;
+                Widgets.DrawTextureFitted(new Rect(rect.x, rect.y, 24, 24), TexButton.Paste, 1f);
+                GUI.color = Color.white;
+                TooltipHandler.TipRegion(new Rect(rect.x, rect.y, 24, 24), "FactionLoadout_Clipboard_Empty".Translate());
+            }
+
+            rect.x += 28;
             Widgets.Label(rect, $"<b>{(edit.IsGlobal ? "<color=cyan>Global (affects all faction pawns)</color>" : edit.Def.LabelCap)}</b>");
         }
 

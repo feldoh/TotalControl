@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using Verse;
 
-namespace FactionLoadout;
+namespace FactionLoadout.UISupport;
 
 [StaticConstructorOnStartup]
 public class Textures
