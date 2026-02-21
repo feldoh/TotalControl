@@ -80,4 +80,9 @@
     <FactionLoadout_Clipboard_PasteAll>Paste All</FactionLoadout_Clipboard_PasteAll>
     <FactionLoadout_Clipboard_PasteAllTooltip>Paste all fields from clipboard\n{0}</FactionLoadout_Clipboard_PasteAllTooltip>
     <FactionLoadout_Clipboard_Empty>Clipboard is empty</FactionLoadout_Clipboard_Empty>
+
+    <!-- Faction-level clipboard -->
+    <FactionLoadout_FactionClipboard_CopyTooltip>Copy faction settings (tech level, xenotypes) to clipboard</FactionLoadout_FactionClipboard_CopyTooltip>
+    <FactionLoadout_FactionClipboard_PasteTooltip>Paste faction settings from clipboard\n{0}</FactionLoadout_FactionClipboard_PasteTooltip>
+    <FactionLoadout_FactionClipboard_Description>Tech level: {0} | Xenotype override: {1}</FactionLoadout_FactionClipboard_Description>
 </LanguageData>

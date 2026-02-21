@@ -262,6 +262,23 @@ public class FactionEdit : IExposable
         factionSpecificPawnKindReplacements.SetOrAdd((faction, original), replacement);
     }
 
+    /// <summary>
+    /// Copies top-level faction fields (tech level, xenotype overrides) from
+    /// <paramref name="source"/> into this edit. KindEdits and identity fields
+    /// (Faction, Active, DeletedOrClosed) are left untouched.
+    /// </summary>
+    public void CopyFrom(FactionEdit source)
+    {
+        TechLevel = source.TechLevel;
+        OverrideFactionXenotypes = source.OverrideFactionXenotypes;
+        xenotypeChances = source.xenotypeChances != null
+            ? new Dictionary<string, float>(source.xenotypeChances)
+            : [];
+        xenotypeChancesByDef = source.xenotypeChancesByDef != null
+            ? new Dictionary<XenotypeDef, float>(source.xenotypeChancesByDef)
+            : [];
+    }
+
     public override string ToString()
     {
         return $"FactionEdit [{Faction}]";

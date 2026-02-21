@@ -108,6 +108,8 @@ public class FactionEditUI : Window
         // Disabled for now
         // DrawMaterialFilter(ui);
 
+        DrawFactionClipboardToolbar(ui);
+
         if (
             ui.ButtonTextLabeled(
                 "FactionLoadout_Faction_Techlevel".Translate(),
@@ -481,6 +483,34 @@ public class FactionEditUI : Window
 
         GUI.enabled = true;
         ui.End();
+    }
+
+    private void DrawFactionClipboardToolbar(Listing_Standard ui)
+    {
+        Rect toolbar = ui.GetRect(28f);
+        float x = toolbar.x;
+        float y = toolbar.y;
+        const float btnSize = 24f;
+        const float gap = 4f;
+
+        if (Widgets.ButtonImageFitted(new Rect(x, y, btnSize, btnSize), TexButton.Copy))
+            FactionEditClipboard.Copy(Current);
+        TooltipHandler.TipRegion(new Rect(x, y, btnSize, btnSize), "FactionLoadout_FactionClipboard_CopyTooltip".Translate());
+
+        x += btnSize + gap;
+        if (FactionEditClipboard.HasData)
+        {
+            if (Widgets.ButtonImageFitted(new Rect(x, y, btnSize, btnSize), TexButton.Paste))
+                FactionEditClipboard.PasteAll(Current);
+            TooltipHandler.TipRegion(new Rect(x, y, btnSize, btnSize), "FactionLoadout_FactionClipboard_PasteTooltip".Translate(FactionEditClipboard.GetDescription()));
+        }
+        else
+        {
+            GUI.color = Color.gray;
+            Widgets.DrawTextureFitted(new Rect(x, y, btnSize, btnSize), TexButton.Paste, 1f);
+            GUI.color = Color.white;
+            TooltipHandler.TipRegion(new Rect(x, y, btnSize, btnSize), "FactionLoadout_Clipboard_Empty".Translate());
+        }
     }
 
     private void DrawMaterialFilter(Listing_Standard ui)
