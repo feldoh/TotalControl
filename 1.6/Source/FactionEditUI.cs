@@ -233,6 +233,7 @@ public class FactionEditUI : Window
             if (PawnKindClipboard.HasData)
             {
                 if (Widgets.ButtonImageFitted(new Rect(rect.x, rect.y, 24, 24), TexButton.Paste))
+                    PawnKindClipboard.PasteAll(edit);
                 TooltipHandler.TipRegion(new Rect(rect.x, rect.y, 24, 24), "FactionLoadout_Clipboard_PasteAllTooltip".Translate(PawnKindClipboard.GetDescription()));
             }
             else
