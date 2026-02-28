@@ -90,4 +90,12 @@
     <FactionLoadout_FactionClipboard_CopyTooltip>Copy faction settings (tech level, xenotypes) to clipboard</FactionLoadout_FactionClipboard_CopyTooltip>
     <FactionLoadout_FactionClipboard_PasteTooltip>Paste faction settings from clipboard\n{0}</FactionLoadout_FactionClipboard_PasteTooltip>
     <FactionLoadout_FactionClipboard_Description>Tech level: {0} | Xenotype override: {1}</FactionLoadout_FactionClipboard_Description>
+
+    <!-- Packaged presets -->
+    <FactionLoadout_PackagedLabel>Packaged</FactionLoadout_PackagedLabel>
+    <FactionLoadout_CopyToMyPresets>Copy to my presets</FactionLoadout_CopyToMyPresets>
+    <FactionLoadout_EditSourceFile>Edit source file (advanced)</FactionLoadout_EditSourceFile>
+    <FactionLoadout_PackagedPresetWarning>This preset is bundled with {0}. Saving will overwrite the source file — Steam updates may reset it. Consider using "Copy to my presets" instead.</FactionLoadout_PackagedPresetWarning>
+    <FactionLoadout_CopySuffix>(copy)</FactionLoadout_CopySuffix>
+    <FactionLoadout_SaveToSourceFile>Save to source file</FactionLoadout_SaveToSourceFile>
 </LanguageData>

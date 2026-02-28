@@ -1,4 +1,6 @@
-﻿using RimWorld;
+﻿using System;
+using System.Collections.Generic;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -75,26 +77,75 @@ public class Dialog_FactionLoadout : Window
 
                 GUI.color = Color.white;
                 area.x += 90;
-                GUI.color = deleteMode ? Color.red : Color.white;
-                if (Widgets.ButtonText(area, deleteMode ? "Delete".Translate().CapitalizeFirst() : "FactionLoadout_Edit".Translate().CapitalizeFirst()))
+
+                if (preset.IsPackaged)
                 {
-                    if (!deleteMode)
+                    GUI.color = new Color(1f, 0.75f, 0.2f);
+                    if (Widgets.ButtonText(area, "FactionLoadout_PackagedLabel".Translate().CapitalizeFirst()))
                     {
-                        PresetUI.OpenEditor(preset);
-                        Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
-                        Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
+                        Preset capturedPreset = preset;
+                        List<FloatMenuOption> options =
+                        [
+                            new FloatMenuOption(
+                                "FactionLoadout_CopyToMyPresets".Translate(),
+                                () =>
+                                {
+                                    try
+                                    {
+                                        Preset copy = Preset.CreateCopy(capturedPreset);
+                                        Preset.AddNewPreset(copy);
+                                        copy.Save();
+                                        PresetUI.OpenEditor(copy);
+                                        Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
+                                        Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        ModCore.Error("Failed to copy packaged preset.", ex);
+                                    }
+                                }
+                            ),
+                            new FloatMenuOption(
+                                "FactionLoadout_EditSourceFile".Translate(),
+                                () =>
+                                {
+                                    PresetUI.OpenEditor(capturedPreset);
+                                    Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
+                                    Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
+                                }
+                            ),
+                        ];
+                        Find.WindowStack.Add(new FloatMenu(options));
                     }
-                    else
-                    {
-                        toDelete = preset;
-                    }
+                    GUI.color = Color.white;
+
+                    area.x += 90;
+                    area.width = 9999;
+                    Widgets.Label(area, $"{preset.Name} <color=#888888><i>({preset.PackagedModName})</i></color>");
                 }
+                else
+                {
+                    GUI.color = deleteMode ? Color.red : Color.white;
+                    if (Widgets.ButtonText(area, deleteMode ? "Delete".Translate().CapitalizeFirst() : "FactionLoadout_Edit".Translate().CapitalizeFirst()))
+                    {
+                        if (!deleteMode)
+                        {
+                            PresetUI.OpenEditor(preset);
+                            Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
+                            Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
+                        }
+                        else
+                        {
+                            toDelete = preset;
+                        }
+                    }
 
-                GUI.color = Color.white;
+                    GUI.color = Color.white;
 
-                area.x += 90;
-                area.width = 9999;
-                Widgets.Label(area, preset.Name);
+                    area.x += 90;
+                    area.width = 9999;
+                    Widgets.Label(area, preset.Name);
+                }
             }
 
             if (toDelete != null)

@@ -67,7 +67,10 @@ public class PresetUI : Window
         button.width *= 0.3f;
         button = button.ExpandedBy(-2f, -5f);
         GUI.color = Color.green;
-        if (Widgets.ButtonText(button, "<color=white>SAVE</color>"))
+        string saveLabel = Current.IsPackaged
+            ? "FactionLoadout_SaveToSourceFile".Translate().ToString()
+            : "SAVE";
+        if (Widgets.ButtonText(button, $"<color=white>{saveLabel}</color>"))
             Current.Save();
 
         // Save & exit
@@ -92,6 +95,14 @@ public class PresetUI : Window
 
         GUI.color = Color.white;
         ui.GapLine();
+
+        if (Current.IsPackaged)
+        {
+            Rect warningRect = ui.GetRect(44);
+            Widgets.DrawBoxSolid(warningRect, new Color(0.45f, 0.35f, 0.05f, 0.85f));
+            warningRect = warningRect.ContractedBy(6f);
+            Widgets.Label(warningRect, "FactionLoadout_PackagedPresetWarning".Translate(Current.PackagedModName).ToString());
+        }
 
         // Missing faction handling.
         if (Current.HasMissingFactions())

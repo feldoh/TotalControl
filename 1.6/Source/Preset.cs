@@ -31,6 +31,38 @@ namespace FactionLoadout
                     ModCore.Error($"Failed to load preset from '{file.FullName}'", e);
                 }
             }
+
+            foreach (TCPresetPackageDef packageDef in DefDatabase<TCPresetPackageDef>.AllDefs)
+            {
+                if (packageDef.modContentPack == null)
+                {
+                    ModCore.Warn($"TCPresetPackageDef '{packageDef.defName}' has no modContentPack — skipping.");
+                    continue;
+                }
+                string fullPath = Path.Combine(packageDef.modContentPack.RootDir, packageDef.presetPath);
+                if (!File.Exists(fullPath))
+                {
+                    ModCore.Warn($"Packaged preset file not found: '{fullPath}' (from def '{packageDef.defName}').");
+                    continue;
+                }
+                try
+                {
+                    var preset = new Preset();
+                    IO.LoadFromFile(preset, fullPath);
+                    if (loadedPresets.Any(p => p.GUID == preset.GUID))
+                    {
+                        ModCore.Warn($"Packaged preset '{preset.Name}' (GUID {preset.GUID}) from '{packageDef.defName}' has a conflicting GUID with another loaded preset.");
+                    }
+                    preset.IsPackaged = true;
+                    preset.PackagedFilePath = fullPath;
+                    preset.SourcePackageDef = packageDef;
+                    loadedPresets.Add(preset);
+                }
+                catch (Exception e)
+                {
+                    ModCore.Error($"Failed to load packaged preset from '{fullPath}' (def '{packageDef.defName}').", e);
+                }
+            }
         }
 
         public static void AddNewPreset(Preset preset)
@@ -47,13 +79,42 @@ namespace FactionLoadout
                 return;
 
             loadedPresets.Remove(preset);
+            if (!preset.IsPackaged)
+            {
+                try
+                {
+                    preset.DeleteFile();
+                }
+                catch (Exception e)
+                {
+                    ModCore.Error($"Failed to delete preset file for {preset.Name} ({preset.GUID})", e);
+                }
+            }
+        }
+
+        // Creates a deep copy of source as a new user-owned preset with a fresh GUID.
+        // Uses round-trip serialization through a temp file to guarantee full fidelity.
+        public static Preset CreateCopy(Preset source)
+        {
+            string tempPath = Path.Combine(Path.GetTempPath(), $"TC_preset_copy_{System.Guid.NewGuid()}.xml");
             try
             {
-                preset.DeleteFile();
+                IO.SaveToFile(source, tempPath);
+                var copy = new Preset();
+                IO.LoadFromFile(copy, tempPath);
+                copy.guid = null; // Force new GUID on first access
+                copy.IsPackaged = false;
+                copy.PackagedFilePath = null;
+                copy.SourcePackageDef = null;
+                copy.Name = source.Name + " " + "FactionLoadout_CopySuffix".Translate().ToString();
+                return copy;
             }
-            catch (Exception e)
+            finally
             {
-                ModCore.Error($"Failed to delete preset file for {preset.Name} ({preset.GUID})", e);
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
             }
         }
 
@@ -107,6 +168,13 @@ namespace FactionLoadout
 
         public string Name = "My preset";
         public List<FactionEdit> factionChanges = new List<FactionEdit>();
+
+        // Runtime-only: set when this preset was loaded from a packaged mod file.
+        // Not serialized via ExposeData.
+        public bool IsPackaged = false;
+        public string PackagedFilePath = null;
+        public TCPresetPackageDef SourcePackageDef = null;
+        public string PackagedModName => SourcePackageDef?.modContentPack?.Name ?? "Unknown mod";
 
         public string GUID
         {
@@ -306,6 +374,11 @@ namespace FactionLoadout
 
         public void Save()
         {
+            if (IsPackaged && PackagedFilePath != null)
+            {
+                IO.SaveToFile(this, PackagedFilePath);
+                return;
+            }
             EnsureGUID();
 
             string fileName = $"{guid}.xml";
