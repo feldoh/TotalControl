@@ -27,6 +27,7 @@ public class FactionEditUI : Window
     private bool _ThingIDPatch = false;
     private Vector2 overridesScrollPos;
     private float overridesContentHeight = 500f;
+    private float overridesScrollInnerHeight = 500f;
 
     public FactionEditUI(FactionEdit fac)
     {
@@ -116,9 +117,9 @@ public class FactionEditUI : Window
         const float minFooterHeight = 200f;
         float scrollOutHeight = Mathf.Clamp(overridesContentHeight, 60f, Mathf.Max(60f, inRect.height - ui.CurHeight - minFooterHeight));
         Rect scrollOutRect = ui.GetRect(scrollOutHeight);
-        // Add a buffer so that if content grows by more than overridesContentHeight in a single
-        // frame (e.g. enabling xenotype overrides), the scroll view still covers the new content.
-        Rect scrollViewRect = new(0, 0, scrollOutRect.width - 16f, Mathf.Max(overridesContentHeight, scrollOutHeight) + 300f);
+        // Use overridesScrollInnerHeight: equals actual content height when stable, temporarily
+        // buffered by +300 for one frame when content grows so newly-expanded items are reachable.
+        Rect scrollViewRect = new(0, 0, scrollOutRect.width - 16f, Mathf.Max(overridesScrollInnerHeight, scrollOutHeight));
 
         Widgets.BeginScrollView(scrollOutRect, ref overridesScrollPos, scrollViewRect);
         Listing_Standard inner = new();
@@ -149,76 +150,18 @@ public class FactionEditUI : Window
             && Current.Faction?.Def != Preset.SpecialFactionlessPawnsFaction
         )
         {
-            inner.GapLine();
-            inner.CheckboxLabeled($"<b>{"FactionLoadout_EditXenoSpawnRates".Translate()}:</b>", ref Current.OverrideFactionXenotypes);
-            if (Current.OverrideFactionXenotypes)
-            {
-                List<string> toDelete = [];
-                if (Current.xenotypeChances.NullOrEmpty() && Current.OverrideFactionXenotypes)
-                {
-                    Current.xenotypeChances =
-                        Current.Faction?.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype.defName, x => x.chance) ?? new Dictionary<string, float>();
-                    if (!Current.xenotypeChances.ContainsKey(BaselinerDefName))
-                        Current.xenotypeChances.Add(BaselinerDefName, Current.Faction?.Def?.xenotypeSet?.BaselinerChance ?? 1f);
-                }
-
-                Current.xenotypeChances[BaselinerDefName] = Math.Max(0f, 1f - Current.xenotypeChances.Sum(x => x.Key == BaselinerDefName ? 0 : x.Value));
-
-                foreach (string key in Current.xenotypeChances.Keys.ToList())
-                    Current.xenotypeChances[key] = UIHelpers.SliderLabeledWithDelete(
-                        inner,
-                        $"{DefDatabase<XenotypeDef>.GetNamedSilentFail(key)?.LabelCap ?? key}: {Current.xenotypeChances[key].ToStringPercent()}",
-                        Current.xenotypeChances[key],
-                        0f,
-                        1f,
-                        deleteAction: delegate
-                        {
-                            toDelete.Add(key);
-                        }
-                    );
-
-                foreach (string delete in toDelete)
-                    Current.xenotypeChances.Remove(delete);
-
-                if (inner.ButtonText("FactionLoadout_AddNewByDefName".Translate()))
-                {
-                    Find.WindowStack.Add(
-                        new Dialog_TextEntry(
-                            "FactionLoadout_AddNewByDefNameDesc".Translate(),
-                            defName =>
-                            {
-                                if (Current.xenotypeChances.ContainsKey(defName))
-                                {
-                                    Messages.Message("FactionLoadout_DuplicateListItem".Translate(defName), MessageTypeDefOf.RejectInput);
-                                    return;
-                                }
-                                Current.xenotypeChances[defName] = 0.1f;
-                            }
-                        )
-                    );
-                }
-
-                if (ModLister.BiotechInstalled && inner.ButtonText("FactionLoadout_AddNew".Translate()))
-                {
-                    var xenoItems = CustomFloatMenu.MakeItems(
-                        DefDatabase<XenotypeDef>.AllDefs.Where(def => !Current.xenotypeChances.ContainsKey(def.defName)),
-                        def => new MenuItemText(def, def.LabelCap, def.Icon)
-                    );
-                    CustomFloatMenu.Open(
-                        xenoItems,
-                        item =>
-                        {
-                            XenotypeDef def = item.GetPayload<XenotypeDef>();
-                            Current.xenotypeChances[def.defName] = 0.1f;
-                        }
-                    );
-                }
-            }
-            else
+            if (!Current.OverrideFactionXenotypes)
             {
                 Current.xenotypeChances.Clear();
                 Current.xenotypeChancesByDef.Clear();
             }
+
+            inner.GapLine();
+            string xenoState = Current.OverrideFactionXenotypes
+                ? "FactionLoadout_Xenotype_ActiveCount".Translate(Current.xenotypeChances.Count)
+                : "FactionLoadout_Xenotype_Off".Translate();
+            if (inner.ButtonTextLabeled("FactionLoadout_EditXenoSpawnRates".Translate(), xenoState))
+                Find.WindowStack.Add(new Dialog_XenotypeEdit(Current));
         }
 
         inner.GapLine();
@@ -339,7 +282,9 @@ public class FactionEditUI : Window
             );
         }
 
-        overridesContentHeight = inner.CurHeight;
+        float newHeight = inner.CurHeight;
+        overridesScrollInnerHeight = newHeight > overridesContentHeight + 5f ? newHeight + 300f : newHeight;
+        overridesContentHeight = newHeight;
         inner.End();
         Widgets.EndScrollView();
 
@@ -563,6 +508,124 @@ public class FactionEditUI : Window
                 DefDatabase<SpecialThingFilterDef>.GetNamed("AllowRotten"),
             ]
         );
+    }
+}
+
+public class Dialog_XenotypeEdit : Window
+{
+    private readonly FactionEdit _edit;
+    private Vector2 _scrollPos;
+    private float _contentHeight = 200f;
+
+    public Dialog_XenotypeEdit(FactionEdit edit)
+    {
+        _edit = edit;
+        doCloseX = true;
+        closeOnCancel = true;
+        draggable = true;
+        resizeable = true;
+    }
+
+    public override Vector2 InitialSize => new(450f, 400f);
+
+    public override void DoWindowContents(Rect inRect)
+    {
+        Listing_Standard ui = new();
+        ui.Begin(inRect);
+
+        ui.CheckboxLabeled(
+            $"<b>{"FactionLoadout_EditXenoSpawnRates".Translate()}:</b>",
+            ref _edit.OverrideFactionXenotypes
+        );
+
+        if (_edit.OverrideFactionXenotypes)
+        {
+            if (_edit.xenotypeChances.NullOrEmpty())
+            {
+                _edit.xenotypeChances =
+                    _edit.Faction?.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype.defName, x => x.chance)
+                    ?? new Dictionary<string, float>();
+                if (!_edit.xenotypeChances.ContainsKey(FactionEditUI.BaselinerDefName))
+                    _edit.xenotypeChances.Add(FactionEditUI.BaselinerDefName, _edit.Faction?.Def?.xenotypeSet?.BaselinerChance ?? 1f);
+            }
+
+            _edit.xenotypeChances[FactionEditUI.BaselinerDefName] = Math.Max(
+                0f,
+                1f - _edit.xenotypeChances.Sum(x => x.Key == FactionEditUI.BaselinerDefName ? 0 : x.Value)
+            );
+
+            // Reserve space for add buttons at bottom.
+            const float addButtonsHeight = 70f;
+            float scrollH = Mathf.Max(30f, inRect.height - ui.CurHeight - addButtonsHeight);
+            Rect scrollOutRect = ui.GetRect(scrollH);
+            Rect innerRect = new(0f, 0f, scrollOutRect.width - 16f, Mathf.Max(_contentHeight, scrollH));
+
+            Widgets.BeginScrollView(scrollOutRect, ref _scrollPos, innerRect);
+            Listing_Standard inner = new();
+            inner.Begin(innerRect);
+
+            List<string> toDelete = [];
+            foreach (string key in _edit.xenotypeChances.Keys.ToList())
+                _edit.xenotypeChances[key] = UIHelpers.SliderLabeledWithDelete(
+                    inner,
+                    $"{DefDatabase<XenotypeDef>.GetNamedSilentFail(key)?.LabelCap ?? key}: {_edit.xenotypeChances[key].ToStringPercent()}",
+                    _edit.xenotypeChances[key],
+                    0f,
+                    1f,
+                    deleteAction: delegate
+                    {
+                        toDelete.Add(key);
+                    }
+                );
+
+            foreach (string delete in toDelete)
+                _edit.xenotypeChances.Remove(delete);
+
+            _contentHeight = inner.CurHeight;
+            inner.End();
+            Widgets.EndScrollView();
+
+            if (ui.ButtonText("FactionLoadout_AddNewByDefName".Translate()))
+            {
+                Find.WindowStack.Add(
+                    new Dialog_TextEntry(
+                        "FactionLoadout_AddNewByDefNameDesc".Translate(),
+                        defName =>
+                        {
+                            if (_edit.xenotypeChances.ContainsKey(defName))
+                            {
+                                Messages.Message("FactionLoadout_DuplicateListItem".Translate(defName), MessageTypeDefOf.RejectInput);
+                                return;
+                            }
+                            _edit.xenotypeChances[defName] = 0.1f;
+                        }
+                    )
+                );
+            }
+
+            if (ModLister.BiotechInstalled && ui.ButtonText("FactionLoadout_AddNew".Translate()))
+            {
+                var xenoItems = CustomFloatMenu.MakeItems(
+                    DefDatabase<XenotypeDef>.AllDefs.Where(def => !_edit.xenotypeChances.ContainsKey(def.defName)),
+                    def => new MenuItemText(def, def.LabelCap, def.Icon)
+                );
+                CustomFloatMenu.Open(
+                    xenoItems,
+                    item =>
+                    {
+                        XenotypeDef def = item.GetPayload<XenotypeDef>();
+                        _edit.xenotypeChances[def.defName] = 0.1f;
+                    }
+                );
+            }
+        }
+        else
+        {
+            _edit.xenotypeChances.Clear();
+            _edit.xenotypeChancesByDef.Clear();
+        }
+
+        ui.End();
     }
 }
 
