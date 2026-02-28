@@ -116,7 +116,9 @@ public class FactionEditUI : Window
         const float minFooterHeight = 200f;
         float scrollOutHeight = Mathf.Clamp(overridesContentHeight, 60f, Mathf.Max(60f, inRect.height - ui.CurHeight - minFooterHeight));
         Rect scrollOutRect = ui.GetRect(scrollOutHeight);
-        Rect scrollViewRect = new(0, 0, scrollOutRect.width - 16f, Mathf.Max(overridesContentHeight, scrollOutHeight));
+        // Add a buffer so that if content grows by more than overridesContentHeight in a single
+        // frame (e.g. enabling xenotype overrides), the scroll view still covers the new content.
+        Rect scrollViewRect = new(0, 0, scrollOutRect.width - 16f, Mathf.Max(overridesContentHeight, scrollOutHeight) + 300f);
 
         Widgets.BeginScrollView(scrollOutRect, ref overridesScrollPos, scrollViewRect);
         Listing_Standard inner = new();
@@ -198,19 +200,18 @@ public class FactionEditUI : Window
 
                 if (ModLister.BiotechInstalled && inner.ButtonText("FactionLoadout_AddNew".Translate()))
                 {
-                    List<FloatMenuOption> floatMenuList = [];
-                    foreach (XenotypeDef def in DefDatabase<XenotypeDef>.AllDefs)
-                        if (!Current.xenotypeChances.ContainsKey(def.defName))
-                            floatMenuList.Add(
-                                new FloatMenuOption(
-                                    def.LabelCap,
-                                    delegate
-                                    {
-                                        Current.xenotypeChances[def.defName] = 0.1f;
-                                    }
-                                )
-                            );
-                    Find.WindowStack.Add(new FloatMenu(floatMenuList));
+                    var xenoItems = CustomFloatMenu.MakeItems(
+                        DefDatabase<XenotypeDef>.AllDefs.Where(def => !Current.xenotypeChances.ContainsKey(def.defName)),
+                        def => new MenuItemText(def, def.LabelCap, def.Icon)
+                    );
+                    CustomFloatMenu.Open(
+                        xenoItems,
+                        item =>
+                        {
+                            XenotypeDef def = item.GetPayload<XenotypeDef>();
+                            Current.xenotypeChances[def.defName] = 0.1f;
+                        }
+                    );
                 }
             }
             else
@@ -316,7 +317,7 @@ public class FactionEditUI : Window
             var kinds = MakeKinds().ToList();
             var items = CustomFloatMenu.MakeItems(
                 kinds,
-                k => k != null ? new MenuItemText(k, k.LabelCap, tooltip: k.description) : new MenuItemText(null, "<color=cyan><b>Global (affects all faction pawns)</b></color>")
+                k => k != null ? new MenuItemText(k, $"{k.LabelCap} ({k.defName})", tooltip: k.description) : new MenuItemText(null, "<color=cyan><b>Global (affects all faction pawns)</b></color>")
             );
             CustomFloatMenu.Open(
                 items,

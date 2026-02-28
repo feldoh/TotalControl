@@ -1687,20 +1687,18 @@ public class PawnKindEditUI : Window
 
         if (!ui.ButtonText("Add new..."))
             return;
-        List<FloatMenuOption> floatMenuList = [];
-        foreach (XenotypeDef def in DefDatabase<XenotypeDef>.AllDefs)
-            if (!Current.ForcedXenotypeChances.ContainsKey(def.defName))
-                floatMenuList.Add(
-                    new FloatMenuOption(
-                        def.LabelCap,
-                        delegate
-                        {
-                            Current.ForcedXenotypeChances[def.defName] = 0.1f;
-                        }
-                    )
-                );
-
-        Find.WindowStack.Add(new FloatMenu(floatMenuList));
+        var xenoItems = CustomFloatMenu.MakeItems(
+            DefDatabase<XenotypeDef>.AllDefs.Where(def => !Current.ForcedXenotypeChances.ContainsKey(def.defName)),
+            def => new MenuItemText(def, def.LabelCap, def.Icon)
+        );
+        CustomFloatMenu.Open(
+            xenoItems,
+            item =>
+            {
+                XenotypeDef def = item.GetPayload<XenotypeDef>();
+                Current.ForcedXenotypeChances[def.defName] = 0.1f;
+            }
+        );
     }
 
     private void DrawForceSpecificXenos(Listing_Standard ui)

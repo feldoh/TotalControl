@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using FactionLoadout;
+using FactionLoadout.UISupport;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -137,21 +138,21 @@ public static class GiddyUpUI
         // Add mount button
         if (ui.ButtonText("FactionLoadout_AddMount".Translate()))
         {
-            // Show a float menu of all mountable animal PawnKindDefs
-            List<FloatMenuOption> options = DefDatabase<PawnKindDef>
-                .AllDefsListForReading.Where(k => k.RaceProps.Animal && !data.PossibleMounts.ContainsKey(k.defName))
-                .OrderBy(k => k.LabelCap.Resolve())
-                .Select(k => new FloatMenuOption(
-                    k.LabelCap,
-                    () =>
+            var mountItems = CustomFloatMenu.MakeItems(
+                DefDatabase<PawnKindDef>.AllDefsListForReading.Where(k => k.RaceProps.Animal && !data.PossibleMounts.ContainsKey(k.defName)),
+                k => new MenuItemText(k, k.LabelCap, tooltip: k.description)
+            );
+            if (mountItems.Count > 0)
+            {
+                CustomFloatMenu.Open(
+                    mountItems,
+                    item =>
                     {
+                        PawnKindDef k = item.GetPayload<PawnKindDef>();
                         data.PossibleMounts[k.defName] = 100;
                     }
-                ))
-                .ToList();
-
-            if (options.Count > 0)
-                Find.WindowStack.Add(new FloatMenu(options));
+                );
+            }
         }
 
         // Clear all button
