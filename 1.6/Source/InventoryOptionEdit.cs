@@ -36,7 +36,8 @@ namespace FactionLoadout
         public float ChoiceChance = 1f;
         public float SkipChance;
 
-        public string BufferA, BufferB;
+        public string BufferA,
+            BufferB;
 
         public List<InventoryOptionEdit> SubOptionsTakeAll;
         public List<InventoryOptionEdit> SubOptionsChooseOne;
@@ -63,8 +64,8 @@ namespace FactionLoadout
             ChoiceChance = option.choiceChance;
             SkipChance = option.skipChance;
 
-            SubOptionsTakeAll = option.subOptionsTakeAll is {Count: > 0} optsTakeAll ? optsTakeAll.Select(x => new InventoryOptionEdit(x)).ToList() : null;
-            SubOptionsChooseOne = option.subOptionsChooseOne is {Count: > 0} optsChooseOne ? optsChooseOne.Select(x => new InventoryOptionEdit(x)).ToList() : null;
+            SubOptionsTakeAll = option.subOptionsTakeAll is { Count: > 0 } optsTakeAll ? optsTakeAll.Select(x => new InventoryOptionEdit(x)).ToList() : null;
+            SubOptionsChooseOne = option.subOptionsChooseOne is { Count: > 0 } optsChooseOne ? optsChooseOne.Select(x => new InventoryOptionEdit(x)).ToList() : null;
         }
 
         public PawnInventoryOption ConvertToVanilla() =>
@@ -75,7 +76,7 @@ namespace FactionLoadout
                 skipChance = SkipChance,
                 countRange = CountRange,
                 subOptionsTakeAll = SubOptionsTakeAll is { Count: > 0 } ? SubOptionsTakeAll.Select(o => o.ConvertToVanilla()).ToList() : null,
-                subOptionsChooseOne = SubOptionsChooseOne is { Count: > 0 } ? SubOptionsChooseOne.Select(o => o.ConvertToVanilla()).ToList() : null
+                subOptionsChooseOne = SubOptionsChooseOne is { Count: > 0 } ? SubOptionsChooseOne.Select(o => o.ConvertToVanilla()).ToList() : null,
             };
 
         public int GetSize()

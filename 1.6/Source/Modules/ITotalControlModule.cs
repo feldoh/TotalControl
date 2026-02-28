@@ -79,5 +79,4 @@ public interface ITotalControlModule
     /// <param name="source">The PawnKindEdit being copied from.</param>
     /// <param name="dest">The PawnKindEdit being copied to.</param>
     void CopyData(PawnKindEdit source, PawnKindEdit dest);
-
 }

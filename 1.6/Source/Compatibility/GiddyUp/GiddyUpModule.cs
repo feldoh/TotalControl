@@ -13,11 +13,13 @@ namespace TotalControlGiddyUpCompat;
 /// </summary>
 public class GiddyUpModule : ITotalControlModule
 {
-    private const string GiddyUpPackageId = "Owlchemist.GiddyUp";
+    // Support both the Owlchemist original and the MemeGoddess fork (mutually incompatible, so at most one will be active)
+    private const string GiddyUpPackageIdOwlchemist = "Owlchemist.GiddyUp";
+    private const string GiddyUpPackageIdMemeGoddess = "MemeGoddess.GiddyUp";
 
     public string ModuleKey => "giddyUp";
     public string ModuleName => "GiddyUp Mounts";
-    public bool IsActive => ModsConfig.IsActive(GiddyUpPackageId);
+    public bool IsActive => ModsConfig.IsActive(GiddyUpPackageIdOwlchemist) || ModsConfig.IsActive(GiddyUpPackageIdMemeGoddess);
 
     // Per-PawnKindEdit data storage
     private static readonly Dictionary<PawnKindEdit, GiddyUpData> dataStore = new();
@@ -120,7 +122,7 @@ public class GiddyUpModule : ITotalControlModule
         if (data == null)
             return;
 
-        GiddyUpData copy = new() { MountChance = data.MountChance, PossibleMounts = data.PossibleMounts != null ? new Dictionary<string, int>(data.PossibleMounts) : null, };
+        GiddyUpData copy = new() { MountChance = data.MountChance, PossibleMounts = data.PossibleMounts != null ? new Dictionary<string, int>(data.PossibleMounts) : null };
         dataStore[dest] = copy;
     }
 

@@ -37,11 +37,7 @@ public static class PawnKindClipboard
         PawnKindEdit clone = new() { Def = source.Def, IsGlobal = source.IsGlobal };
         clone.CopyFrom(source);
 
-        Clipboard = new PawnKindClipboardData
-        {
-            Clone = clone,
-            SourceLabel = source.IsGlobal ? "Global" : source.Def?.LabelCap.ToString() ?? "Unknown",
-        };
+        Clipboard = new PawnKindClipboardData { Clone = clone, SourceLabel = source.IsGlobal ? "Global" : source.Def?.LabelCap.ToString() ?? "Unknown" };
         SoundDefOf.Tick_High.PlayOneShotOnCamera();
     }
 
@@ -56,6 +52,5 @@ public static class PawnKindClipboard
     }
 
     /// <summary>Clipboard description for tooltips.</summary>
-    public static string GetDescription() =>
-        Clipboard == null ? "Clipboard is empty." : $"Source: {Clipboard.SourceLabel}";
+    public static string GetDescription() => Clipboard == null ? "Clipboard is empty." : $"Source: {Clipboard.SourceLabel}";
 }

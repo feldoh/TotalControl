@@ -271,12 +271,8 @@ public class FactionEdit : IExposable
     {
         TechLevel = source.TechLevel;
         OverrideFactionXenotypes = source.OverrideFactionXenotypes;
-        xenotypeChances = source.xenotypeChances != null
-            ? new Dictionary<string, float>(source.xenotypeChances)
-            : [];
-        xenotypeChancesByDef = source.xenotypeChancesByDef != null
-            ? new Dictionary<XenotypeDef, float>(source.xenotypeChancesByDef)
-            : [];
+        xenotypeChances = source.xenotypeChances != null ? new Dictionary<string, float>(source.xenotypeChances) : [];
+        xenotypeChancesByDef = source.xenotypeChancesByDef != null ? new Dictionary<XenotypeDef, float>(source.xenotypeChancesByDef) : [];
     }
 
     public override string ToString()

@@ -91,7 +91,7 @@ public class CustomFloatMenu : Window
         // number of items in each column should be equal.
         preRenderItems.Clear();
         preRenderItems.AddRange(FilteredItems(SearchString));
-        int perColumnTarget = Mathf.CeilToInt((float) preRenderItems.Count / Columns);
+        int perColumnTarget = Mathf.CeilToInt((float)preRenderItems.Count / Columns);
 
         float padding = 6;
         float x = 0;
@@ -163,7 +163,7 @@ public abstract class MenuItemBase : IComparable<MenuItemBase>
 {
     public object Payload { get; set; }
 
-    public T GetPayload<T>() => (T) Payload;
+    public T GetPayload<T>() => (T)Payload;
 
     public abstract bool Matches(string search);
     public abstract int CompareTo(MenuItemBase other);

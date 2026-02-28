@@ -88,10 +88,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Lib.Harmony" Version="2.2.2">
-            <ExcludeAssets>runtime</ExcludeAssets>
-            <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
+        <PackageReference Include="Lib.Harmony" Version="2.2.2" />
         <Publicize Include="Assembly-CSharp" />
     </ItemGroup>
     <ItemGroup>
@@ -104,14 +101,9 @@
     <Target Name="CleanAssemblies" AfterTargets="Clean">
         <RemoveDir Directories="$(OutputPath)" Condition="Exists('$(OutputPath)')" />
     </Target>
-    <!-- Add A step to the build to run csharpier on build -->
-    <Target Name="CheckCsharpier" BeforeTargets="Build">
-        <Exec Command="dotnet csharpier --version" IgnoreExitCode="true">
-            <Output TaskParameter="ExitCode" PropertyName="ExitCode" />
-        </Exec>
-    </Target>
-
-    <Target Name="FormatCode" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Release' And '$(ExitCode)' == '0' " DependsOnTargets="CheckCsharpier">
-        <Exec Command="dotnet csharpier ." />
+    <!-- Run csharpier on release builds via the local tool manifest (.config/dotnet-tools.json) -->
+    <Target Name="FormatCode" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Release' ">
+        <Exec Command="dotnet tool restore" StandardOutputImportance="Low" />
+        <Exec Command="dotnet tool run csharpier -- format ." />
     </Target>
 </Project>

@@ -93,11 +93,17 @@ public class PawnKindEdit : IExposable
         get { return Preset.LoadedPresets.SelectMany(preset => preset.factionChanges).FirstOrDefault(change => change.KindEdits.Contains(this)); }
     }
 
+    [NoCopy]
+    public PawnKindDef Def;
 
-    [NoCopy] public PawnKindDef Def;
-    [NoCopy] public bool IsGlobal = false;
-    [NoCopy] public bool DeletedOrClosed;
-    [NoCopy] public PawnKindEdit globalEdit = null; // transient runtime ref, set during Apply
+    [NoCopy]
+    public bool IsGlobal = false;
+
+    [NoCopy]
+    public bool DeletedOrClosed;
+
+    [NoCopy]
+    public PawnKindEdit globalEdit = null; // transient runtime ref, set during Apply
 
     /// <summary>
     /// Raw InnerXml for module sub-nodes whose module is not currently registered/active.
@@ -225,9 +231,9 @@ public class PawnKindEdit : IExposable
         if (Scribe.mode == LoadSaveMode.PostLoadInit)
         {
             ForcedXenotypeChanceDefs = ForcedXenotypeChances
-                .Select(kvp => new Pair<XenotypeDef, float>(DefDatabase<XenotypeDef>.GetNamedSilentFail(kvp.Key), kvp.Value))
-                .Where(c => c.first != null)
-                .ToDictionary(kvp => kvp.first, kvp => kvp.second);
+                .Select(kvp => (Def: DefDatabase<XenotypeDef>.GetNamedSilentFail(kvp.Key), Value: kvp.Value))
+                .Where(c => c.Def != null)
+                .ToDictionary(c => c.Def, c => c.Value);
         }
 
         bool isFake = NameMaker == FakeRulePack;
@@ -292,9 +298,7 @@ public class PawnKindEdit : IExposable
     /// </summary>
     public static void CopyModuleData(PawnKindEdit source, PawnKindEdit dest)
     {
-        dest.preservedModuleXml = source.preservedModuleXml != null
-            ? new Dictionary<string, string>(source.preservedModuleXml)
-            : null;
+        dest.preservedModuleXml = source.preservedModuleXml != null ? new Dictionary<string, string>(source.preservedModuleXml) : null;
 
         foreach (ITotalControlModule module in ModuleRegistry.Modules)
         {
