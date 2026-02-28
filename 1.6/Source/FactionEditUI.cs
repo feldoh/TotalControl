@@ -262,7 +262,10 @@ public class FactionEditUI : Window
             var kinds = MakeKinds().ToList();
             var items = CustomFloatMenu.MakeItems(
                 kinds,
-                k => k != null ? new MenuItemText(k, $"{k.LabelCap} ({k.defName})", tooltip: k.description) : new MenuItemText(null, "<color=cyan><b>Global (affects all faction pawns)</b></color>")
+                k =>
+                    k != null
+                        ? new MenuItemText(k, $"{k.LabelCap} ({k.defName})", tooltip: k.description)
+                        : new MenuItemText(null, "<color=cyan><b>Global (affects all faction pawns)</b></color>")
             );
             CustomFloatMenu.Open(
                 items,
@@ -535,26 +538,18 @@ public class Dialog_XenotypeEdit : Window
         Listing_Standard ui = new();
         ui.Begin(inRect);
 
-        ui.CheckboxLabeled(
-            $"<b>{"FactionLoadout_EditXenoSpawnRates".Translate()}:</b>",
-            ref _edit.OverrideFactionXenotypes
-        );
+        ui.CheckboxLabeled($"<b>{"FactionLoadout_EditXenoSpawnRates".Translate()}:</b>", ref _edit.OverrideFactionXenotypes);
 
         if (_edit.OverrideFactionXenotypes)
         {
             if (_edit.xenotypeChances.NullOrEmpty())
             {
-                _edit.xenotypeChances =
-                    _edit.Faction?.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype.defName, x => x.chance)
-                    ?? new Dictionary<string, float>();
+                _edit.xenotypeChances = _edit.Faction?.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype.defName, x => x.chance) ?? new Dictionary<string, float>();
                 if (!_edit.xenotypeChances.ContainsKey(FactionEditUI.BaselinerDefName))
                     _edit.xenotypeChances.Add(FactionEditUI.BaselinerDefName, _edit.Faction?.Def?.xenotypeSet?.BaselinerChance ?? 1f);
             }
 
-            _edit.xenotypeChances[FactionEditUI.BaselinerDefName] = Math.Max(
-                0f,
-                1f - _edit.xenotypeChances.Sum(x => x.Key == FactionEditUI.BaselinerDefName ? 0 : x.Value)
-            );
+            _edit.xenotypeChances[FactionEditUI.BaselinerDefName] = Math.Max(0f, 1f - _edit.xenotypeChances.Sum(x => x.Key == FactionEditUI.BaselinerDefName ? 0 : x.Value));
 
             // Reserve space for add buttons at bottom.
             const float addButtonsHeight = 70f;

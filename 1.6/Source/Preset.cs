@@ -215,11 +215,7 @@ namespace FactionLoadout
             foreach (FactionDef f in DefDatabase<FactionDef>.AllDefsListForReading)
             {
                 // Skip our own synthetic special factions.
-                if (
-                    f.defName == SpecialCreepjoinerFactionDefName
-                    || f.defName == SpecialWildManFactionDefName
-                    || f.defName == SpecialFactionlessPawnsFactionDefName
-                )
+                if (f.defName == SpecialCreepjoinerFactionDefName || f.defName == SpecialWildManFactionDefName || f.defName == SpecialFactionlessPawnsFactionDefName)
                 {
                     continue;
                 }
@@ -274,16 +270,7 @@ namespace FactionLoadout
                 options.Add(new PawnGenOption { kind = k });
             }
 
-            SpecialFactionlessPawnsFaction.pawnGroupMakers = options.Count > 0
-                ?
-                [
-                    new PawnGroupMaker
-                    {
-                        kindDef = PawnGroupKindDefOf.Combat,
-                        options = options,
-                    },
-                ]
-                : null;
+            SpecialFactionlessPawnsFaction.pawnGroupMakers = options.Count > 0 ? [new PawnGroupMaker { kindDef = PawnGroupKindDefOf.Combat, options = options }] : null;
         }
 
         public static void SetupRelationsForFaction(Faction faction)

@@ -67,9 +67,7 @@ public class PresetUI : Window
         button.width *= 0.3f;
         button = button.ExpandedBy(-2f, -5f);
         GUI.color = Color.green;
-        string saveLabel = Current.IsPackaged
-            ? "FactionLoadout_SaveToSourceFile".Translate().ToString()
-            : "SAVE";
+        string saveLabel = Current.IsPackaged ? "FactionLoadout_SaveToSourceFile".Translate().ToString() : "SAVE";
         if (Widgets.ButtonText(button, $"<color=white>{saveLabel}</color>"))
             Current.Save();
 
