@@ -96,10 +96,15 @@ public class CustomFloatMenu : Window
         float padding = 6;
         float x = 0;
 
+        // Visible y range inside the scroll view (used for virtual scrolling).
+        float visibleTop = scroll.y;
+        float visibleBottom = scroll.y + inRect.height;
+
         Widgets.BeginScrollView(inRect, ref scroll, new Rect(0, 0, lastWidth, lastHeight));
         lastWidth = 0;
         lastHeight = 0;
 
+        bool closedThisFrame = false;
         for (int i = 0; i < Columns; i++)
         {
             float maxItemWidth = 0f;
@@ -110,27 +115,35 @@ public class CustomFloatMenu : Window
                 if (index >= preRenderItems.Count)
                     break;
 
-                var pos = new Vector2(x, y);
                 var item = preRenderItems[index];
-                if (Tint != Color.white)
-                    GUI.color = Tint;
-                var size = item.Draw(pos);
-                GUI.color = Color.white;
-                var area = new Rect(pos, size);
-                Widgets.DrawBox(area);
-                if (Widgets.ButtonInvisible(area))
+                var itemSize = item.GetSize();
+
+                // Only call Draw (and register hit-boxes/tooltips) for items within the
+                // visible scroll viewport. Off-screen items still advance y so the scroll
+                // bar correctly reflects total content height.
+                if (!closedThisFrame && y + itemSize.y > visibleTop && y < visibleBottom)
                 {
-                    OnSelected?.Invoke(item);
-                    if (CloseOnSelected)
+                    var pos = new Vector2(x, y);
+                    if (Tint != Color.white)
+                        GUI.color = Tint;
+                    var size = item.Draw(pos);
+                    GUI.color = Color.white;
+                    var area = new Rect(pos, size);
+                    Widgets.DrawBox(area);
+                    if (Widgets.ButtonInvisible(area))
                     {
-                        Close();
-                        break;
+                        OnSelected?.Invoke(item);
+                        if (CloseOnSelected)
+                        {
+                            closedThisFrame = true;
+                            Close();
+                        }
                     }
                 }
 
-                y += size.y + padding;
-                if (maxItemWidth < size.x)
-                    maxItemWidth = size.x;
+                y += itemSize.y + padding;
+                if (maxItemWidth < itemSize.x)
+                    maxItemWidth = itemSize.x;
                 if (y > lastHeight)
                     lastHeight = y;
             }
@@ -168,6 +181,9 @@ public abstract class MenuItemBase : IComparable<MenuItemBase>
     public abstract bool Matches(string search);
     public abstract int CompareTo(MenuItemBase other);
     public abstract Vector2 Draw(Vector2 pos);
+
+    /// <summary>Returns the item's layout size without drawing. Used for virtual scrolling.</summary>
+    public abstract Vector2 GetSize();
 }
 
 public class MenuItemText : MenuItemBase
@@ -205,6 +221,8 @@ public class MenuItemText : MenuItemBase
             return string.Compare(Label, txt.Label, StringComparison.Ordinal);
         return 0;
     }
+
+    public override Vector2 GetSize() => Size;
 
     public override Vector2 Draw(Vector2 pos)
     {
@@ -272,6 +290,8 @@ public class MenuItemIcon : MenuItemBase
     {
         return 0; // No order, sort by natural load order (mod).
     }
+
+    public override Vector2 GetSize() => Size;
 
     public override Vector2 Draw(Vector2 pos)
     {
