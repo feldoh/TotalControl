@@ -81,6 +81,9 @@
     <FactionLoadout_Clipboard_PasteAllTooltip>Paste all fields from clipboard\n{0}</FactionLoadout_Clipboard_PasteAllTooltip>
     <FactionLoadout_Clipboard_Empty>Clipboard is empty</FactionLoadout_Clipboard_Empty>
 
+    <!-- Special faction warnings -->
+    <FactionLoadout_Special_FactionlessWarning>This is a special group for factionless pawns automatically discovered at startup. It covers humanlike pawnkinds not belonging to any real faction.</FactionLoadout_Special_FactionlessWarning>
+
     <!-- Faction-level clipboard -->
     <FactionLoadout_FactionClipboard_CopyTooltip>Copy faction settings (tech level, xenotypes) to clipboard</FactionLoadout_FactionClipboard_CopyTooltip>
     <FactionLoadout_FactionClipboard_PasteTooltip>Paste faction settings from clipboard\n{0}</FactionLoadout_FactionClipboard_PasteTooltip>

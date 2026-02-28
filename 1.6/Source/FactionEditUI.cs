@@ -103,6 +103,8 @@ public class FactionEditUI : Window
             ui.Label("<color=yellow>EXPERIMENTAL! - This is a fake faction used for Creepjoiner editing, use at your own risk.</color>");
         if (Current.Faction.DefName == Preset.SpecialWildManFactionDefName)
             ui.Label("<color=yellow>EXPERIMENTAL! - This is a fake faction used for WildMan editing, use at your own risk.</color>");
+        if (Current.Faction.DefName == Preset.SpecialFactionlessPawnsFactionDefName)
+            ui.Label($"<color=yellow>{"FactionLoadout_Special_FactionlessWarning".Translate()}</color>");
 
         // Disabled for now
         // DrawMaterialFilter(ui);
@@ -139,7 +141,11 @@ public class FactionEditUI : Window
             );
         }
 
-        if (ModsConfig.BiotechActive && Current.Faction?.Def != Preset.SpecialWildManFaction)
+        if (
+            ModsConfig.BiotechActive
+            && Current.Faction?.Def != Preset.SpecialWildManFaction
+            && Current.Faction?.Def != Preset.SpecialFactionlessPawnsFaction
+        )
         {
             inner.GapLine();
             inner.CheckboxLabeled($"<b>{"FactionLoadout_EditXenoSpawnRates".Translate()}:</b>", ref Current.OverrideFactionXenotypes);

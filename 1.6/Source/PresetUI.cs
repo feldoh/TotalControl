@@ -171,6 +171,14 @@ public class PresetUI : Window
             {
                 raw.Add(Preset.SpecialWildManFaction);
             }
+            if (
+                Preset.FactionlessPawnKindsSet.Count > 0
+                && !Current.HasEditFor(Preset.SpecialFactionlessPawnsFaction)
+                && !raw.Any(f => f.defName == Preset.SpecialFactionlessPawnsFaction.defName)
+            )
+            {
+                raw.Add(Preset.SpecialFactionlessPawnsFaction);
+            }
             List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                 raw,
                 f => new MenuItemText(f, $"{f.LabelCap} ({f.defName})", PawnKindEditUI.TryGetIcon(f, out Color c), c, f.description)

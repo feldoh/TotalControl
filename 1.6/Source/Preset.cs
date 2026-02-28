@@ -59,6 +59,7 @@ namespace FactionLoadout
 
         public static string SpecialCreepjoinerFactionDefName = "FactionLoadout_Special_CreepJoiner";
         public static string SpecialWildManFactionDefName = "FactionLoadout_Special_WildMan";
+        public static string SpecialFactionlessPawnsFactionDefName = "FactionLoadout_Special_Factionless";
 
         public static FactionDef SpecialCreepjoinerFaction = new()
         {
@@ -91,6 +92,19 @@ namespace FactionLoadout
             basicMemberKind = PawnKindDefOf.WildMan,
         };
 
+        public static FactionDef SpecialFactionlessPawnsFaction = new()
+        {
+            hidden = true,
+            defName = SpecialFactionlessPawnsFactionDefName,
+            label = "Factionless Pawns",
+            description = "A special group for editing humanlike pawnkinds that don't belong to any faction. Populated automatically at startup.",
+            humanlikeFaction = true,
+            raidsForbidden = true,
+            requiredCountAtGameStart = 0,
+        };
+
+        public static HashSet<PawnKindDef> FactionlessPawnKindsSet = new();
+
         public string Name = "My preset";
         public List<FactionEdit> factionChanges = new List<FactionEdit>();
 
@@ -121,6 +135,87 @@ namespace FactionLoadout
                 DefDatabase<FactionDef>.Add(SpecialCreepjoinerFaction);
             if (DefDatabase<FactionDef>.GetNamed(SpecialWildManFactionDefName, false) == null)
                 DefDatabase<FactionDef>.Add(SpecialWildManFaction);
+            if (DefDatabase<FactionDef>.GetNamed(SpecialFactionlessPawnsFactionDefName, false) == null)
+                DefDatabase<FactionDef>.Add(SpecialFactionlessPawnsFaction);
+            PopulateFactionlessPawnKinds();
+        }
+
+        public static void PopulateFactionlessPawnKinds()
+        {
+            // Build the set of all pawnkinds that belong to at least one real faction.
+            var inAnyFaction = new HashSet<PawnKindDef>();
+            foreach (FactionDef f in DefDatabase<FactionDef>.AllDefsListForReading)
+            {
+                // Skip our own synthetic special factions.
+                if (
+                    f.defName == SpecialCreepjoinerFactionDefName
+                    || f.defName == SpecialWildManFactionDefName
+                    || f.defName == SpecialFactionlessPawnsFactionDefName
+                )
+                {
+                    continue;
+                }
+
+                void AddOptions(List<PawnGenOption> list)
+                {
+                    if (list == null)
+                        return;
+                    foreach (PawnGenOption opt in list)
+                    {
+                        if (opt.kind != null)
+                            inAnyFaction.Add(opt.kind);
+                    }
+                }
+
+                if (f.pawnGroupMakers != null)
+                {
+                    foreach (PawnGroupMaker maker in f.pawnGroupMakers)
+                    {
+                        AddOptions(maker.options);
+                        AddOptions(maker.guards);
+                        AddOptions(maker.traders);
+                        AddOptions(maker.carriers);
+                    }
+                }
+
+                if (f.basicMemberKind != null)
+                    inAnyFaction.Add(f.basicMemberKind);
+
+                if (f.fixedLeaderKinds != null)
+                {
+                    foreach (PawnKindDef k in f.fixedLeaderKinds)
+                        inAnyFaction.Add(k);
+                }
+            }
+
+            // Collect humanlike pawnkinds not claimed by any real faction or named special faction.
+            FactionlessPawnKindsSet.Clear();
+            var options = new List<PawnGenOption>();
+            foreach (PawnKindDef k in DefDatabase<PawnKindDef>.AllDefsListForReading)
+            {
+                if (k.race?.race?.Humanlike != true)
+                    continue;
+                if (k == PawnKindDefOf.WildMan)
+                    continue;
+                if (k is CreepJoinerFormKindDef)
+                    continue;
+                if (inAnyFaction.Contains(k))
+                    continue;
+
+                FactionlessPawnKindsSet.Add(k);
+                options.Add(new PawnGenOption { kind = k });
+            }
+
+            SpecialFactionlessPawnsFaction.pawnGroupMakers = options.Count > 0
+                ?
+                [
+                    new PawnGroupMaker
+                    {
+                        kindDef = PawnGroupKindDefOf.Combat,
+                        options = options,
+                    },
+                ]
+                : null;
         }
 
         public static void SetupRelationsForFaction(Faction faction)

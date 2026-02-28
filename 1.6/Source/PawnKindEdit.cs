@@ -70,6 +70,11 @@ public class PawnKindEdit : IExposable
             return Preset.SpecialCreepjoinerFaction;
         }
 
+        if (fallbackFactionDef == null && Preset.FactionlessPawnKindsSet.Contains(def))
+        {
+            return Preset.SpecialFactionlessPawnsFaction;
+        }
+
         return fallbackFactionDef;
     }
 
