@@ -91,6 +91,11 @@
     <FactionLoadout_FactionClipboard_PasteTooltip>Paste faction settings from clipboard\n{0}</FactionLoadout_FactionClipboard_PasteTooltip>
     <FactionLoadout_FactionClipboard_Description>Tech level: {0} | Xenotype override: {1}</FactionLoadout_FactionClipboard_Description>
 
+    <!-- Missing faction handling -->
+    <FactionLoadout_EditAnyway>Edit anyway</FactionLoadout_EditAnyway>
+    <FactionLoadout_FactionMissing>(missing — mod not loaded)</FactionLoadout_FactionMissing>
+    <FactionLoadout_FactionMissingEditWarning>This faction is missing — its mod is probably not loaded. You can still edit and delete the pawnkind overrides below, but the faction-level settings and pawn preview are unavailable.</FactionLoadout_FactionMissingEditWarning>
+
     <!-- Packaged presets -->
     <FactionLoadout_PackagedLabel>Packaged</FactionLoadout_PackagedLabel>
     <FactionLoadout_CopyToMyPresets>Copy to my presets</FactionLoadout_CopyToMyPresets>

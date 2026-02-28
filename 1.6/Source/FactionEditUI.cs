@@ -95,9 +95,7 @@ public class FactionEditUI : Window
         Widgets.Label(r, $"<size=34><b>Faction: <color=#cf9af5>{Current.Faction.Def?.LabelCap ?? "none"}</color></b></size>");
         if (Current.Faction.IsMissing)
         {
-            ui.Label($"<color=red>Missing faction! Could not find '{Current.Faction}', probably because it's in an unloaded mod.</color>");
-            ui.End();
-            return;
+            ui.Label($"<color=orange>{"FactionLoadout_FactionMissingEditWarning".Translate()}</color>");
         }
 
         if (Current.Faction.DefName == Preset.SpecialCreepjoinerFactionDefName)
@@ -110,7 +108,10 @@ public class FactionEditUI : Window
         // Disabled for now
         // DrawMaterialFilter(ui);
 
-        DrawFactionClipboardToolbar(ui);
+        if (!Current.Faction.IsMissing)
+        {
+            DrawFactionClipboardToolbar(ui);
+        }
 
         // --- Scrollable overrides ---
         // Cap scroll height so at least 200px remains for the preview section below.
@@ -146,6 +147,7 @@ public class FactionEditUI : Window
 
         if (
             ModsConfig.BiotechActive
+            && !Current.Faction.IsMissing
             && Current.Faction?.Def != Preset.SpecialWildManFaction
             && Current.Faction?.Def != Preset.SpecialFactionlessPawnsFaction
         )
@@ -211,7 +213,7 @@ public class FactionEditUI : Window
             Current.KindEdits.Remove(item);
         bin.Clear();
 
-        if (inner.ButtonText("Add new..."))
+        if (!Current.Faction.IsMissing && inner.ButtonText("Add new..."))
         {
             IEnumerable<PawnKindDef> MakeKinds()
             {

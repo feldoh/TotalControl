@@ -153,7 +153,14 @@ public class PresetUI : Window
             area.x += 90;
             if (item.Faction.IsMissing)
             {
-                item.Active = false;
+                GUI.color = new Color(1f, 0.75f, 0.2f);
+                if (Widgets.ButtonText(area, "FactionLoadout_EditAnyway".Translate()))
+                    FactionEditUI.OpenEditor(item);
+                GUI.color = Color.white;
+                area.x += 90;
+                GUI.color = new Color(1f, 0.4f, 0.4f);
+                Widgets.Label(area, "FactionLoadout_FactionMissing".Translate());
+                GUI.color = Color.white;
             }
             else
             {
