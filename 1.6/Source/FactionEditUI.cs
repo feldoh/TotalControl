@@ -25,6 +25,8 @@ public class FactionEditUI : Window
     private readonly List<Pawn> pawns = new();
     private readonly HashSet<PawnKindDef> tempKinds = new();
     private bool _ThingIDPatch = false;
+    private Vector2 overridesScrollPos;
+    private float overridesContentHeight = 500f;
 
     public FactionEditUI(FactionEdit fac)
     {
@@ -87,6 +89,7 @@ public class FactionEditUI : Window
         Listing_Standard ui = new();
         ui.Begin(inRect);
 
+        // --- Header (always visible) ---
         Rect r = ui.GetRect(50);
         Widgets.Label(r, $"<size=34><b>Faction: <color=#cf9af5>{Current.Faction.Def?.LabelCap ?? "none"}</color></b></size>");
         if (Current.Faction.IsMissing)
@@ -97,21 +100,28 @@ public class FactionEditUI : Window
         }
 
         if (Current.Faction.DefName == Preset.SpecialCreepjoinerFactionDefName)
-        {
             ui.Label("<color=yellow>EXPERIMENTAL! - This is a fake faction used for Creepjoiner editing, use at your own risk.</color>");
-        }
         if (Current.Faction.DefName == Preset.SpecialWildManFactionDefName)
-        {
             ui.Label("<color=yellow>EXPERIMENTAL! - This is a fake faction used for WildMan editing, use at your own risk.</color>");
-        }
 
         // Disabled for now
         // DrawMaterialFilter(ui);
 
         DrawFactionClipboardToolbar(ui);
 
+        // --- Scrollable overrides ---
+        // Cap scroll height so at least 200px remains for the preview section below.
+        const float minFooterHeight = 200f;
+        float scrollOutHeight = Mathf.Clamp(overridesContentHeight, 60f, Mathf.Max(60f, inRect.height - ui.CurHeight - minFooterHeight));
+        Rect scrollOutRect = ui.GetRect(scrollOutHeight);
+        Rect scrollViewRect = new(0, 0, scrollOutRect.width - 16f, Mathf.Max(overridesContentHeight, scrollOutHeight));
+
+        Widgets.BeginScrollView(scrollOutRect, ref overridesScrollPos, scrollViewRect);
+        Listing_Standard inner = new();
+        inner.Begin(scrollViewRect);
+
         if (
-            ui.ButtonTextLabeled(
+            inner.ButtonTextLabeled(
                 "FactionLoadout_Faction_Techlevel".Translate(),
                 Current.TechLevel?.ToStringHuman() ?? "FactionLoadout_NotOverriden_WithDefault".Translate((Current.Faction?.Def?.techLevel ?? TechLevel.Undefined).ToStringHuman())
             )
@@ -131,8 +141,8 @@ public class FactionEditUI : Window
 
         if (ModsConfig.BiotechActive && Current.Faction?.Def != Preset.SpecialWildManFaction)
         {
-            ui.GapLine();
-            ui.CheckboxLabeled($"<b>{"FactionLoadout_EditXenoSpawnRates".Translate()}:</b>", ref Current.OverrideFactionXenotypes);
+            inner.GapLine();
+            inner.CheckboxLabeled($"<b>{"FactionLoadout_EditXenoSpawnRates".Translate()}:</b>", ref Current.OverrideFactionXenotypes);
             if (Current.OverrideFactionXenotypes)
             {
                 List<string> toDelete = [];
@@ -148,7 +158,7 @@ public class FactionEditUI : Window
 
                 foreach (string key in Current.xenotypeChances.Keys.ToList())
                     Current.xenotypeChances[key] = UIHelpers.SliderLabeledWithDelete(
-                        ui,
+                        inner,
                         $"{DefDatabase<XenotypeDef>.GetNamedSilentFail(key)?.LabelCap ?? key}: {Current.xenotypeChances[key].ToStringPercent()}",
                         Current.xenotypeChances[key],
                         0f,
@@ -162,9 +172,8 @@ public class FactionEditUI : Window
                 foreach (string delete in toDelete)
                     Current.xenotypeChances.Remove(delete);
 
-                if (ui.ButtonText("FactionLoadout_AddNewByDefName".Translate()))
+                if (inner.ButtonText("FactionLoadout_AddNewByDefName".Translate()))
                 {
-                    // Add a new xenotype by def name only, allows adding options without the mod loaded.
                     Find.WindowStack.Add(
                         new Dialog_TextEntry(
                             "FactionLoadout_AddNewByDefNameDesc".Translate(),
@@ -180,8 +189,8 @@ public class FactionEditUI : Window
                         )
                     );
                 }
-                // Show a list of xenotypes that can be added, much nicer than going by name but requires biotech
-                if (ModLister.BiotechInstalled && ui.ButtonText("FactionLoadout_AddNew".Translate()))
+
+                if (ModLister.BiotechInstalled && inner.ButtonText("FactionLoadout_AddNew".Translate()))
                 {
                     List<FloatMenuOption> floatMenuList = [];
                     foreach (XenotypeDef def in DefDatabase<XenotypeDef>.AllDefs)
@@ -195,7 +204,6 @@ public class FactionEditUI : Window
                                     }
                                 )
                             );
-
                     Find.WindowStack.Add(new FloatMenu(floatMenuList));
                 }
             }
@@ -206,14 +214,13 @@ public class FactionEditUI : Window
             }
         }
 
-        ui.GapLine();
-        ui.Label("<b>Loadout Overrides:</b>");
-
-        ui.Gap();
+        inner.GapLine();
+        inner.Label("<b>Loadout Overrides:</b>");
+        inner.Gap();
 
         foreach (PawnKindEdit edit in Current.KindEdits)
         {
-            Rect rect = ui.GetRect(30);
+            Rect rect = inner.GetRect(30);
             GUI.color = Color.red;
             if (Widgets.ButtonText(new Rect(rect.x, rect.y, 38, 24), "DEL"))
             {
@@ -252,10 +259,9 @@ public class FactionEditUI : Window
 
         foreach (PawnKindEdit item in bin)
             Current.KindEdits.Remove(item);
-
         bin.Clear();
 
-        if (ui.ButtonText("Add new..."))
+        if (inner.ButtonText("Add new..."))
         {
             IEnumerable<PawnKindDef> MakeKinds()
             {
@@ -267,7 +273,6 @@ public class FactionEditUI : Window
                 {
                     if (list == null)
                         return;
-
                     foreach (PawnGenOption thing in list)
                         if (!Current.HasEditFor(thing.kind))
                             tempKinds.Add(thing.kind);
@@ -290,7 +295,6 @@ public class FactionEditUI : Window
                 foreach (PawnKindDef item in tempKinds)
                     yield return item;
 
-                // If there's no kinds to edit, other than the global add some for special cases.
                 if (tempKinds.Count(k => k != null) == 0)
                 {
                     if (Current.Faction.Def == FactionDefOf.Ancients || Current.Faction.Def == FactionDefOf.AncientsHostile)
@@ -313,7 +317,6 @@ public class FactionEditUI : Window
                 raw =>
                 {
                     PawnKindDef k = raw.GetPayload<PawnKindDef>();
-
                     if (k != null)
                     {
                         Current.KindEdits.Add(new PawnKindEdit(k));
@@ -329,6 +332,11 @@ public class FactionEditUI : Window
             );
         }
 
+        overridesContentHeight = inner.CurHeight;
+        inner.End();
+        Widgets.EndScrollView();
+
+        // --- Footer (always visible) ---
         ui.GapLine(26);
 
         if (Prefs.DevMode && clonedFac != null && ui.ButtonText("DevMode: Debug cloned kinds"))
@@ -362,7 +370,6 @@ public class FactionEditUI : Window
                 for (int i = 0; i < count; i++)
                 {
                     Rect pawnArea = new(total.x + i * w, total.y, w, w);
-
                     Pawn pawn = pawns[i];
 
                     if (pawn != null)
