@@ -4,7 +4,7 @@ using HarmonyLib;
 using JetBrains.Annotations;
 using Verse;
 
-namespace FactionLoadout;
+namespace FactionLoadout.Modules;
 
 public static class VEPsycastsReflectionHelper
 {

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using System.Linq;
 using FactionLoadout;
+using FactionLoadout.Modules;
+using FactionLoadout.UISupport;
 using HarmonyLib;
-using RimWorld;
 using Verse;
 
 namespace TotalControlGiddyUpCompat;
@@ -13,11 +13,13 @@ namespace TotalControlGiddyUpCompat;
 /// </summary>
 public class GiddyUpModule : ITotalControlModule
 {
-    private const string GiddyUpPackageId = "Owlchemist.GiddyUp";
+    // Support both the Owlchemist original and the MemeGoddess fork (mutually incompatible, so at most one will be active)
+    private const string GiddyUpPackageIdOwlchemist = "Owlchemist.GiddyUp";
+    private const string GiddyUpPackageIdMemeGoddess = "MemeGoddess.GiddyUp";
 
     public string ModuleKey => "giddyUp";
     public string ModuleName => "GiddyUp Mounts";
-    public bool IsActive => ModsConfig.IsActive(GiddyUpPackageId);
+    public bool IsActive => ModsConfig.IsActive(GiddyUpPackageIdOwlchemist) || ModsConfig.IsActive(GiddyUpPackageIdMemeGoddess);
 
     // Per-PawnKindEdit data storage
     private static readonly Dictionary<PawnKindEdit, GiddyUpData> dataStore = new();
@@ -36,6 +38,7 @@ public class GiddyUpModule : ITotalControlModule
             data = new GiddyUpData();
             dataStore[edit] = data;
         }
+
         return data;
     }
 
@@ -88,6 +91,7 @@ public class GiddyUpModule : ITotalControlModule
                 ModCore.Warn("GiddyUp module: Failed to create CustomMounts instance.");
                 return;
             }
+
             def.modExtensions.Add(extension);
         }
 
@@ -110,6 +114,16 @@ public class GiddyUpModule : ITotalControlModule
 
         if (resolved.Count > 0)
             GiddyUpReflection.PossibleMountsField.SetValue(extension, resolved);
+    }
+
+    public void CopyData(PawnKindEdit source, PawnKindEdit dest)
+    {
+        GiddyUpData data = GetData(source);
+        if (data == null)
+            return;
+
+        GiddyUpData copy = new() { MountChance = data.MountChance, PossibleMounts = data.PossibleMounts != null ? new Dictionary<string, int>(data.PossibleMounts) : null };
+        dataStore[dest] = copy;
     }
 
     public void AddTabs(PawnKindEdit edit, PawnKindDef defaultKind, List<Tab> tabs)

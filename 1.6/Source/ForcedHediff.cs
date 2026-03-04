@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using FactionLoadout.Util;
 using Verse;
 
 namespace FactionLoadout;
 
-public class ForcedHediff : IExposable
+public class ForcedHediff : IExposable, IDeepCopyable<ForcedHediff>
 {
     private Lazy<HediffDef> resolvedHediffDef;
     public string hediffDef;
@@ -31,6 +32,16 @@ public class ForcedHediff : IExposable
             resolvedHediffDef = new Lazy<HediffDef>(() => value);
         }
     }
+
+    public ForcedHediff DeepClone() =>
+        new ForcedHediff
+        {
+            hediffDef = hediffDef,
+            parts = parts == null ? null : new List<BodyPartDef>(parts),
+            maxParts = maxParts,
+            maxPartsRange = maxPartsRange,
+            chance = chance,
+        };
 
     public void ExposeData()
     {

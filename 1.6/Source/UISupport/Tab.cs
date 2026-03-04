@@ -1,8 +1,8 @@
 using System;
-using UnityEngine;
+using FactionLoadout.Modules;
 using Verse;
 
-namespace FactionLoadout;
+namespace FactionLoadout.UISupport;
 
 /// <summary>
 /// Represents a tab in the PawnKindEdit editor UI.

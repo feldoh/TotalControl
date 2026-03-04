@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using FactionLoadout.UISupport;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -66,7 +67,8 @@ public class PresetUI : Window
         button.width *= 0.3f;
         button = button.ExpandedBy(-2f, -5f);
         GUI.color = Color.green;
-        if (Widgets.ButtonText(button, "<color=white>SAVE</color>"))
+        string saveLabel = Current.IsPackaged ? "FactionLoadout_SaveToSourceFile".Translate().ToString() : "SAVE";
+        if (Widgets.ButtonText(button, $"<color=white>{saveLabel}</color>"))
             Current.Save();
 
         // Save & exit
@@ -92,6 +94,14 @@ public class PresetUI : Window
         GUI.color = Color.white;
         ui.GapLine();
 
+        if (Current.IsPackaged)
+        {
+            Rect warningRect = ui.GetRect(44);
+            Widgets.DrawBoxSolid(warningRect, new Color(0.45f, 0.35f, 0.05f, 0.85f));
+            warningRect = warningRect.ContractedBy(6f);
+            Widgets.Label(warningRect, "FactionLoadout_PackagedPresetWarning".Translate(Current.PackagedModName).ToString());
+        }
+
         // Missing faction handling.
         if (Current.HasMissingFactions())
         {
@@ -112,7 +122,8 @@ public class PresetUI : Window
         ui.Label($"<b>This preset edits {Current.factionChanges.Count} factions:</b>");
         ui.Gap();
 
-        Widgets.BeginScrollView(ui.GetRect(200), ref scroll, new Rect(0, 0, inRect.width - 20, Current.factionChanges.Count * (28 * 2 + 10)));
+        float factionListHeight = Mathf.Max(100f, inRect.height - ui.CurHeight - 60f);
+        Widgets.BeginScrollView(ui.GetRect(factionListHeight), ref scroll, new Rect(0, 0, inRect.width - 20, Current.factionChanges.Count * (28 * 2 + 10)));
 
         Listing_Standard oldUI = ui;
         ui = new Listing_Standard();
@@ -141,7 +152,16 @@ public class PresetUI : Window
             area.x += 90;
             if (item.Faction.IsMissing)
             {
-                item.Active = false;
+                area.width = 120;
+                GUI.color = new Color(1f, 0.75f, 0.2f);
+                if (Widgets.ButtonText(area, "FactionLoadout_EditAnyway".Translate()))
+                    FactionEditUI.OpenEditor(item);
+                GUI.color = Color.white;
+                area.x += 130;
+                area.width = inRect.width - 20 - area.x;
+                GUI.color = new Color(1f, 0.4f, 0.4f);
+                Widgets.Label(area, "FactionLoadout_FactionMissing".Translate());
+                GUI.color = Color.white;
             }
             else
             {
@@ -169,6 +189,14 @@ public class PresetUI : Window
             if (!Current.HasEditFor(Preset.SpecialWildManFaction) && !raw.Any(f => f.defName == Preset.SpecialWildManFaction.defName))
             {
                 raw.Add(Preset.SpecialWildManFaction);
+            }
+            if (
+                Preset.FactionlessPawnKindsSet.Count > 0
+                && !Current.HasEditFor(Preset.SpecialFactionlessPawnsFaction)
+                && !raw.Any(f => f.defName == Preset.SpecialFactionlessPawnsFaction.defName)
+            )
+            {
+                raw.Add(Preset.SpecialFactionlessPawnsFaction);
             }
             List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                 raw,

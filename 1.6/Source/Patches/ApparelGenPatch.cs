@@ -6,7 +6,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 
-namespace FactionLoadout;
+namespace FactionLoadout.Patches;
 
 [HarmonyPatch(typeof(PawnApparelGenerator), "GenerateStartingApparelFor")]
 public static class ApparelGenPatch

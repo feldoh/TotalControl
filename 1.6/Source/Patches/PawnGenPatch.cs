@@ -5,7 +5,7 @@ using HarmonyLib;
 using RimWorld;
 using Verse;
 
-namespace FactionLoadout;
+namespace FactionLoadout.Patches;
 
 [HarmonyPatch(typeof(PawnGenerator), "GetBodyTypeFor")]
 public static class PawnGenPatchBodyTypeDef
@@ -120,12 +120,12 @@ public static class PawnGenRequestKindPatch
 public static class PawnGenPatchRecruitable
 {
     [HarmonyPrefix]
-    public static bool Prefix(Pawn_GuestTracker __instance)
+    public static bool Prefix(Pawn_GuestTracker __instance, Pawn ___pawn)
     {
-        if (__instance.pawn.Faction == null)
+        if (___pawn.Faction == null)
             return true;
         float? maxUnwaveringlyLoyalChance = null;
-        foreach (PawnKindEdit pawnKindEdit in PawnKindEdit.GetEditsFor(__instance.pawn.kindDef, __instance.pawn.Faction?.def))
+        foreach (PawnKindEdit pawnKindEdit in PawnKindEdit.GetEditsFor(___pawn.kindDef, ___pawn.Faction?.def))
         {
             if (pawnKindEdit.UnwaveringlyLoyalChance != null && (!pawnKindEdit.IsGlobal || maxUnwaveringlyLoyalChance == null))
             {

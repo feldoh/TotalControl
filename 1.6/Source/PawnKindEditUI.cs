@@ -1,8 +1,11 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using FactionLoadout.Modules;
+using FactionLoadout.UISupport;
+using FactionLoadout.Util;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -219,7 +222,7 @@ public class PawnKindEditUI : Window
     private List<Def> thingBin = new();
     private Vector2[] scrolls = new Vector2[64];
     private string[] buffers = new string[64];
-    private List<Pair<string, string>>[] curvePointBuffers = new List<Pair<string, string>>[64];
+    private List<(string x, string y)>[] curvePointBuffers = new List<(string x, string y)>[64];
     private int scrollIndex;
     private int bufferIndex;
     private int curveIndex;
@@ -338,13 +341,18 @@ public class PawnKindEditUI : Window
                 selectedTab = i;
                 buffers = new string[64];
                 scrolls = new Vector2[64];
-                curvePointBuffers = new List<Pair<string, string>>[64];
+                curvePointBuffers = new List<(string x, string y)>[64];
             }
 
             if (selectedTab != i)
                 continue;
+
+            // -- Clipboard toolbar --
+            float toolbarY = inRect.y + 100 + 50 * (tabRows - 1);
+            DrawClipboardToolbar(new Rect(inRect.x, toolbarY, inRect.width, 28));
+
             Rect contentArea = inRect;
-            contentArea.yMin += 100 + 50 * (tabRows - 1);
+            contentArea.yMin += 100 + 50 * (tabRows - 1) + 32;
             Widgets.BeginScrollView(contentArea, ref globalScroll, new Rect(0, 0, inRect.width - 24, lastHeight));
             lastHeight = 0f;
 
@@ -365,27 +373,34 @@ public class PawnKindEditUI : Window
         bool isAnimal = DefaultKind.RaceProps.Animal;
 
         if (!Current.IsGlobal && isAnimal)
-            DrawOverride(ui, DefaultKind, ref Current.ReplaceWith, "Replace with...", DrawReplaceWith);
+            DrawOverride(ui, DefaultKind, ref Current.ReplaceWith, "Replace with...", DrawReplaceWith, pasteGet: e => e.ReplaceWith);
 
-        DrawOverride(ui, DefaultKind.nameMaker ?? PawnKindEdit.FakeRulePack, ref Current.NameMaker, "Name Maker...", DrawNameMaker);
-        DrawOverride(ui, DefaultKind.nameMakerFemale ?? PawnKindEdit.FakeRulePack, ref Current.NameMakerFemale, "Name Maker Female...", DrawNameMakerFemale);
+        DrawOverride(ui, DefaultKind.nameMaker ?? PawnKindEdit.FakeRulePack, ref Current.NameMaker, "Name Maker...", DrawNameMaker, pasteGet: e => e.NameMaker);
+        DrawOverride(
+            ui,
+            DefaultKind.nameMakerFemale ?? PawnKindEdit.FakeRulePack,
+            ref Current.NameMakerFemale,
+            "Name Maker Female...",
+            DrawNameMakerFemale,
+            pasteGet: e => e.NameMakerFemale
+        );
 
-        DrawOverride(ui, Gender.None, ref Current.ForcedGender, "Forced Gender", DrawGender);
-        DrawOverride(ui, DefaultKind.label, ref Current.Label, "Custom name", DrawCustomName);
-        DrawOverride(ui, DefaultKind.minGenerationAge, ref Current.MinGenerationAge, "Min Generation Age", DrawMinAge);
-        DrawOverride(ui, DefaultKind.maxGenerationAge, ref Current.MaxGenerationAge, "Max Generation Age", DrawMaxAge);
-        DrawOverride(ui, DefaultKind.itemQuality, ref Current.ItemQuality, "Average Gear Quality", DrawItemQuality);
+        DrawOverride(ui, Gender.None, ref Current.ForcedGender, "Forced Gender", DrawGender, pasteGet: e => e.ForcedGender);
+        DrawOverride(ui, DefaultKind.label, ref Current.Label, "Custom name", DrawCustomName, pasteGet: e => e.Label);
+        DrawOverride(ui, DefaultKind.minGenerationAge, ref Current.MinGenerationAge, "Min Generation Age", DrawMinAge, pasteGet: e => e.MinGenerationAge);
+        DrawOverride(ui, DefaultKind.maxGenerationAge, ref Current.MaxGenerationAge, "Max Generation Age", DrawMaxAge, pasteGet: e => e.MaxGenerationAge);
+        DrawOverride(ui, DefaultKind.itemQuality, ref Current.ItemQuality, "Average Gear Quality", DrawItemQuality, pasteGet: e => e.ItemQuality);
 
         // Only non-animal things after here
         if (isAnimal)
             return;
 
-        DrawOverride(ui, 0f, ref Current.UnwaveringlyLoyalChance, "Unwaveringly Loyal Chance", DrawUnwaveringlyLoyalChance);
+        DrawOverride(ui, 0f, ref Current.UnwaveringlyLoyalChance, "Unwaveringly Loyal Chance", DrawUnwaveringlyLoyalChance, pasteGet: e => e.UnwaveringlyLoyalChance);
 
         if (!Current.IsGlobal)
         {
             // Human-likes can change race, global would include animals.
-            DrawOverride(ui, DefaultKind.race, ref Current.Race, "Species", DrawRace);
+            DrawOverride(ui, DefaultKind.race, ref Current.Race, "Species", DrawRace, pasteGet: e => e.Race);
         }
 
         // Backstory section
@@ -398,7 +413,8 @@ public class PawnKindEditUI : Window
             DefaultKind.backstoryCryptosleepCommonality,
             ref Current.BackstoryCryptosleepCommonality,
             "FactionLoadout_Backstory_CryptosleepChance".Translate(),
-            DrawCryptosleepCommonality
+            DrawCryptosleepCommonality,
+            pasteGet: e => e.BackstoryCryptosleepCommonality
         );
         DrawBackstoryFiltersOverride(ui);
         DrawOverride(
@@ -408,7 +424,8 @@ public class PawnKindEditUI : Window
             "FactionLoadout_Backstory_FixedChildhood".Translate(),
             DrawFixedChildBackstories,
             GetHeightFor(Current.FixedChildBackstories),
-            false
+            false,
+            pasteGet: e => e.FixedChildBackstories
         );
         DrawOverride(
             ui,
@@ -417,7 +434,8 @@ public class PawnKindEditUI : Window
             "FactionLoadout_Backstory_FixedAdulthood".Translate(),
             DrawFixedAdultBackstories,
             GetHeightFor(Current.FixedAdultBackstories),
-            false
+            false,
+            pasteGet: e => e.FixedAdultBackstories
         );
         DrawOverride(
             ui,
@@ -426,7 +444,8 @@ public class PawnKindEditUI : Window
             "FactionLoadout_Backstory_ExcludedCategories".Translate(),
             DrawExcludedBackstoryCategories,
             GetHeightFor(Current.ExcludedBackstoryCategories),
-            false
+            false,
+            pasteGet: e => e.ExcludedBackstoryCategories
         );
         DrawOverride(
             ui,
@@ -435,7 +454,8 @@ public class PawnKindEditUI : Window
             "FactionLoadout_Backstory_Excluded".Translate(),
             DrawExcludedBackstories,
             GetHeightFor(Current.ExcludedBackstories),
-            false
+            false,
+            pasteGet: e => e.ExcludedBackstories
         );
     }
 
@@ -781,10 +801,19 @@ public class PawnKindEditUI : Window
 
     private void DrawAppearanceTab(Listing_Standard ui)
     {
-        DrawOverride(ui, null, ref Current.CustomBeards, "Forced Beard Styles", DrawBeardStyles, GetHeightFor(Current.CustomBeards), false);
-        DrawOverride(ui, null, ref Current.CustomHair, "Forced Hair Styles", DrawHairStyles, GetHeightFor(Current.CustomHair), false);
-        DrawOverride(ui, null, ref Current.CustomHairColors, "Forced Hair Colors", DrawHairColors, GetHeightFor(Current.CustomHairColors, 36), false);
-        DrawOverride(ui, null, ref Current.BodyTypes, "Allowed Body Types", DrawBodyTypes, GetHeightFor(Current.BodyTypes), false);
+        DrawOverride(ui, null, ref Current.CustomBeards, "Forced Beard Styles", DrawBeardStyles, GetHeightFor(Current.CustomBeards), false, pasteGet: e => e.CustomBeards);
+        DrawOverride(ui, null, ref Current.CustomHair, "Forced Hair Styles", DrawHairStyles, GetHeightFor(Current.CustomHair), false, pasteGet: e => e.CustomHair);
+        DrawOverride(
+            ui,
+            null,
+            ref Current.CustomHairColors,
+            "Forced Hair Colors",
+            DrawHairColors,
+            GetHeightFor(Current.CustomHairColors, 36),
+            false,
+            pasteGet: e => e.CustomHairColors
+        );
+        DrawOverride(ui, null, ref Current.BodyTypes, "Allowed Body Types", DrawBodyTypes, GetHeightFor(Current.BodyTypes), false, pasteGet: e => e.BodyTypes);
     }
 
     private void DrawHairStyles(Rect rect, bool active, List<HairDef> nullList)
@@ -907,12 +936,30 @@ public class PawnKindEditUI : Window
             return;
         DrawForceOnlySelected(ui);
 
-        DrawOverride(ui, DefaultKind.apparelMoney, ref Current.ApparelMoney, "Apparel Value", DrawApparelMoney);
-        DrawOverride(ui, DefaultKind.apparelTags, ref Current.ApparelTags, "Allowed Apparel Types", DrawApparelTags, GetHeightFor(Current.ApparelTags), true);
+        DrawOverride(ui, DefaultKind.apparelMoney, ref Current.ApparelMoney, "Apparel Value", DrawApparelMoney, pasteGet: e => e.ApparelMoney);
+        DrawOverride(
+            ui,
+            DefaultKind.apparelTags,
+            ref Current.ApparelTags,
+            "Allowed Apparel Types",
+            DrawApparelTags,
+            GetHeightFor(Current.ApparelTags),
+            true,
+            pasteGet: e => e.ApparelTags
+        );
         // Disabled for now. Not very useful.
         //DrawOverride(ui, DefaultFac.apparelDisallowTags, ref Current.ApparelDisallowedTags, "Disallowed Apparel Types", DrawDisallowedApparelTags, GetHeightFor(Current.ApparelDisallowedTags), true);
-        DrawOverride(ui, DefaultKind.apparelColor, ref Current.ApparelColor, "Apparel Color (where applicable)", DrawApparelColor);
-        DrawOverride(ui, DefaultKind.apparelRequired, ref Current.ApparelRequired, "Required Apparel (simple)", DrawRequiredApparel, GetHeightFor(Current.ApparelRequired), true);
+        DrawOverride(ui, DefaultKind.apparelColor, ref Current.ApparelColor, "Apparel Color (where applicable)", DrawApparelColor, pasteGet: e => e.ApparelColor);
+        DrawOverride(
+            ui,
+            DefaultKind.apparelRequired,
+            ref Current.ApparelRequired,
+            "Required Apparel (simple)",
+            DrawRequiredApparel,
+            GetHeightFor(Current.ApparelRequired),
+            true,
+            pasteGet: e => e.ApparelRequired
+        );
         DrawSpecificGear(ui, ref Current.SpecificApparel, "Required Apparel (advanced)", t => t.IsApparel, ThingDefOf.Apparel_Parka);
     }
 
@@ -963,10 +1010,7 @@ public class PawnKindEditUI : Window
         bool active = edits != null;
         if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
         {
-            if (active)
-                edits = null;
-            else
-                edits = new List<SpecRequirementEdit>();
+            edits = active ? null : [];
             active = !active;
         }
 
@@ -1320,10 +1364,19 @@ public class PawnKindEditUI : Window
 
     private void DrawWeaponTab(Listing_Standard ui)
     {
-        DrawOverride(ui, DefaultKind.weaponMoney, ref Current.WeaponMoney, "Weapon Value", DrawWeaponMoney);
-        DrawOverride(ui, QualityCategory.Normal, ref Current.ForcedWeaponQuality, "Forced Weapon Quality", DrawWeaponQuality);
-        DrawOverride(ui, DefaultKind.biocodeWeaponChance, ref Current.BiocodeWeaponChance, "Biocode Chance", DrawBiocodeChance);
-        DrawOverride(ui, DefaultKind.weaponTags, ref Current.WeaponTags, "Allowed Weapon Types", DrawWeaponTags, GetHeightFor(Current.WeaponTags), true);
+        DrawOverride(ui, DefaultKind.weaponMoney, ref Current.WeaponMoney, "Weapon Value", DrawWeaponMoney, pasteGet: e => e.WeaponMoney);
+        DrawOverride(ui, QualityCategory.Normal, ref Current.ForcedWeaponQuality, "Forced Weapon Quality", DrawWeaponQuality, pasteGet: e => e.ForcedWeaponQuality);
+        DrawOverride(ui, DefaultKind.biocodeWeaponChance, ref Current.BiocodeWeaponChance, "Biocode Chance", DrawBiocodeChance, pasteGet: e => e.BiocodeWeaponChance);
+        DrawOverride(
+            ui,
+            DefaultKind.weaponTags,
+            ref Current.WeaponTags,
+            "Allowed Weapon Types",
+            DrawWeaponTags,
+            GetHeightFor(Current.WeaponTags),
+            true,
+            pasteGet: e => e.WeaponTags
+        );
         DrawSpecificGear(ui, ref Current.SpecificWeapons, "Required Weapons (advanced)", t => t.IsWeapon, ThingDef.Named("Gun_AssaultRifle"));
     }
 
@@ -1529,8 +1582,17 @@ public class PawnKindEditUI : Window
 
     private void DrawImplantsAndBionicsTab(Listing_Standard ui)
     {
-        DrawOverride(ui, DefaultKind.techHediffsMoney, ref Current.TechMoney, "Implants & Bionics Value", DrawTechMoney);
-        DrawOverride(ui, DefaultKind.techHediffsTags, ref Current.TechHediffTags, "Allowed Implants & Bionics Types", DrawTechTags, GetHeightFor(Current.TechHediffTags), true);
+        DrawOverride(ui, DefaultKind.techHediffsMoney, ref Current.TechMoney, "Implants & Bionics Value", DrawTechMoney, pasteGet: e => e.TechMoney);
+        DrawOverride(
+            ui,
+            DefaultKind.techHediffsTags,
+            ref Current.TechHediffTags,
+            "Allowed Implants & Bionics Types",
+            DrawTechTags,
+            GetHeightFor(Current.TechHediffTags),
+            true,
+            pasteGet: e => e.TechHediffTags
+        );
         DrawOverride(
             ui,
             DefaultKind.techHediffsDisallowTags,
@@ -1538,11 +1600,21 @@ public class PawnKindEditUI : Window
             "Disallowed Implants & Bionics Types",
             DrawDisallowedTechTags,
             GetHeightFor(Current.TechHediffDisallowedTags),
-            true
+            true,
+            pasteGet: e => e.TechHediffDisallowedTags
         );
-        DrawOverride(ui, DefaultKind.techHediffsRequired, ref Current.TechRequired, "Required Implants & Bionics", DrawRequiredTech, GetHeightFor(Current.TechRequired), true);
-        DrawOverride(ui, DefaultKind.techHediffsChance, ref Current.TechHediffChance, "Implants & Bionics Chance", DrawTechChance);
-        DrawOverride(ui, DefaultKind.techHediffsMaxAmount, ref Current.TechHediffsMaxAmount, "Max # of Implants & Bionics", DrawMaxTech);
+        DrawOverride(
+            ui,
+            DefaultKind.techHediffsRequired,
+            ref Current.TechRequired,
+            "Required Implants & Bionics",
+            DrawRequiredTech,
+            GetHeightFor(Current.TechRequired),
+            true,
+            pasteGet: e => e.TechRequired
+        );
+        DrawOverride(ui, DefaultKind.techHediffsChance, ref Current.TechHediffChance, "Implants & Bionics Chance", DrawTechChance, pasteGet: e => e.TechHediffChance);
+        DrawOverride(ui, DefaultKind.techHediffsMaxAmount, ref Current.TechHediffsMaxAmount, "Max # of Implants & Bionics", DrawMaxTech, pasteGet: e => e.TechHediffsMaxAmount);
         DrawSpecificHediffs(ui, ref Current.ForcedHediffs, "Required Hediffs (advanced)", t => true, HediffDefOf.Scaria);
     }
 
@@ -1550,8 +1622,15 @@ public class PawnKindEditUI : Window
     {
         if (!VFEAncientsReflectionHelper.ModLoaded.Value)
             return;
-        DrawOverride(ui, 0, ref Current.NumVFEAncientsSuperPowers, "# of VFE Ancients Super Powers", DrawNumVFEAncientsSuperPowers);
-        DrawOverride(ui, 0, ref Current.NumVFEAncientsSuperWeaknesses, "# of VFE Ancients Super Weaknesses", DrawNumVFEAncientsSuperWeaknesses);
+        DrawOverride(ui, 0, ref Current.NumVFEAncientsSuperPowers, "# of VFE Ancients Super Powers", DrawNumVFEAncientsSuperPowers, pasteGet: e => e.NumVFEAncientsSuperPowers);
+        DrawOverride(
+            ui,
+            0,
+            ref Current.NumVFEAncientsSuperWeaknesses,
+            "# of VFE Ancients Super Weaknesses",
+            DrawNumVFEAncientsSuperWeaknesses,
+            pasteGet: e => e.NumVFEAncientsSuperWeaknesses
+        );
         DrawOverride(
             ui,
             new List<string>(),
@@ -1559,7 +1638,8 @@ public class PawnKindEditUI : Window
             "Forced Powers and Weaknesses",
             DrawVFEAncientsPowers,
             GetHeightFor(Current.ForcedVFEAncientsItems),
-            true
+            true,
+            pasteGet: e => e.ForcedVFEAncientsItems
         );
     }
 
@@ -1567,9 +1647,9 @@ public class PawnKindEditUI : Window
     {
         if (!VEPsycastsReflectionHelper.ModLoaded.Value)
             return;
-        DrawOverride(ui, false, ref Current.VEPsycastRandomAbilities, "Give Random Abilities", DrawVPERandomAbilities);
-        DrawOverride(ui, 1, ref Current.VEPsycastLevel, "Psycaster Level", DrawVPELevel);
-        DrawOverride(ui, IntRange.Zero, ref Current.VEPsycastStatPoints, "Psycaster Stat Points", DrawVPEStats);
+        DrawOverride(ui, false, ref Current.VEPsycastRandomAbilities, "Give Random Abilities", DrawVPERandomAbilities, pasteGet: e => e.VEPsycastRandomAbilities);
+        DrawOverride(ui, 1, ref Current.VEPsycastLevel, "Psycaster Level", DrawVPELevel, pasteGet: e => e.VEPsycastLevel);
+        DrawOverride(ui, IntRange.Zero, ref Current.VEPsycastStatPoints, "Psycaster Stat Points", DrawVPEStats, pasteGet: e => e.VEPsycastStatPoints);
     }
 
     private void DrawXenotypeTab(Listing_Standard ui)
@@ -1607,20 +1687,18 @@ public class PawnKindEditUI : Window
 
         if (!ui.ButtonText("Add new..."))
             return;
-        List<FloatMenuOption> floatMenuList = [];
-        foreach (XenotypeDef def in DefDatabase<XenotypeDef>.AllDefs)
-            if (!Current.ForcedXenotypeChances.ContainsKey(def.defName))
-                floatMenuList.Add(
-                    new FloatMenuOption(
-                        def.LabelCap,
-                        delegate
-                        {
-                            Current.ForcedXenotypeChances[def.defName] = 0.1f;
-                        }
-                    )
-                );
-
-        Find.WindowStack.Add(new FloatMenu(floatMenuList));
+        var xenoItems = CustomFloatMenu.MakeItems(
+            DefDatabase<XenotypeDef>.AllDefs.Where(def => !Current.ForcedXenotypeChances.ContainsKey(def.defName)),
+            def => new MenuItemText(def, def.LabelCap, def.Icon)
+        );
+        CustomFloatMenu.Open(
+            xenoItems,
+            item =>
+            {
+                XenotypeDef def = item.GetPayload<XenotypeDef>();
+                Current.ForcedXenotypeChances[def.defName] = 0.1f;
+            }
+        );
     }
 
     private void DrawForceSpecificXenos(Listing_Standard ui)
@@ -1668,7 +1746,7 @@ public class PawnKindEditUI : Window
         if (Widgets.ButtonText(overrideButtonRect, "FactionLoadout_FactionDefault".Translate()))
         {
             Current.RaidCommonalityFromPointsCurve = new SimpleCurve(
-                FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidCommonalityFromPointsCurve?.points ?? []
+                FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidCommonalityFromPointsCurve?.Points ?? []
             );
         }
 
@@ -1692,7 +1770,7 @@ public class PawnKindEditUI : Window
         Rect overrideButtonRect = ui.GetRect(30);
         if (Widgets.ButtonText(overrideButtonRect, "FactionLoadout_FactionDefault".Translate()))
         {
-            Current.RaidLootValueFromPointsCurve = new SimpleCurve(FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidLootValueFromPointsCurve?.points ?? []);
+            Current.RaidLootValueFromPointsCurve = new SimpleCurve(FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidLootValueFromPointsCurve?.Points ?? []);
         }
 
         Current.RaidLootValueFromPointsCurve ??= [];
@@ -1700,7 +1778,7 @@ public class PawnKindEditUI : Window
         DrawCurve(ui, ref Current.RaidLootValueFromPointsCurve, ref curvePointBuffers[curveIndex++]);
     }
 
-    public void DrawCurve(Listing_Standard listing, ref SimpleCurve curve, ref List<Pair<string, string>> curvePointBuffer)
+    public void DrawCurve(Listing_Standard listing, ref SimpleCurve curve, ref List<(string x, string y)> curvePointBuffer)
     {
         curvePointBuffer ??= [];
         for (int i = 0; i < curve.PointsCount; i++)
@@ -1708,16 +1786,16 @@ public class PawnKindEditUI : Window
             CurvePoint point = curve[i];
             if (curvePointBuffer.Count <= i)
             {
-                curvePointBuffer.Add(new Pair<string, string>(point.x.ToString(CultureInfo.InvariantCulture), point.y.ToString(CultureInfo.InvariantCulture)));
+                curvePointBuffer.Add((point.x.ToString(CultureInfo.InvariantCulture), point.y.ToString(CultureInfo.InvariantCulture)));
             }
 
             Rect pointRect = listing.GetRect(Text.LineHeight + 3);
 
             Widgets.Label(pointRect.LeftHalf().LeftHalf(), "FactionLoadout_CurvePoint".Translate(i + 1, point.x, point.y));
 
-            Pair<string, string> buffer = curvePointBuffer[i];
-            Widgets.TextFieldNumeric(pointRect.LeftHalf().RightHalf(), ref point.loc.x, ref buffer.first);
-            Widgets.TextFieldNumeric(pointRect.RightHalf().LeftHalf(), ref point.loc.y, ref buffer.second);
+            (string x, string y) buffer = curvePointBuffer[i];
+            Widgets.TextFieldNumeric(pointRect.LeftHalf().RightHalf(), ref point.loc.x, ref buffer.x);
+            Widgets.TextFieldNumeric(pointRect.RightHalf().LeftHalf(), ref point.loc.y, ref buffer.y);
             curvePointBuffer[i] = buffer;
             curve[i] = point;
             if (Widgets.ButtonText(pointRect.RightHalf().RightHalf(), "Remove".Translate()))
@@ -1736,7 +1814,7 @@ public class PawnKindEditUI : Window
             float py = p.y + 1;
             ModCore.Debug($"Adding point {px}, {py}");
             curve.Add(px, py);
-            curvePointBuffer.Add(new Pair<string, string>(px.ToString(CultureInfo.InvariantCulture), py.ToString(CultureInfo.InvariantCulture)));
+            curvePointBuffer.Add((px.ToString(CultureInfo.InvariantCulture), py.ToString(CultureInfo.InvariantCulture)));
         }
     }
 
@@ -1758,10 +1836,7 @@ public class PawnKindEditUI : Window
         bool active = field != null;
         if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
         {
-            if (active)
-                Current.Inventory = null;
-            else
-                Current.Inventory = new InventoryOptionEdit(Current.Def.inventoryOptions);
+            Current.Inventory = !active ? new InventoryOptionEdit(Current.Def.inventoryOptions) : null;
 
             active = !active;
         }
@@ -2567,24 +2642,81 @@ public class PawnKindEditUI : Window
         }
     }
 
-    // Generic, takes T and T?
-    private void DrawOverride<T>(Listing_Standard ui, T defaultValue, ref T? field, string label, Action<Rect, bool, T> drawContent, float height = 32)
+    // -- Clipboard toolbar --
+
+    public void DrawClipboardToolbar(Rect toolbar)
+    {
+        float x = toolbar.x;
+        float y = toolbar.y;
+        float btnW = 80f;
+        float btnH = 26f;
+        float gap = 4f;
+
+        // Copy
+        if (Widgets.ButtonText(new Rect(x, y, btnW, btnH), "FactionLoadout_Clipboard_Copy".Translate()))
+            PawnKindClipboard.Copy(Current);
+        TooltipHandler.TipRegion(new Rect(x, y, btnW, btnH), "FactionLoadout_Clipboard_CopyTooltip".Translate());
+        x += btnW + gap;
+
+        // Paste All
+        bool hasData = PawnKindClipboard.HasData;
+        GUI.enabled = hasData;
+        if (Widgets.ButtonText(new Rect(x, y, btnW, btnH), "FactionLoadout_Clipboard_PasteAll".Translate()) && hasData)
+        {
+            PawnKindClipboard.PasteAll(Current);
+            ResetBuffers();
+        }
+        if (hasData)
+            TooltipHandler.TipRegion(new Rect(x, y, btnW, btnH), "FactionLoadout_Clipboard_PasteAllTooltip".Translate(PawnKindClipboard.GetDescription()));
+        GUI.enabled = true;
+    }
+
+    public void ResetBuffers()
+    {
+        buffers = new string[64];
+        scrolls = new Vector2[64];
+        curvePointBuffers = new List<(string x, string y)>[64];
+    }
+
+    // Generic, takes T and T? (nullable struct)
+    // pasteGet: reads the field from the clipboard clone; result is deep-copied into ref field.
+    public void DrawOverride<T>(
+        Listing_Standard ui,
+        T defaultValue,
+        ref T? field,
+        string label,
+        Action<Rect, bool, T> drawContent,
+        float height = 32,
+        Func<PawnKindEdit, T?> pasteGet = null
+    )
         where T : struct
     {
         ui.Label($"<b>{label}</b>");
         Rect rect = ui.GetRect(height);
         bool active = field != null;
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
-        {
-            if (active)
-                field = null;
-            else
-                field = defaultValue;
 
+        const float toggleW = 120f;
+        bool hasPaste = PawnKindClipboard.HasData && pasteGet != null;
+        float pasteW = hasPaste ? 28f : 0f;
+
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, toggleW, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        {
+            field = active ? (T?)null : defaultValue;
             active = !active;
         }
 
-        Rect content = new(rect.x + 122, rect.y, ui.ColumnWidth - 124, rect.height);
+        if (hasPaste)
+        {
+            Rect pasteRect = new(rect.x + toggleW + 2, rect.y, pasteW - 2, 32);
+            if (Widgets.ButtonText(pasteRect, "▼"))
+            {
+                field = pasteGet(PawnKindClipboard.Clipboard.Clone);
+                ResetBuffers();
+            }
+            TooltipHandler.TipRegion(pasteRect, $"Paste from clipboard ({PawnKindClipboard.Clipboard?.SourceLabel})");
+        }
+
+        Rect content = new(rect.x + toggleW + pasteW + 2, rect.y, ui.ColumnWidth - (toggleW + pasteW + 4), rect.height);
         Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
         content = content.ExpandedBy(-2);
         GUI.enabled = active;
@@ -2593,24 +2725,45 @@ public class PawnKindEditUI : Window
         ui.Gap();
     }
 
-    // Generic, takes T and T
-    private void DrawOverride<T>(Listing_Standard ui, T defaultValue, ref T field, string label, Action<Rect, bool, T> drawContent, float height = 32)
+    // Generic, takes T and T (class)
+    // pasteGet: reads the field from the clipboard clone; result is deep-copied into ref field.
+    public void DrawOverride<T>(
+        Listing_Standard ui,
+        T defaultValue,
+        ref T field,
+        string label,
+        Action<Rect, bool, T> drawContent,
+        float height = 32,
+        Func<PawnKindEdit, T> pasteGet = null
+    )
         where T : class
     {
         ui.Label($"<b>{label}</b>");
         Rect rect = ui.GetRect(height);
         bool active = field != null;
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
-        {
-            if (active)
-                field = null;
-            else
-                field = defaultValue;
 
+        const float toggleW = 120f;
+        bool hasPaste = PawnKindClipboard.HasData && pasteGet != null;
+        float pasteW = hasPaste ? 28f : 0f;
+
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, toggleW, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        {
+            field = active ? null : defaultValue;
             active = !active;
         }
 
-        Rect content = new(rect.x + 122, rect.y, ui.ColumnWidth - 124, rect.height);
+        if (hasPaste)
+        {
+            Rect pasteRect = new(rect.x + toggleW + 2, rect.y, pasteW - 2, 32);
+            if (Widgets.ButtonText(pasteRect, "▼"))
+            {
+                field = pasteGet(PawnKindClipboard.Clipboard.Clone);
+                ResetBuffers();
+            }
+            TooltipHandler.TipRegion(pasteRect, $"Paste from clipboard ({PawnKindClipboard.Clipboard?.SourceLabel})");
+        }
+
+        Rect content = new(rect.x + toggleW + pasteW + 2, rect.y, ui.ColumnWidth - (toggleW + pasteW + 4), rect.height);
         Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
         content = content.ExpandedBy(-2);
         GUI.enabled = active;
@@ -2619,14 +2772,29 @@ public class PawnKindEditUI : Window
         ui.Gap();
     }
 
-    // For lists, takes T and T
-    private void DrawOverride<T>(Listing_Standard ui, T defaultValue, ref T field, string label, Action<Rect, bool, T> drawContent, float height = 32, bool cloneDefault = true)
+    // For lists, takes T and T (IList)
+    // pasteGet: reads the list field from the clipboard clone; result assigned directly to ref field.
+    public void DrawOverride<T>(
+        Listing_Standard ui,
+        T defaultValue,
+        ref T field,
+        string label,
+        Action<Rect, bool, T> drawContent,
+        float height = 32,
+        bool cloneDefault = true,
+        Func<PawnKindEdit, T> pasteGet = null
+    )
         where T : IList
     {
         ui.Label($"<b>{label}</b>");
         Rect rect = ui.GetRect(height);
         bool active = field != null;
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+
+        const float toggleW = 120f;
+        bool hasPaste = PawnKindClipboard.HasData && pasteGet != null;
+        float pasteW = hasPaste ? 28f : 0f;
+
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, toggleW, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
         {
             if (active)
             {
@@ -2643,7 +2811,18 @@ public class PawnKindEditUI : Window
             active = !active;
         }
 
-        Rect content = new(rect.x + 122, rect.y, ui.ColumnWidth - 124, rect.height);
+        if (hasPaste)
+        {
+            Rect pasteRect = new(rect.x + toggleW + 2, rect.y, pasteW - 2, 32);
+            if (Widgets.ButtonText(pasteRect, "▼"))
+            {
+                field = pasteGet(PawnKindClipboard.Clipboard.Clone);
+                ResetBuffers();
+            }
+            TooltipHandler.TipRegion(pasteRect, $"Paste from clipboard ({PawnKindClipboard.Clipboard?.SourceLabel})");
+        }
+
+        Rect content = new(rect.x + toggleW + pasteW + 2, rect.y, ui.ColumnWidth - (toggleW + pasteW + 4), rect.height);
         Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
         content = content.ExpandedBy(-2);
         GUI.enabled = active;

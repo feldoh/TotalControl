@@ -4,7 +4,7 @@ using System.Reflection;
 using RimWorld;
 using Verse;
 
-namespace FactionLoadout
+namespace FactionLoadout.Util
 {
     public static class CloningUtility
     {

@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using RimWorld;
 
-namespace FactionLoadout;
+namespace FactionLoadout.Patches;
 
 /**
  * This method checks every faction's relation to our faction. If there are none it spams errors.

@@ -1,9 +1,10 @@
 ﻿using System;
+using FactionLoadout.Util;
 using Verse;
 
 namespace FactionLoadout
 {
-    public class DefRef<T> : IExposable
+    public class DefRef<T> : IExposable, IDeepCopyable<DefRef<T>>
         where T : Def, new()
     {
         public bool HasValue => def != null;
@@ -57,6 +58,8 @@ namespace FactionLoadout
                 label = $"({def.defName})";
             return $"DefRef<{GenericType.Name}> {label}";
         }
+
+        public DefRef<T> DeepClone() => new DefRef<T>(def) { defName = defName, modName = modName };
 
         public static implicit operator T(DefRef<T> r) => r?.Def;
 

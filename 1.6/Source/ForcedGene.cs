@@ -1,11 +1,13 @@
 ﻿using System;
+using FactionLoadout.Util;
 using Verse;
 
 namespace FactionLoadout;
 
-public class ForcedGene : IExposable
+public class ForcedGene : IExposable, IDeepCopyable<ForcedGene>
 {
     private Lazy<GeneDef> resolvedGeneDef;
+
     public string geneDef;
     public float chance = 1f;
     public bool xenogene = false;
@@ -24,6 +26,15 @@ public class ForcedGene : IExposable
             resolvedGeneDef = new Lazy<GeneDef>(() => value);
         }
     }
+
+    public ForcedGene DeepClone() =>
+        new()
+        {
+            geneDef = geneDef,
+            chance = chance,
+            xenogene = xenogene,
+            forceActive = forceActive,
+        };
 
     public void ExposeData()
     {

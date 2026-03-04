@@ -41,6 +41,8 @@
     <Undefined>Undefined</Undefined>
 
     <FactionLoadout_EditXenoSpawnRates>Edit Xenotype spawn rates</FactionLoadout_EditXenoSpawnRates>
+    <FactionLoadout_Xenotype_Off>Not Overriding</FactionLoadout_Xenotype_Off>
+    <FactionLoadout_Xenotype_ActiveCount>{0} xenotype(s)</FactionLoadout_Xenotype_ActiveCount>
     <FactionLoadout_AddNew>Add new...</FactionLoadout_AddNew>
     <FactionLoadout_AddNewByDefName>Add new by def name...</FactionLoadout_AddNewByDefName>
     <FactionLoadout_AddNewByDefNameDesc>Enter def name of xenotype to add:</FactionLoadout_AddNewByDefNameDesc>
@@ -73,4 +75,35 @@
     <GiddyUp_Mounts>GiddyUp Mounts</GiddyUp_Mounts>
     <FactionLoadout_AddMount>Add mount...</FactionLoadout_AddMount>
     <FactionLoadout_ClearMounts>Clear all mounts</FactionLoadout_ClearMounts>
+
+    <!-- Clipboard -->
+    <FactionLoadout_Clipboard_Copy>Copy</FactionLoadout_Clipboard_Copy>
+    <FactionLoadout_Clipboard_CopyTooltip>Copy all fields to clipboard</FactionLoadout_Clipboard_CopyTooltip>
+    <FactionLoadout_Clipboard_PasteAll>Paste All</FactionLoadout_Clipboard_PasteAll>
+    <FactionLoadout_Clipboard_PasteAllTooltip>Paste all fields from clipboard\n{0}</FactionLoadout_Clipboard_PasteAllTooltip>
+    <FactionLoadout_Clipboard_Empty>Clipboard is empty</FactionLoadout_Clipboard_Empty>
+
+    <!-- Special faction warnings -->
+    <FactionLoadout_Special_FactionlessWarning>This is a special group for factionless pawns automatically discovered at startup. It covers humanlike pawnkinds not belonging to any real faction.</FactionLoadout_Special_FactionlessWarning>
+
+    <!-- Faction-level clipboard -->
+    <FactionLoadout_FactionClipboard_CopyTooltip>Copy faction settings (tech level, xenotypes) to clipboard</FactionLoadout_FactionClipboard_CopyTooltip>
+    <FactionLoadout_FactionClipboard_PasteTooltip>Paste faction settings from clipboard\n{0}</FactionLoadout_FactionClipboard_PasteTooltip>
+    <FactionLoadout_FactionClipboard_Description>Tech level: {0} | Xenotype override: {1}</FactionLoadout_FactionClipboard_Description>
+
+    <!-- Color picker -->
+    <FactionLoadout_ColorPicker_Brightness>Brightness</FactionLoadout_ColorPicker_Brightness>
+
+    <!-- Missing faction handling -->
+    <FactionLoadout_EditAnyway>Edit anyway</FactionLoadout_EditAnyway>
+    <FactionLoadout_FactionMissing>(missing — mod not loaded)</FactionLoadout_FactionMissing>
+    <FactionLoadout_FactionMissingEditWarning>This faction is missing — its mod is probably not loaded. You can still edit and delete the pawnkind overrides below, but the faction-level settings and pawn preview are unavailable.</FactionLoadout_FactionMissingEditWarning>
+
+    <!-- Packaged presets -->
+    <FactionLoadout_PackagedLabel>Packaged</FactionLoadout_PackagedLabel>
+    <FactionLoadout_CopyToMyPresets>Copy to my presets</FactionLoadout_CopyToMyPresets>
+    <FactionLoadout_EditSourceFile>Edit source file (advanced)</FactionLoadout_EditSourceFile>
+    <FactionLoadout_PackagedPresetWarning>This preset is bundled with {0}. Saving will overwrite the source file — Steam updates may reset it. Consider using "Copy to my presets" instead.</FactionLoadout_PackagedPresetWarning>
+    <FactionLoadout_CopySuffix>(copy)</FactionLoadout_CopySuffix>
+    <FactionLoadout_SaveToSourceFile>Save to source file</FactionLoadout_SaveToSourceFile>
 </LanguageData>

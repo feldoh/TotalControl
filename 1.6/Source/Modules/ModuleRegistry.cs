@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FactionLoadout;
+namespace FactionLoadout.Modules;
 
 /// <summary>
 /// Central registry for Total Control modules. External assemblies register their
@@ -10,8 +10,8 @@ namespace FactionLoadout;
 /// </summary>
 public static class ModuleRegistry
 {
-    private static readonly List<ITotalControlModule> modules = [];
-    private static bool initialized;
+    public static readonly List<ITotalControlModule> modules = [];
+    public static bool initialized;
 
     /// <summary>
     /// All registered modules. Safe to iterate at any time; the list grows as modules register.
@@ -57,7 +57,7 @@ public static class ModuleRegistry
     /// <summary>
     /// Initialize all registered modules. Called once by ModCore before presets are loaded.
     /// </summary>
-    internal static void InitializeAll()
+    public static void InitializeAll()
     {
         initialized = true;
         ModCore.Log($"Initializing {modules.Count} registered module(s)...");

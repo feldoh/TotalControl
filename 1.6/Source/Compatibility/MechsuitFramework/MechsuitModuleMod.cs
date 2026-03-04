@@ -1,4 +1,5 @@
 using FactionLoadout;
+using FactionLoadout.Modules;
 using Verse;
 
 namespace TotalControlMechsuitCompat;

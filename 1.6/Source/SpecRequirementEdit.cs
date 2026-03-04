@@ -1,11 +1,11 @@
-﻿using System.Reflection;
+﻿using FactionLoadout.Util;
 using RimWorld;
 using UnityEngine;
 using Verse;
 
 namespace FactionLoadout
 {
-    public class SpecRequirementEdit : IExposable
+    public class SpecRequirementEdit : IExposable, IDeepCopyable<SpecRequirementEdit>
     {
         public ThingDef Thing;
         public ThingDef Material;
@@ -16,7 +16,18 @@ namespace FactionLoadout
         public ApparelSelectionMode SelectionMode = ApparelSelectionMode.AlwaysTake;
         public float SelectionChance = 1f;
 
-        public SpecRequirementEdit() { }
+        public SpecRequirementEdit DeepClone() =>
+            new()
+            {
+                Thing = Thing,
+                Material = Material,
+                Style = Style,
+                Quality = Quality,
+                Biocode = Biocode,
+                Color = Color,
+                SelectionMode = SelectionMode,
+                SelectionChance = SelectionChance,
+            };
 
         public void ExposeData()
         {

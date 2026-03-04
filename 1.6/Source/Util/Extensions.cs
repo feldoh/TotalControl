@@ -3,7 +3,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 
-namespace FactionLoadout
+namespace FactionLoadout.Util
 {
     public static class Extensions
     {

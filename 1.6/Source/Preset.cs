@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using FactionLoadout.Util;
 using RimWorld;
 using Verse;
 
@@ -30,6 +31,38 @@ namespace FactionLoadout
                     ModCore.Error($"Failed to load preset from '{file.FullName}'", e);
                 }
             }
+
+            foreach (TCPresetPackageDef packageDef in DefDatabase<TCPresetPackageDef>.AllDefs)
+            {
+                if (packageDef.modContentPack == null)
+                {
+                    ModCore.Warn($"TCPresetPackageDef '{packageDef.defName}' has no modContentPack — skipping.");
+                    continue;
+                }
+                string fullPath = Path.Combine(packageDef.modContentPack.RootDir, packageDef.presetPath);
+                if (!File.Exists(fullPath))
+                {
+                    ModCore.Warn($"Packaged preset file not found: '{fullPath}' (from def '{packageDef.defName}').");
+                    continue;
+                }
+                try
+                {
+                    var preset = new Preset();
+                    IO.LoadFromFile(preset, fullPath);
+                    if (loadedPresets.Any(p => p.GUID == preset.GUID))
+                    {
+                        ModCore.Warn($"Packaged preset '{preset.Name}' (GUID {preset.GUID}) from '{packageDef.defName}' has a conflicting GUID with another loaded preset.");
+                    }
+                    preset.IsPackaged = true;
+                    preset.PackagedFilePath = fullPath;
+                    preset.SourcePackageDef = packageDef;
+                    loadedPresets.Add(preset);
+                }
+                catch (Exception e)
+                {
+                    ModCore.Error($"Failed to load packaged preset from '{fullPath}' (def '{packageDef.defName}').", e);
+                }
+            }
         }
 
         public static void AddNewPreset(Preset preset)
@@ -46,18 +79,48 @@ namespace FactionLoadout
                 return;
 
             loadedPresets.Remove(preset);
+            if (!preset.IsPackaged)
+            {
+                try
+                {
+                    preset.DeleteFile();
+                }
+                catch (Exception e)
+                {
+                    ModCore.Error($"Failed to delete preset file for {preset.Name} ({preset.GUID})", e);
+                }
+            }
+        }
+
+        // Creates a deep copy of source as a new user-owned preset with a fresh GUID.
+        // Uses round-trip serialization through a temp file to guarantee full fidelity.
+        public static Preset CreateCopy(Preset source)
+        {
+            string tempPath = Path.Combine(Path.GetTempPath(), $"TC_preset_copy_{System.Guid.NewGuid()}.xml");
             try
             {
-                preset.DeleteFile();
+                IO.SaveToFile(source, tempPath);
+                var copy = new Preset();
+                IO.LoadFromFile(copy, tempPath);
+                copy.guid = null; // Force new GUID on first access
+                copy.IsPackaged = false;
+                copy.PackagedFilePath = null;
+                copy.SourcePackageDef = null;
+                copy.Name = source.Name + " " + "FactionLoadout_CopySuffix".Translate().ToString();
+                return copy;
             }
-            catch (Exception e)
+            finally
             {
-                ModCore.Error($"Failed to delete preset file for {preset.Name} ({preset.GUID})", e);
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
             }
         }
 
         public static string SpecialCreepjoinerFactionDefName = "FactionLoadout_Special_CreepJoiner";
         public static string SpecialWildManFactionDefName = "FactionLoadout_Special_WildMan";
+        public static string SpecialFactionlessPawnsFactionDefName = "FactionLoadout_Special_Factionless";
 
         public static FactionDef SpecialCreepjoinerFaction = new()
         {
@@ -90,8 +153,28 @@ namespace FactionLoadout
             basicMemberKind = PawnKindDefOf.WildMan,
         };
 
+        public static FactionDef SpecialFactionlessPawnsFaction = new()
+        {
+            hidden = true,
+            defName = SpecialFactionlessPawnsFactionDefName,
+            label = "Factionless Pawns",
+            description = "A special group for editing humanlike pawnkinds that don't belong to any faction. Populated automatically at startup.",
+            humanlikeFaction = true,
+            raidsForbidden = true,
+            requiredCountAtGameStart = 0,
+        };
+
+        public static HashSet<PawnKindDef> FactionlessPawnKindsSet = new();
+
         public string Name = "My preset";
         public List<FactionEdit> factionChanges = new List<FactionEdit>();
+
+        // Runtime-only: set when this preset was loaded from a packaged mod file.
+        // Not serialized via ExposeData.
+        public bool IsPackaged = false;
+        public string PackagedFilePath = null;
+        public TCPresetPackageDef SourcePackageDef = null;
+        public string PackagedModName => SourcePackageDef?.modContentPack?.Name ?? "Unknown mod";
 
         public string GUID
         {
@@ -120,6 +203,74 @@ namespace FactionLoadout
                 DefDatabase<FactionDef>.Add(SpecialCreepjoinerFaction);
             if (DefDatabase<FactionDef>.GetNamed(SpecialWildManFactionDefName, false) == null)
                 DefDatabase<FactionDef>.Add(SpecialWildManFaction);
+            if (DefDatabase<FactionDef>.GetNamed(SpecialFactionlessPawnsFactionDefName, false) == null)
+                DefDatabase<FactionDef>.Add(SpecialFactionlessPawnsFaction);
+            PopulateFactionlessPawnKinds();
+        }
+
+        public static void PopulateFactionlessPawnKinds()
+        {
+            // Build the set of all pawnkinds that belong to at least one real faction.
+            var inAnyFaction = new HashSet<PawnKindDef>();
+            foreach (FactionDef f in DefDatabase<FactionDef>.AllDefsListForReading)
+            {
+                // Skip our own synthetic special factions.
+                if (f.defName == SpecialCreepjoinerFactionDefName || f.defName == SpecialWildManFactionDefName || f.defName == SpecialFactionlessPawnsFactionDefName)
+                {
+                    continue;
+                }
+
+                void AddOptions(List<PawnGenOption> list)
+                {
+                    if (list == null)
+                        return;
+                    foreach (PawnGenOption opt in list)
+                    {
+                        if (opt.kind != null)
+                            inAnyFaction.Add(opt.kind);
+                    }
+                }
+
+                if (f.pawnGroupMakers != null)
+                {
+                    foreach (PawnGroupMaker maker in f.pawnGroupMakers)
+                    {
+                        AddOptions(maker.options);
+                        AddOptions(maker.guards);
+                        AddOptions(maker.traders);
+                        AddOptions(maker.carriers);
+                    }
+                }
+
+                if (f.basicMemberKind != null)
+                    inAnyFaction.Add(f.basicMemberKind);
+
+                if (f.fixedLeaderKinds != null)
+                {
+                    foreach (PawnKindDef k in f.fixedLeaderKinds)
+                        inAnyFaction.Add(k);
+                }
+            }
+
+            // Collect humanlike pawnkinds not claimed by any real faction or named special faction.
+            FactionlessPawnKindsSet.Clear();
+            var options = new List<PawnGenOption>();
+            foreach (PawnKindDef k in DefDatabase<PawnKindDef>.AllDefsListForReading)
+            {
+                if (k.race?.race?.Humanlike != true)
+                    continue;
+                if (k == PawnKindDefOf.WildMan)
+                    continue;
+                if (k is CreepJoinerFormKindDef)
+                    continue;
+                if (inAnyFaction.Contains(k))
+                    continue;
+
+                FactionlessPawnKindsSet.Add(k);
+                options.Add(new PawnGenOption { kind = k });
+            }
+
+            SpecialFactionlessPawnsFaction.pawnGroupMakers = options.Count > 0 ? [new PawnGroupMaker { kindDef = PawnGroupKindDefOf.Combat, options = options }] : null;
         }
 
         public static void SetupRelationsForFaction(Faction faction)
@@ -210,6 +361,11 @@ namespace FactionLoadout
 
         public void Save()
         {
+            if (IsPackaged && PackagedFilePath != null)
+            {
+                IO.SaveToFile(this, PackagedFilePath);
+                return;
+            }
             EnsureGUID();
 
             string fileName = $"{guid}.xml";

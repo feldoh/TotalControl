@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using FactionLoadout.Util;
 using LudeonTK;
 using RimWorld;
 using Verse;
