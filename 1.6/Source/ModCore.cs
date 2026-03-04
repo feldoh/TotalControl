@@ -56,6 +56,7 @@ public class ModCore : Mod
 
     private void LoadLate()
     {
+        ModuleRegistry.InitializeAll();
         Preset.LoadAllPresets();
 
         int count = 0;

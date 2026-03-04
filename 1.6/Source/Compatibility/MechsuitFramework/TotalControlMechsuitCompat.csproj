@@ -1,14 +1,13 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <RootNamespace>TotalControlVEPsycastsCompat</RootNamespace>
-        <AssemblyName>TotalControlVEPsycastsCompat</AssemblyName>
+        <RootNamespace>TotalControlMechsuitCompat</RootNamespace>
+        <AssemblyName>TotalControlMechsuitCompat</AssemblyName>
         <TargetFramework>net48</TargetFramework>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
         <LangVersion>preview</LangVersion>
-        <PackageId>TotalControlVEPsycastsCompat</PackageId>
+        <PackageId>TotalControlMechsuitCompat</PackageId>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 
         <RimworldPath Condition=" '$(RIMWORLD_PATH)' == '' ">../../../../../../</RimworldPath>
         <RimworldPath Condition=" '$(RIMWORLD_PATH)' != '' ">$(RIMWORLD_PATH)</RimworldPath>
@@ -22,7 +21,7 @@
         <DebugSymbols>true</DebugSymbols>
         <DebugType>portable</DebugType>
         <Optimize>false</Optimize>
-        <OutputPath>../../../../Compatibility/VEPsycasts/1.6/Assemblies</OutputPath>
+        <OutputPath>../../../../Compatibility/MechsuitFramework/1.6/Assemblies</OutputPath>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
@@ -31,7 +30,7 @@
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <DebugType>none</DebugType>
         <Optimize>true</Optimize>
-        <OutputPath>../../../../Compatibility/VEPsycasts/1.6/Assemblies</OutputPath>
+        <OutputPath>../../../../Compatibility/MechsuitFramework/1.6/Assemblies</OutputPath>
         <DefineConstants>TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
@@ -54,27 +53,38 @@
                     <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
                     <Private>False</Private>
                 </Reference>
+                <Reference Include="UnityEngine.IMGUIModule">
+                    <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
+                    <Private>False</Private>
+                </Reference>
+                <Reference Include="UnityEngine.TextRenderingModule">
+                    <HintPath>$(RimworldPath)/RimWorldWin64_Data/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
+                    <Private>False</Private>
+                </Reference>
             </ItemGroup>
         </When>
     </Choose>
 
+    <!-- Reference to core FactionLoadout project -->
     <ItemGroup>
-        <Reference Include="VanillaPsycastsExpanded">
-            <HintPath>$(ModPath)/2842502659/1.6/Assemblies/VanillaPsycastsExpanded.dll</HintPath>
+        <ProjectReference Include="../../FactionLoadout.csproj">
             <Private>false</Private>
-        </Reference>
-        <Reference Include="VFECore">
-            <HintPath>$(ModPath)/2023507013/1.6/Assemblies/VEF.dll</HintPath>
+        </ProjectReference>
+    </ItemGroup>
+
+    <!-- Reference to MechsuitFramework (Exosuit) assembly — Steam workshop ID 3352894993 -->
+    <ItemGroup>
+        <Reference Include="Exosuit">
+            <HintPath>$(ModPath)/3352894993/1.6/Assemblies/Exosuit.dll</HintPath>
             <Private>false</Private>
         </Reference>
     </ItemGroup>
 
-    <!-- The below condition will check if you've defined a reference called "Assembly-CSharp" and if that reference exists on disk.
-        If that reference does not exist, it will add Krafs Rimworld Ref to the project. If it does exist, Krafs won't be added
-        as a reference. This basically means that Krafs is treated as a fallback if Assembly-CSharp is not found -->
+    <!-- Krafs fallback for RimWorld references -->
     <ItemGroup Condition="'@(Reference->WithMetadataValue('Identity', 'Assembly-CSharp')->Metadata('HintPath')->Exists())' == ''">
         <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6-*" />
     </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="Lib.Harmony" Version="2.2.2" />
     </ItemGroup>

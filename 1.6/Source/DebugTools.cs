@@ -67,7 +67,7 @@ public class DebugTools
 
                             GenSpawn.Spawn(pawn, UI.MouseCell(), Find.CurrentMap);
                             DebugToolsSpawning.PostPawnSpawn(pawn);
-                        }
+                        },
                     }
                 );
             }

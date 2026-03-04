@@ -45,4 +45,32 @@
     <FactionLoadout_AddNewByDefName>Add new by def name...</FactionLoadout_AddNewByDefName>
     <FactionLoadout_AddNewByDefNameDesc>Enter def name of xenotype to add:</FactionLoadout_AddNewByDefNameDesc>
     <FactionLoadout_DuplicateListItem>{0} already exists in the list</FactionLoadout_DuplicateListItem>
+
+    <!-- Backstory -->
+    <FactionLoadout_Backstory_Section>Backstory</FactionLoadout_Backstory_Section>
+    <FactionLoadout_Backstory_CryptosleepChance>Cryptosleep Backstory Chance</FactionLoadout_Backstory_CryptosleepChance>
+    <FactionLoadout_Backstory_FiltersOverride>Backstory Filters Override</FactionLoadout_Backstory_FiltersOverride>
+    <FactionLoadout_Backstory_FiltersOverrideTooltip>Overrides faction backstory filters entirely.\nEach filter has categories that backstories must match.\nMultiple filters are weighted by commonality.</FactionLoadout_Backstory_FiltersOverrideTooltip>
+    <FactionLoadout_Backstory_FixedChildhood>Fixed Childhood Backstories</FactionLoadout_Backstory_FixedChildhood>
+    <FactionLoadout_Backstory_FixedAdulthood>Fixed Adulthood Backstories</FactionLoadout_Backstory_FixedAdulthood>
+    <FactionLoadout_Backstory_ExcludedCategories>Excluded Backstory Categories</FactionLoadout_Backstory_ExcludedCategories>
+    <FactionLoadout_Backstory_Excluded>Excluded Backstories</FactionLoadout_Backstory_Excluded>
+    <FactionLoadout_Backstory_AddFilter>Add Filter</FactionLoadout_Backstory_AddFilter>
+    <FactionLoadout_Backstory_Categories>Categories:</FactionLoadout_Backstory_Categories>
+    <FactionLoadout_Backstory_Exclude>Exclude:</FactionLoadout_Backstory_Exclude>
+    <FactionLoadout_Backstory_Weight>Weight:</FactionLoadout_Backstory_Weight>
+    <FactionLoadout_Backstory_SlotChild>[Child]</FactionLoadout_Backstory_SlotChild>
+    <FactionLoadout_Backstory_SlotAdult>[Adult]</FactionLoadout_Backstory_SlotAdult>
+    <FactionLoadout_Backstory_FilterCount>[Default] {0} filter(s)</FactionLoadout_Backstory_FilterCount>
+    <FactionLoadout_Backstory_EmptyFilter>Empty filter</FactionLoadout_Backstory_EmptyFilter>
+    <FactionLoadout_Backstory_ChildPrefix>Child: </FactionLoadout_Backstory_ChildPrefix>
+    <FactionLoadout_Backstory_AdultPrefix>Adult: </FactionLoadout_Backstory_AdultPrefix>
+    <FactionLoadout_DefRef_Missing>{0} (missing — from {1})</FactionLoadout_DefRef_Missing>
+    <FactionLoadout_DefRef_UnknownMod>unknown mod</FactionLoadout_DefRef_UnknownMod>
+    <FactionLoadout_None>None</FactionLoadout_None>
+
+    <!-- GiddyUp Module -->
+    <GiddyUp_Mounts>GiddyUp Mounts</GiddyUp_Mounts>
+    <FactionLoadout_AddMount>Add mount...</FactionLoadout_AddMount>
+    <FactionLoadout_ClearMounts>Clear all mounts</FactionLoadout_ClearMounts>
 </LanguageData>

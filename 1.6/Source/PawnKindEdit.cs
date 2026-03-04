@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Xml;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -139,6 +140,14 @@ public class PawnKindEdit : IExposable
     public RulePackDef NameMakerFemale = null;
     public float? UnwaveringlyLoyalChance = null;
 
+    // Backstory
+    public List<BackstoryFilter> BackstoryFiltersOverride = null;
+    public List<DefRef<BackstoryDef>> FixedChildBackstories = null;
+    public List<DefRef<BackstoryDef>> FixedAdultBackstories = null;
+    public List<string> ExcludedBackstoryCategories = null;
+    public List<DefRef<BackstoryDef>> ExcludedBackstories = null;
+    public float? BackstoryCryptosleepCommonality = null;
+
     // VFE Ancients
     public int? NumVFEAncientsSuperPowers = null;
     public int? NumVFEAncientsSuperWeaknesses = null;
@@ -149,15 +158,13 @@ public class PawnKindEdit : IExposable
     public IntRange? VEPsycastStatPoints = null;
     public bool? VEPsycastRandomAbilities = null;
 
-    /**
-     * public List<AbilityDef> giveAbilities
-     * public HediffDef implantDef
-     * List<PathUnlockData> unlockedPaths
-     * |- public PsycasterPathDef path
-     * |- public IntRange unlockedAbilityLevelRange
-     * |- public IntRange unlockedAbilityCount
-     */
     private PawnKindEdit globalEdit = null;
+
+    /// <summary>
+    /// Raw InnerXml for module sub-nodes whose module is not currently registered/active.
+    /// Preserved across save/load so users don't lose module config when a dependency is absent.
+    /// </summary>
+    private Dictionary<string, string> preservedModuleXml;
 
     public PawnKindEdit() { }
 
@@ -232,6 +239,14 @@ public class PawnKindEdit : IExposable
         if (isFake)
             NameMakerFemale = FakeRulePack;
 
+        // Backstory
+        Scribe_Collections.Look(ref BackstoryFiltersOverride, "backstoryFiltersOverride", LookMode.Deep);
+        Scribe_Collections.Look(ref FixedChildBackstories, "fixedChildBackstories", LookMode.Deep);
+        Scribe_Collections.Look(ref FixedAdultBackstories, "fixedAdultBackstories", LookMode.Deep);
+        Scribe_Collections.Look(ref ExcludedBackstoryCategories, "excludedBackstoryCategories");
+        Scribe_Collections.Look(ref ExcludedBackstories, "excludedBackstories", LookMode.Deep);
+        Scribe_Values.Look(ref BackstoryCryptosleepCommonality, "backstoryCryptosleepCommonality");
+
         // VFEAncients Compatibility
         Scribe_Values.Look(ref NumVFEAncientsSuperPowers, "numVFEAncientsSuperPowers");
         Scribe_Values.Look(ref NumVFEAncientsSuperWeaknesses, "numVFEAncientsSuperWeaknesses");
@@ -241,6 +256,121 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref VEPsycastLevel, "vePsycastLevel");
         Scribe_Values.Look(ref VEPsycastStatPoints, "vePsycastStatPoints");
         Scribe_Values.Look(ref VEPsycastRandomAbilities, "vePsycastRandomAbilities");
+
+        // Module system
+        ExposeModuleData();
+    }
+
+    /// <summary>
+    /// Delegates serialization to registered modules and preserves XML for absent modules.
+    /// Each module gets its own named child node inside a &lt;modules&gt; element.
+    /// Unrecognized child nodes (from modules not currently loaded) are stored as raw XML
+    /// and written back on save to prevent data loss.
+    /// </summary>
+    private void ExposeModuleData()
+    {
+        IReadOnlyList<ITotalControlModule> modules = ModuleRegistry.Modules;
+
+        if (Scribe.mode == LoadSaveMode.LoadingVars)
+        {
+            XmlNode modulesNode = Scribe.loader.curXmlParent?["modules"];
+            if (modulesNode == null)
+                return;
+
+            foreach (XmlNode child in modulesNode.ChildNodes)
+            {
+                ITotalControlModule module = ModuleRegistry.GetModule(child.Name);
+                if (module is { IsActive: true })
+                {
+                    // Position the Scribe cursor inside this module's node and let it deserialize.
+                    XmlNode previousParent = Scribe.loader.curXmlParent;
+                    Scribe.loader.curXmlParent = child;
+                    try
+                    {
+                        module.ExposeData(this);
+                    }
+                    catch (Exception e)
+                    {
+                        ModCore.Error($"Error loading module data for '{module.ModuleName}' (key: {module.ModuleKey})", e);
+                    }
+
+                    Scribe.loader.curXmlParent = previousParent;
+                }
+                else
+                {
+                    // Module not registered or not active — preserve the raw XML for re-saving.
+                    preservedModuleXml ??= new Dictionary<string, string>();
+                    preservedModuleXml[child.Name] = child.InnerXml;
+                    ModCore.Debug($"Preserving module data for absent module '{child.Name}'");
+                }
+            }
+        }
+        else if (Scribe.mode == LoadSaveMode.Saving)
+        {
+            // Determine if there's anything to write.
+            bool hasActiveModules = modules.Any(m => m.IsActive);
+            bool hasPreserved = preservedModuleXml is { Count: > 0 };
+
+            if (!hasActiveModules && !hasPreserved)
+                return;
+
+            Scribe.saver.EnterNode("modules");
+            try
+            {
+                // Write data for each active module.
+                foreach (ITotalControlModule module in modules)
+                {
+                    if (!module.IsActive)
+                        continue;
+                    Scribe.saver.EnterNode(module.ModuleKey);
+                    try
+                    {
+                        module.ExposeData(this);
+                    }
+                    catch (Exception e)
+                    {
+                        ModCore.Error($"Error saving module data for '{module.ModuleName}' (key: {module.ModuleKey})", e);
+                    }
+
+                    Scribe.saver.ExitNode();
+                }
+
+                // Write back preserved XML for absent modules.
+                if (preservedModuleXml != null)
+                {
+                    HashSet<string> activeKeys = new(modules.Where(m => m.IsActive).Select(m => m.ModuleKey));
+                    foreach (KeyValuePair<string, string> kvp in preservedModuleXml)
+                    {
+                        if (activeKeys.Contains(kvp.Key))
+                            continue; // Module is now active and wrote its own data above.
+                        Scribe.saver.writer.WriteStartElement(kvp.Key);
+                        Scribe.saver.writer.WriteRaw(kvp.Value);
+                        Scribe.saver.writer.WriteEndElement();
+                    }
+                }
+            }
+            finally
+            {
+                Scribe.saver.ExitNode();
+            }
+        }
+        else if (Scribe.mode == LoadSaveMode.PostLoadInit)
+        {
+            // Give modules a chance to run post-load initialization.
+            foreach (ITotalControlModule module in modules)
+            {
+                if (!module.IsActive)
+                    continue;
+                try
+                {
+                    module.ExposeData(this);
+                }
+                catch (Exception e)
+                {
+                    ModCore.Error($"Error in post-load init for module '{module.ModuleName}' (key: {module.ModuleKey})", e);
+                }
+            }
+        }
     }
 
     private void ReplaceMaybe<T>(ref T field, T maybe)
@@ -287,6 +417,26 @@ public class PawnKindEdit : IExposable
             field = [];
             foreach (object value in maybe)
                 field.Add(value);
+        }
+    }
+
+    private void ReplaceMaybeDefRefList<T>(ref List<T> field, List<DefRef<T>> maybe, bool tryAdd)
+        where T : Def, new()
+    {
+        if (maybe == null)
+            return;
+
+        List<T> resolved = maybe.Where(r => r.HasValue).Select(r => r.Def).ToList();
+
+        if (tryAdd && field != null)
+        {
+            foreach (T value in resolved)
+                if (!field.Contains(value))
+                    field.Add(value);
+        }
+        else
+        {
+            field = resolved;
         }
     }
 
@@ -358,6 +508,21 @@ public class PawnKindEdit : IExposable
         ReplaceMaybeList(ref def.apparelRequired, ApparelRequired, global?.ApparelRequired != null);
         ReplaceMaybeList(ref def.techHediffsRequired, TechRequired, global?.TechRequired != null);
 
+        // Backstory filters override — BackstoryFilter extends BackstoryCategoryFilter, so cast directly.
+        if (BackstoryFiltersOverride is { Count: > 0 })
+        {
+            def.backstoryFiltersOverride = new List<BackstoryCategoryFilter>(BackstoryFiltersOverride);
+        }
+
+        ReplaceMaybe(ref def.backstoryCryptosleepCommonality, BackstoryCryptosleepCommonality);
+
+        // Fixed backstories — resolve DefRefs to actual defs, skipping missing ones.
+        ReplaceMaybeDefRefList(ref def.fixedChildBackstories, FixedChildBackstories, global?.FixedChildBackstories != null);
+        ReplaceMaybeDefRefList(ref def.fixedAdultBackstories, FixedAdultBackstories, global?.FixedAdultBackstories != null);
+
+        // Backstory exclusions: remove matching entries from all filter lists and fixed lists
+        ApplyBackstoryExclusions(def);
+
         bool removeFixedInventory = RemoveFixedInventory || global?.RemoveFixedInventory == true;
         if (removeFixedInventory)
             def.fixedInventory = [];
@@ -426,6 +591,21 @@ public class PawnKindEdit : IExposable
         ApplyVFEAncientsEdits(def);
         ApplyVEPsycastsEdits(def);
 
+        // Delegate to registered modules.
+        foreach (ITotalControlModule module in ModuleRegistry.Modules)
+        {
+            if (!module.IsActive)
+                continue;
+            try
+            {
+                module.Apply(this, def, global);
+            }
+            catch (Exception e)
+            {
+                ModCore.Error($"Error applying module '{module.ModuleName}' (key: {module.ModuleKey}) to {def.defName}", e);
+            }
+        }
+
         globalEdit = null;
         return def;
     }
@@ -493,6 +673,159 @@ public class PawnKindEdit : IExposable
             .Select(i => VFEAncientsReflectionHelper.GetPowerDefMethod.Value.Invoke(null, new object[] { i }))
             .Where(p => p != null)
             .DoIf(p => !powerList.Contains(p), p => powerList.Add(p));
+    }
+
+    /// <summary>
+    /// Applies backstory exclusions at the def level:
+    /// <list type="bullet">
+    ///   <item>Category exclusions are injected into filter exclude lists.</item>
+    ///   <item>Specific def exclusions are removed from fixed backstory lists.</item>
+    ///   <item>When specific defs are excluded for a given slot, the categories for that slot
+    ///         are resolved into concrete <see cref="BackstoryDef"/> entries (minus exclusions)
+    ///         and written into the corresponding fixed backstory list. This lets vanilla's
+    ///         <c>GiveShuffledBioTo</c> pick from the fixed list directly, avoiding any need
+    ///         for a Harmony patch at generation time. Slots without specific def exclusions
+    ///         are left untouched, so vanilla's category-based selection still applies.</item>
+    /// </list>
+    /// </summary>
+    private void ApplyBackstoryExclusions(PawnKindDef def)
+    {
+        bool hasExcludedCategories = ExcludedBackstoryCategories is { Count: > 0 };
+        bool hasExcludedDefs = ExcludedBackstories is { Count: > 0 };
+
+        // Inject excluded categories into all existing filters as exclude entries.
+        if (hasExcludedCategories)
+        {
+            void InjectExcludes(List<BackstoryCategoryFilter> filters)
+            {
+                if (filters == null)
+                {
+                    return;
+                }
+
+                foreach (BackstoryCategoryFilter filter in filters)
+                {
+                    filter.exclude ??= [];
+                    foreach (string cat in ExcludedBackstoryCategories)
+                    {
+                        if (!filter.exclude.Contains(cat))
+                        {
+                            filter.exclude.Add(cat);
+                        }
+                    }
+                }
+            }
+
+            InjectExcludes(def.backstoryFiltersOverride);
+            InjectExcludes(def.backstoryFilters);
+        }
+
+        if (!hasExcludedDefs)
+            return;
+
+        // Partition excluded defs by slot so we only resolve categories for affected slots.
+        HashSet<BackstoryDef> excludedChild = [];
+        HashSet<BackstoryDef> excludedAdult = [];
+        foreach (DefRef<BackstoryDef> defRef in ExcludedBackstories)
+        {
+            switch (defRef?.Def?.slot)
+            {
+                case BackstorySlot.Childhood:
+                    excludedChild.Add(defRef.Def);
+                    break;
+                case BackstorySlot.Adulthood:
+                    excludedAdult.Add(defRef.Def);
+                    break;
+                default:
+                    continue;
+            }
+        }
+
+        // Always remove excluded defs from existing fixed lists regardless.
+        if (excludedChild.Count > 0)
+            def.fixedChildBackstories?.RemoveAll(b => excludedChild.Contains(b));
+        if (excludedAdult.Count > 0)
+            def.fixedAdultBackstories?.RemoveAll(b => excludedAdult.Contains(b));
+
+        // Collect the active categories per slot from the def's filters.
+        // "categories" applies to both slots; "categoriesChildhood"/"categoriesAdulthood" are slot-specific.
+        HashSet<string> childCategories = [];
+        HashSet<string> adultCategories = [];
+        List<BackstoryCategoryFilter> activeFilters = def.backstoryFiltersOverride ?? def.backstoryFilters;
+        if (activeFilters != null)
+        {
+            foreach (BackstoryCategoryFilter filter in activeFilters)
+            {
+                if (!filter.categories.NullOrEmpty())
+                {
+                    foreach (string cat in filter.categories)
+                    {
+                        childCategories.Add(cat);
+                        adultCategories.Add(cat);
+                    }
+                }
+
+                if (!filter.categoriesChildhood.NullOrEmpty())
+                {
+                    foreach (string cat in filter.categoriesChildhood)
+                    {
+                        childCategories.Add(cat);
+                    }
+                }
+
+                if (!filter.categoriesAdulthood.NullOrEmpty())
+                {
+                    foreach (string cat in filter.categoriesAdulthood)
+                    {
+                        adultCategories.Add(cat);
+                    }
+                }
+            }
+        }
+
+        // For each slot that has excluded defs, resolve categories into concrete defs
+        // and populate the fixed backstory list so vanilla picks from it directly.
+        if (excludedChild.Count > 0)
+            ResolveBackstoryCategories(def, BackstorySlot.Childhood, childCategories, excludedChild);
+        if (excludedAdult.Count > 0)
+            ResolveBackstoryCategories(def, BackstorySlot.Adulthood, adultCategories, excludedAdult);
+    }
+
+    /// <summary>
+    /// Resolves backstory categories into concrete <see cref="BackstoryDef"/> entries for a given slot,
+    /// excluding any defs in <paramref name="excluded"/>, then writes them into the corresponding
+    /// fixed backstory list on the def. Existing entries in the fixed list are preserved.
+    /// </summary>
+    private static void ResolveBackstoryCategories(PawnKindDef def, BackstorySlot slot, HashSet<string> categories, HashSet<BackstoryDef> excluded)
+    {
+        // Build the set of existing fixed entries to avoid duplicates.
+        List<BackstoryDef> fixedList = slot == BackstorySlot.Childhood ? def.fixedChildBackstories : def.fixedAdultBackstories;
+        HashSet<BackstoryDef> existing = fixedList != null ? [.. fixedList] : [];
+
+        List<BackstoryDef> resolved = [];
+        resolved.AddRange(
+            from bs in DefDatabase<BackstoryDef>.AllDefsListForReading
+            where bs.slot == slot && bs.shuffleable && !excluded.Contains(bs) && !existing.Contains(bs)
+            where bs.spawnCategories != null
+            where categories.Count <= 0 || bs.spawnCategories.Any(categories.Contains)
+            select bs
+        );
+
+        switch (slot)
+        {
+            case BackstorySlot.Childhood:
+                def.fixedChildBackstories ??= [];
+                def.fixedChildBackstories.AddRange(resolved);
+                break;
+            case BackstorySlot.Adulthood:
+                def.fixedAdultBackstories ??= [];
+                def.fixedAdultBackstories.AddRange(resolved);
+                break;
+            default:
+                return;
+        }
+
+        ModCore.Debug($"Backstory exclusions for {def.defName} ({slot}): " + $"{excluded.Count} excluded, {resolved.Count} resolved from categories into fixed list.");
     }
 
     public bool AppliesTo(PawnKindDef def)

@@ -21,7 +21,7 @@ public class FactionEditUI : Window
     private int framesSinceF;
     private readonly List<Pawn> pawns = new();
     private readonly HashSet<PawnKindDef> tempKinds = new();
-    private bool _ThingIDPatch = true;
+    private bool _ThingIDPatch = false;
 
     public FactionEditUI(FactionEdit fac)
     {
@@ -326,7 +326,7 @@ public class FactionEditUI : Window
         }
         else
         {
-            ui.CheckboxLabeled("Thing ID Patch", ref _ThingIDPatch);
+            ui.CheckboxLabeled("Thing ID Patch", ref _ThingIDPatch, "Turn on to save thing IDs");
             ui.Gap(20);
             Rect total = ui.GetRect(inRect.height - ui.CurHeight - 32);
             int count = pawns.Count;
@@ -396,26 +396,25 @@ public class FactionEditUI : Window
             Current.Apply(clonedFac, false);
             DestroyPawns();
 
-            Faction faction =
-                new()
-                {
-                    def = clonedFac,
-                    loadID = -1,
-                    colorFromSpectrum = Rand.Range(0f, 1f),
-                    hidden = true,
-                    ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos,
-                    Name = clonedFac.fixedName,
-                    relations = Find
-                        .FactionManager.AllFactionsVisible.Select(otherFaction => new FactionRelation
-                        {
-                            other = otherFaction,
-                            baseGoodwill = 0,
-                            kind = FactionRelationKind.Neutral
-                        })
-                        .ToList(),
-                    temporary = true,
-                    deactivated = true
-                };
+            Faction faction = new()
+            {
+                def = clonedFac,
+                loadID = -1,
+                colorFromSpectrum = Rand.Range(0f, 1f),
+                hidden = true,
+                ideos = Find.FactionManager?.FirstFactionOfDef(Current.Faction.Def)?.ideos,
+                Name = clonedFac.fixedName,
+                relations = Find
+                    .FactionManager.AllFactionsVisible.Select(otherFaction => new FactionRelation
+                    {
+                        other = otherFaction,
+                        baseGoodwill = 0,
+                        kind = FactionRelationKind.Neutral,
+                    })
+                    .ToList(),
+                temporary = true,
+                deactivated = true,
+            };
 
             ThingIDPatch.Active = _ThingIDPatch;
             IdeoUtilityPatch.Active = true;
@@ -438,7 +437,7 @@ public class FactionEditUI : Window
                             CanGeneratePawnRelations = false,
                             RelationWithExtraPawnChanceFactor = 0,
                             ColonistRelationChanceFactor = 0,
-                            ForceNoIdeo = true
+                            ForceNoIdeo = true,
                         }
                     );
                     pawns.Add(pawn);
@@ -494,7 +493,7 @@ public class FactionEditUI : Window
                 SpecialThingFilterDefOf.AllowDeadmansApparel,
                 SpecialThingFilterDefOf.AllowNonDeadmansApparel,
                 SpecialThingFilterDefOf.AllowFresh,
-                DefDatabase<SpecialThingFilterDef>.GetNamed("AllowRotten")
+                DefDatabase<SpecialThingFilterDef>.GetNamed("AllowRotten"),
             ]
         );
     }

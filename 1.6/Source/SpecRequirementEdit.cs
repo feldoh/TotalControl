@@ -38,6 +38,6 @@ namespace FactionLoadout
         FromPool1,
         FromPool2,
         FromPool3,
-        FromPool4
+        FromPool4,
     }
 }
