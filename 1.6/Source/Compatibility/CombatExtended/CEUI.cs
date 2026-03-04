@@ -36,9 +36,7 @@ public static class CEUI
         Rect labelRect = row.LeftHalf();
         Rect fieldRect = row.RightHalf();
 
-        string currentLabel = hasOverride
-            ? data.ForcedAmmoCategoryDefName
-            : (defDefault != null ? $"(default: {defDefault})" : "(default: random)");
+        string currentLabel = hasOverride ? data.ForcedAmmoCategoryDefName : (defDefault != null ? $"(default: {defDefault})" : "(default: random)");
 
         Text.Anchor = TextAnchor.MiddleLeft;
         Widgets.Label(labelRect, "FactionLoadout_CE_ForcedAmmoCategory".Translate() + ": " + currentLabel);
@@ -60,20 +58,18 @@ public static class CEUI
 
     private static void OpenAmmoCategoryMenu(CEData data)
     {
-        List<AmmoCategoryDef> allCategories = DefDatabase<AmmoCategoryDef>.AllDefsListForReading
-            .OrderBy(d => d.LabelCap.ToString())
-            .ToList();
+        List<AmmoCategoryDef> allCategories = DefDatabase<AmmoCategoryDef>.AllDefsListForReading.OrderBy(d => d.LabelCap.ToString()).ToList();
 
-        var items = CustomFloatMenu.MakeItems(
-            allCategories,
-            d => new MenuItemText(d, d.LabelCap, tooltip: d.description)
+        var items = CustomFloatMenu.MakeItems(allCategories, d => new MenuItemText(d, d.LabelCap, tooltip: d.description));
+
+        CustomFloatMenu.Open(
+            items,
+            item =>
+            {
+                AmmoCategoryDef selected = item.GetPayload<AmmoCategoryDef>();
+                data.ForcedAmmoCategoryDefName = selected.defName;
+            }
         );
-
-        CustomFloatMenu.Open(items, item =>
-        {
-            AmmoCategoryDef selected = item.GetPayload<AmmoCategoryDef>();
-            data.ForcedAmmoCategoryDefName = selected.defName;
-        });
     }
 
     private static void DrawMagazineCountRow(Listing_Standard ui, CEData data, LoadoutPropertiesExtension defExt)
