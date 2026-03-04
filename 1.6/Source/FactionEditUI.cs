@@ -529,6 +529,7 @@ public class Dialog_XenotypeEdit : Window
         closeOnCancel = true;
         draggable = true;
         resizeable = true;
+        absorbInputAroundWindow = true;
     }
 
     public override Vector2 InitialSize => new(450f, 400f);
