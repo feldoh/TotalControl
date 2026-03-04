@@ -95,7 +95,13 @@ public class ModCore : Mod
             AccessTools.Method(typeof(IdeoUtility), nameof(IdeoUtility.IdeoChangeToWeight)),
             prefix: new HarmonyMethod(AccessTools.Method(typeof(IdeoUtilityPatch), nameof(IdeoUtilityPatch.Prefix)), priority: Priority.First)
         );
-        harmony.Patch(AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"), postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch), "Postfix")));
+        harmony.Patch(
+            AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"),
+            postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch), "Postfix"))
+            {
+                before = new[] { "CombatExtended.HarmonyCE" }
+            }
+        );
         harmony.Patch(
             AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
             postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchCore), nameof(PawnGenPatchCore.Postfix)))
