@@ -71,6 +71,14 @@
     <FactionLoadout_DefRef_UnknownMod>unknown mod</FactionLoadout_DefRef_UnknownMod>
     <FactionLoadout_None>None</FactionLoadout_None>
 
+    <!-- Combat Extended Module -->
+    <FactionLoadout_Tab_CE>CE Loadout</FactionLoadout_Tab_CE>
+    <FactionLoadout_CE_ForcedAmmoCategory>Forced Ammo Category</FactionLoadout_CE_ForcedAmmoCategory>
+    <FactionLoadout_CE_PrimaryMagazineCount>Primary Magazine Count</FactionLoadout_CE_PrimaryMagazineCount>
+    <FactionLoadout_CE_MinAmmoCount>Min Ammo Count</FactionLoadout_CE_MinAmmoCount>
+    <FactionLoadout_CE_Override>Override</FactionLoadout_CE_Override>
+    <FactionLoadout_CE_ChangeAmmo>Change...</FactionLoadout_CE_ChangeAmmo>
+
     <!-- GiddyUp Module -->
     <GiddyUp_Mounts>GiddyUp Mounts</GiddyUp_Mounts>
     <FactionLoadout_AddMount>Add mount...</FactionLoadout_AddMount>
