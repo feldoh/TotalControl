@@ -207,6 +207,8 @@ public class FactionEdit : IExposable
             def.raidCommonalityFromPointsCurve = global.RaidCommonalityFromPointsCurve;
         if ((global?.RaidLootValueFromPointsCurve?.PointsCount ?? 0) > 0)
             def.raidLootValueFromPointsCurve = global.RaidLootValueFromPointsCurve;
+        if ((global?.MaxPawnCostPerTotalPointsCurve?.PointsCount ?? 0) > 0)
+            def.maxPawnCostPerTotalPointsCurve = global.MaxPawnCostPerTotalPointsCurve;
 
         if (TechLevel != null)
             def.techLevel = TechLevel.Value;

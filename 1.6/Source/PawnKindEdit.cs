@@ -159,9 +159,12 @@ public class PawnKindEdit : IExposable
     public Gender? ForcedGender = null;
     public SimpleCurve RaidCommonalityFromPointsCurve = null;
     public SimpleCurve RaidLootValueFromPointsCurve = null;
+    public SimpleCurve MaxPawnCostPerTotalPointsCurve = null;
     public RulePackDef NameMaker = null;
     public RulePackDef NameMakerFemale = null;
     public float? UnwaveringlyLoyalChance = null;
+    public float? CombatPower = null;
+    public bool? AppearsRandomlyInCombatGroups = null;
 
     // Backstory
     public List<BackstoryFilter> BackstoryFiltersOverride = null;
@@ -232,7 +235,10 @@ public class PawnKindEdit : IExposable
         Scribe_Collections.Look(ref ForcedXenotypeChances, "forcedXenotypeChances", LookMode.Value, LookMode.Value);
         Scribe_Deep.Look(ref RaidLootValueFromPointsCurve, "raidLootValueFromPointsCurve");
         Scribe_Deep.Look(ref RaidCommonalityFromPointsCurve, "raidCommonalityFromPointsCurve");
+        Scribe_Deep.Look(ref MaxPawnCostPerTotalPointsCurve, "maxPawnCostPerTotalPointsCurve");
         Scribe_Values.Look(ref UnwaveringlyLoyalChance, "unwaveringlyLoyalChance");
+        Scribe_Values.Look(ref CombatPower, "combatPower");
+        Scribe_Values.Look(ref AppearsRandomlyInCombatGroups, "appearsRandomlyInCombatGroups");
         if (Scribe.mode == LoadSaveMode.PostLoadInit)
         {
             ForcedXenotypeChanceDefs = ForcedXenotypeChances
@@ -611,6 +617,8 @@ public class PawnKindEdit : IExposable
         ReplaceMaybe(ref def.fixedGender, ForcedGender);
         ReplaceMaybe(ref def.nameMaker, NameMaker);
         ReplaceMaybe(ref def.nameMakerFemale, NameMakerFemale);
+        ReplaceMaybe(ref def.combatPower, CombatPower);
+        ReplaceMaybe(ref def.appearsRandomlyInCombatGroups, AppearsRandomlyInCombatGroups);
 
         ReplaceMaybeList(ref def.techHediffsTags, TechHediffTags, global?.TechHediffTags != null);
         ReplaceMaybeList(ref def.techHediffsDisallowTags, TechHediffDisallowedTags, global?.TechHediffDisallowedTags != null);
