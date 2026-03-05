@@ -1732,7 +1732,14 @@ public class PawnKindEditUI : Window
     private void DrawRaidPointsTab(Listing_Standard ui)
     {
         DrawOverride(ui, DefaultKind.combatPower, ref Current.CombatPower, "FactionLoadout_CombatPower".Translate().ToString(), DrawCombatPower, pasteGet: e => e.CombatPower);
-        DrawOverride(ui, DefaultKind.appearsRandomlyInCombatGroups, ref Current.AppearsRandomlyInCombatGroups, "FactionLoadout_AppearsRandomlyInCombatGroups".Translate().ToString(), DrawAppearsRandomlyInCombatGroups, pasteGet: e => e.AppearsRandomlyInCombatGroups);
+        DrawOverride(
+            ui,
+            DefaultKind.appearsRandomlyInCombatGroups,
+            ref Current.AppearsRandomlyInCombatGroups,
+            "FactionLoadout_AppearsRandomlyInCombatGroups".Translate().ToString(),
+            DrawAppearsRandomlyInCombatGroups,
+            pasteGet: e => e.AppearsRandomlyInCombatGroups
+        );
 
         if (!Current.IsGlobal)
             return;

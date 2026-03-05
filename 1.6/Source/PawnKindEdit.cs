@@ -282,8 +282,7 @@ public class PawnKindEdit : IExposable
         ExposeModuleData();
     }
 
-    // ── Reflection-based field enumeration (cached at static init time) ──
-
+    //Reflection-based field enumeration (cached at static init time)
     public static readonly FieldInfo[] CopyableFields = typeof(PawnKindEdit)
         .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
         .Where(f => f.GetCustomAttribute<NoCopyAttribute>() == null)

@@ -147,7 +147,7 @@ public class FactionEditUI : Window
 
         if (
             ModsConfig.BiotechActive
-            && !Current.Faction.IsMissing
+            && Current.Faction is { IsMissing: false }
             && Current.Faction?.Def != Preset.SpecialWildManFaction
             && Current.Faction?.Def != Preset.SpecialFactionlessPawnsFaction
         )
@@ -166,10 +166,56 @@ public class FactionEditUI : Window
                 Find.WindowStack.Add(new Dialog_XenotypeEdit(Current));
         }
 
+        // --- Spawn Groups section ---
+        if (Current.Faction is not { IsMissing: true })
+        {
+            inner.GapLine();
+
+            // Summary row: "Spawn Groups: N groups [Edit Spawn Groups]"
+            Rect groupsRow = inner.GetRect(28f);
+            float editBtnW = 160f;
+            Rect editGroupsBtn = new(groupsRow.xMax - editBtnW, groupsRow.y, editBtnW, 24f);
+
+            Text.Anchor = TextAnchor.MiddleLeft;
+            string groupsSummary;
+            int groupCount;
+            if (Current.PawnGroupMakerEdits != null)
+            {
+                groupCount = Current.PawnGroupMakerEdits.Count;
+                groupsSummary = "FactionLoadout_SpawnGroups_SummaryModified".Translate(groupCount, "FactionLoadout_GroupEditor_NewTag".Translate().ToString().ToLower());
+            }
+            else
+            {
+                groupCount = Current?.Faction?.Def?.pawnGroupMakers?.Count ?? 0;
+                groupsSummary = "FactionLoadout_SpawnGroups_Summary".Translate(groupCount);
+            }
+
+            Rect summaryLabelRect = new(groupsRow.x, groupsRow.y, groupsRow.width - editBtnW - 4f, groupsRow.height);
+            GUI.color = Color.grey;
+            Widgets.Label(summaryLabelRect, "FactionLoadout_SpawnGroups_Label".Translate() + "  " + groupsSummary);
+            GUI.color = Color.white;
+            Text.Anchor = TextAnchor.UpperLeft;
+
+            if (Widgets.ButtonText(editGroupsBtn, "FactionLoadout_SpawnGroups_EditButton".Translate()))
+                GroupEditorUI.OpenEditor(Current);
+
+            // Orphan warning row (conditional)
+            HashSet<PawnKindDef> orphaned = Current?.GetOrphanedKinds() ?? [];
+            if (orphaned.Count > 0)
+            {
+                Rect warnRow = inner.GetRect(24f);
+                GUI.color = new Color(1f, 0.6f, 0.1f);
+                if (Widgets.ButtonText(warnRow, "FactionLoadout_SpawnGroups_OrphanWarning".Translate(orphaned.Count), drawBackground: false))
+                    GroupEditorUI.OpenEditor(Current);
+                GUI.color = Color.white;
+            }
+        }
+
         inner.GapLine();
         inner.Label("<b>Loadout Overrides:</b>");
         inner.Gap();
 
+        HashSet<PawnKindDef> orphanedKinds = Current?.GetOrphanedKinds() ?? [];
         foreach (PawnKindEdit edit in Current.KindEdits)
         {
             Rect rect = inner.GetRect(30);
@@ -206,6 +252,18 @@ public class FactionEditUI : Window
             }
 
             rect.x += 28;
+
+            // Orphan warning icon
+            bool isOrphaned = !edit.IsGlobal && edit.Def != null && orphanedKinds.Contains(edit.Def);
+            if (isOrphaned)
+            {
+                GUI.color = Color.yellow;
+                Widgets.Label(new Rect(rect.x, rect.y, 20f, 24f), "⚠");
+                GUI.color = Color.white;
+                TooltipHandler.TipRegion(new Rect(rect.x, rect.y, 20f, 24f), "FactionLoadout_SpawnGroups_OrphanKindTooltip".Translate());
+                rect.x += 22f;
+            }
+
             Widgets.Label(rect, $"<b>{(edit.IsGlobal ? "<color=cyan>Global (affects all faction pawns)</color>" : edit.Def.LabelCap)}</b>");
         }
 
@@ -221,28 +279,23 @@ public class FactionEditUI : Window
                 if (!Current.HasGlobalEditor())
                     tempKinds.Add(null);
 
-                void Register(List<PawnGenOption> list)
+                // Collect all pawnkinds from group edits (if active) or the
+                // live faction def, then also add basicMemberKind and
+                // fixedLeaderKinds which are not inside pawnGroupMakers.
+                foreach (PawnKindDef kind in Current.GetAllKindDefsForUI())
                 {
-                    if (list == null)
-                        return;
-                    foreach (PawnGenOption thing in list)
-                        if (!Current.HasEditFor(thing.kind))
-                            tempKinds.Add(thing.kind);
+                    if (!Current.HasEditFor(kind))
+                        tempKinds.Add(kind);
                 }
 
-                foreach (PawnGroupMaker maker in Current.Faction.Def.pawnGroupMakers ?? Enumerable.Empty<PawnGroupMaker>())
-                {
-                    Register(maker.options);
-                    Register(maker.guards);
-                    Register(maker.traders);
-                    Register(maker.carriers);
-                }
-
-                if (Current.Faction.Def.basicMemberKind != null)
+                // basicMemberKind and fixedLeaderKinds are not covered by
+                // GetAllKindDefsForUI so add them separately.
+                if (Current.Faction.Def?.basicMemberKind != null && !Current.HasEditFor(Current.Faction.Def.basicMemberKind))
                     tempKinds.Add(Current.Faction.Def.basicMemberKind);
-                if (Current.Faction.Def.fixedLeaderKinds != null)
+                if (Current.Faction.Def?.fixedLeaderKinds != null)
                     foreach (PawnKindDef item in Current.Faction.Def.fixedLeaderKinds)
-                        tempKinds.Add(item);
+                        if (!Current.HasEditFor(item))
+                            tempKinds.Add(item);
 
                 foreach (PawnKindDef item in tempKinds)
                     yield return item;
@@ -259,8 +312,8 @@ public class FactionEditUI : Window
                 tempKinds.Clear();
             }
 
-            var kinds = MakeKinds().ToList();
-            var items = CustomFloatMenu.MakeItems(
+            List<PawnKindDef> kinds = MakeKinds().ToList();
+            List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                 kinds,
                 k =>
                     k != null
@@ -308,7 +361,7 @@ public class FactionEditUI : Window
                     ModCore.Log($"  * {item?.LabelCap ?? "<null>"}");
             }
 
-        var isInGame = Verse.Current.Game != null;
+        bool isInGame = Verse.Current.Game != null;
 
         if (!isInGame)
         {
