@@ -9,6 +9,10 @@
 
     <FactionLoadout_GlobalOnly>Can only be edited via the global edit.</FactionLoadout_GlobalOnly>
     <FactionLoadout_CurvePoint>Point {0}: ({1}, {2})</FactionLoadout_CurvePoint>
+    <FactionLoadout_CombatPower>Combat Power (Point Cost)</FactionLoadout_CombatPower>
+    <FactionLoadout_AppearsRandomlyInCombatGroups>Appears In Combat Groups</FactionLoadout_AppearsRandomlyInCombatGroups>
+    <FactionLoadout_AppearsRandomly_Label>Appears randomly in combat groups</FactionLoadout_AppearsRandomly_Label>
+    <FactionLoadout_Desc_MaxPawnCost>Max point cost a single pawn can have based on total raid points.\nIf a pawn's combat power exceeds this limit it won't be selected, which can cause 0 pawns to spawn.\nEach point is a graph entry (total points, max pawn cost).\nIf you use the same left number twice, last one wins.</FactionLoadout_Desc_MaxPawnCost>
     <FactionLoadout_Desc_RaidPoints>Commonality this faction will attack by raid points.\nEach point is like points on a graph. Consider (300, 0) and (500, 1):\nThey'll never attack until 300 then gradually become more common between 300 and 500, then remain the same.\nIf you use the same left number twice, last one wins.</FactionLoadout_Desc_RaidPoints>
     <FactionLoadout_Desc_RaidLoot>Amount of loot this faction will drop by raid points.\nEach point is like points on a graph. Consider (300, 0) and (500, 150):\nThey'll bring nothing until 300 then gradually become more lucrative between 300 and 500, then remain the same.\nIf you use the same left number twice, last one wins.</FactionLoadout_Desc_RaidLoot>
     <FactionLoadout_FactionDefault>Set to faction default</FactionLoadout_FactionDefault>
