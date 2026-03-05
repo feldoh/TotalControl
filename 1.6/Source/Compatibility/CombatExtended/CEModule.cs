@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using CombatExtended;
 using FactionLoadout;
 using FactionLoadout.Modules;
@@ -9,7 +10,7 @@ namespace TotalControlCECompat;
 
 /// <summary>
 /// Total Control module that allows configuring Combat Extended loadout settings per PawnKindEdit.
-/// Users can force a specific ammo category, override primary magazine count, and set minimum ammo.
+/// Exposes all public fields of LoadoutPropertiesExtension: ammo, shields, sidearms, and attachments.
 /// </summary>
 public class CEModule : ITotalControlModule
 {
@@ -42,25 +43,85 @@ public class CEModule : ITotalControlModule
     {
         CEData data = GetOrCreateData(edit);
 
+        // --- Ammo ---
         string ammoCategory = data.ForcedAmmoCategoryDefName;
         float magMin = data.PrimaryMagazineCount?.min ?? -1f;
         float magMax = data.PrimaryMagazineCount?.max ?? -1f;
         int minAmmo = data.MinAmmoCount ?? -1;
+        List<WeightedAmmoCategoryData> weightedAmmo = data.WeightedAmmoCategories;
 
         Scribe_Values.Look(ref ammoCategory, "forcedAmmoCategory", null);
         Scribe_Values.Look(ref magMin, "magCountMin", -1f);
         Scribe_Values.Look(ref magMax, "magCountMax", -1f);
         Scribe_Values.Look(ref minAmmo, "minAmmoCount", -1);
+        Scribe_Collections.Look(ref weightedAmmo, "weightedAmmoCategories", LookMode.Deep);
 
         data.ForcedAmmoCategoryDefName = ammoCategory;
         data.PrimaryMagazineCount = magMin >= 0f ? new FloatRange(magMin, magMax) : null;
         data.MinAmmoCount = minAmmo >= 0 ? minAmmo : null;
+        data.WeightedAmmoCategories = weightedAmmo?.Count > 0 ? weightedAmmo : null;
 
-        // Clean up empty data
-        if (Scribe.mode == LoadSaveMode.PostLoadInit)
+        // --- Shield ---
+        float shieldMoneyMin = data.ShieldMoney?.min ?? -1f;
+        float shieldMoneyMax = data.ShieldMoney?.max ?? -1f;
+        float shieldChance = data.ShieldChance ?? -1f;
+        // bool? stored as int: -1=unset, 0=false, 1=true
+        int forceShieldMat = data.ForceShieldMaterial.HasValue ? (data.ForceShieldMaterial.Value ? 1 : 0) : -1;
+        List<string> shieldTags = data.ShieldTags;
+        ThingFilter shieldFilter = data.ShieldMaterialFilter;
+
+        Scribe_Values.Look(ref shieldMoneyMin, "shieldMoneyMin", -1f);
+        Scribe_Values.Look(ref shieldMoneyMax, "shieldMoneyMax", -1f);
+        Scribe_Values.Look(ref shieldChance, "shieldChance", -1f);
+        Scribe_Values.Look(ref forceShieldMat, "forceShieldMaterial", -1);
+        Scribe_Collections.Look(ref shieldTags, "shieldTags", LookMode.Value);
+        Scribe_Deep.Look(ref shieldFilter, "shieldMaterialFilter");
+
+        data.ShieldMoney = shieldMoneyMin >= 0f ? new FloatRange(shieldMoneyMin, shieldMoneyMax) : null;
+        data.ShieldChance = shieldChance >= 0f ? shieldChance : null;
+        data.ForceShieldMaterial = forceShieldMat >= 0 ? forceShieldMat > 0 : null;
+        data.ShieldTags = shieldTags?.Count > 0 ? shieldTags : null;
+        data.ShieldMaterialFilter = shieldFilter;
+
+        // --- Forced Sidearm ---
+        SidearmData forcedSidearm = data.ForcedSidearm;
+        bool hasForcedSidearm = forcedSidearm != null;
+        Scribe_Values.Look(ref hasForcedSidearm, "hasForcedSidearm", false);
+        if (hasForcedSidearm)
         {
-            if (data.ForcedAmmoCategoryDefName == null && data.PrimaryMagazineCount == null && data.MinAmmoCount == null)
-                dataStore.Remove(edit);
+            forcedSidearm ??= new SidearmData();
+            Scribe_Deep.Look(ref forcedSidearm, "forcedSidearm");
+            data.ForcedSidearm = forcedSidearm;
+        }
+        else
+        {
+            data.ForcedSidearm = null;
+        }
+
+        // --- Sidearms List ---
+        List<SidearmData> sidearms = data.Sidearms;
+        Scribe_Collections.Look(ref sidearms, "sidearms", LookMode.Deep);
+        data.Sidearms = sidearms?.Count > 0 ? sidearms : null;
+
+        // --- Primary Attachments ---
+        AttachmentData primaryAttachments = data.PrimaryAttachments;
+        bool hasPrimaryAttachments = primaryAttachments != null;
+        Scribe_Values.Look(ref hasPrimaryAttachments, "hasPrimaryAttachments", false);
+        if (hasPrimaryAttachments)
+        {
+            primaryAttachments ??= new AttachmentData();
+            Scribe_Deep.Look(ref primaryAttachments, "primaryAttachments");
+            data.PrimaryAttachments = primaryAttachments;
+        }
+        else
+        {
+            data.PrimaryAttachments = null;
+        }
+
+        // Remove the entry if everything is cleared
+        if (Scribe.mode == LoadSaveMode.PostLoadInit && data.IsEmpty)
+        {
+            dataStore.Remove(edit);
         }
     }
 
@@ -69,24 +130,63 @@ public class CEModule : ITotalControlModule
         CEData data = GetData(edit);
         CEData globalData = global != null ? GetData(global) : null;
 
-        // Merge: specific edit overrides global
+        // Merge: specific edit overrides global for each field independently
         string ammoCategoryName = data?.ForcedAmmoCategoryDefName ?? globalData?.ForcedAmmoCategoryDefName;
         FloatRange? magCount = data?.PrimaryMagazineCount ?? globalData?.PrimaryMagazineCount;
         int? minAmmo = data?.MinAmmoCount ?? globalData?.MinAmmoCount;
+        List<WeightedAmmoCategoryData> weightedAmmo = HasEntries(data?.WeightedAmmoCategories)
+            ? data?.WeightedAmmoCategories
+            : HasEntries(globalData?.WeightedAmmoCategories)
+                ? globalData?.WeightedAmmoCategories
+                : null;
 
-        if (ammoCategoryName == null && magCount == null && minAmmo == null)
+        FloatRange? shieldMoney = data?.ShieldMoney ?? globalData?.ShieldMoney;
+        float? shieldChance = data?.ShieldChance ?? globalData?.ShieldChance;
+        bool? forceShieldMaterial = data?.ForceShieldMaterial ?? globalData?.ForceShieldMaterial;
+        List<string> shieldTags = HasEntries(data?.ShieldTags)
+            ? data?.ShieldTags
+            : HasEntries(globalData?.ShieldTags)
+                ? globalData?.ShieldTags
+                : null;
+        ThingFilter shieldFilter = data?.ShieldMaterialFilter ?? globalData?.ShieldMaterialFilter;
+
+        SidearmData forcedSidearm = data?.ForcedSidearm ?? globalData?.ForcedSidearm;
+        List<SidearmData> sidearms = HasEntries(data?.Sidearms)
+            ? data.Sidearms
+            : HasEntries(globalData?.Sidearms)
+                ? globalData.Sidearms
+                : null;
+        AttachmentData primaryAttachments = data?.PrimaryAttachments ?? globalData?.PrimaryAttachments;
+
+        bool hasAnything =
+            ammoCategoryName != null
+            || magCount != null
+            || minAmmo != null
+            || weightedAmmo != null
+            || shieldMoney != null
+            || shieldChance != null
+            || forceShieldMaterial != null
+            || shieldTags != null
+            || shieldFilter != null
+            || forcedSidearm != null
+            || sidearms != null
+            || primaryAttachments != null;
+
+        if (!hasAnything)
+        {
             return;
+        }
 
+        // Resolve forced ammo category def
         AmmoCategoryDef ammoCategory = null;
         if (ammoCategoryName != null)
         {
             ammoCategory = DefDatabase<AmmoCategoryDef>.GetNamedSilentFail(ammoCategoryName);
             if (ammoCategory == null)
+            {
                 ModCore.Warn($"CE module: Could not resolve AmmoCategoryDef '{ammoCategoryName}'.");
+            }
         }
-
-        if (ammoCategory == null && magCount == null && minAmmo == null)
-            return;
 
         def.modExtensions ??= [];
 
@@ -97,25 +197,57 @@ public class CEModule : ITotalControlModule
             def.modExtensions.Add(ext);
         }
 
-        if (ammoCategory != null)
-            ext.forcedAmmoCategory = ammoCategory;
-        if (magCount.HasValue)
-            ext.primaryMagazineCount = magCount.Value;
-        if (minAmmo.HasValue)
-            ext.minAmmoCount = minAmmo.Value;
+        if (ammoCategory != null) ext.forcedAmmoCategory = ammoCategory;
+        if (magCount.HasValue) ext.primaryMagazineCount = magCount.Value;
+        if (minAmmo.HasValue) ext.minAmmoCount = minAmmo.Value;
+        if (weightedAmmo != null)
+        {
+            List<WeightedAmmoCategory> converted = weightedAmmo
+                .Select(ConvertWeightedAmmo)
+                .Where(w => w != null)
+                .ToList();
+            if (converted.Count > 0) ext.weightedAmmoCategories = converted;
+        }
+
+        if (shieldMoney.HasValue) ext.shieldMoney = shieldMoney.Value;
+        if (shieldChance.HasValue) ext.shieldChance = shieldChance.Value;
+        if (forceShieldMaterial.HasValue) ext.forceShieldMaterial = forceShieldMaterial.Value;
+        if (shieldTags != null) ext.shieldTags = [..shieldTags];
+        if (shieldFilter != null) ext.shieldMaterialFilter = shieldFilter;
+        if (forcedSidearm != null) ext.forcedSidearm = ConvertSidearm(forcedSidearm);
+        if (sidearms != null) ext.sidearms = sidearms.Select(ConvertSidearm).ToList();
+        if (primaryAttachments is { IsEmpty: false }) ext.primaryAttachments = ConvertAttachment(primaryAttachments);
     }
 
     public void CopyData(PawnKindEdit source, PawnKindEdit dest)
     {
         CEData data = GetData(source);
         if (data == null)
+        {
             return;
+        }
+
+        ThingFilter shieldFilterCopy = null;
+        if (data.ShieldMaterialFilter != null)
+        {
+            shieldFilterCopy = new ThingFilter();
+            shieldFilterCopy.CopyAllowancesFrom(data.ShieldMaterialFilter);
+        }
 
         dataStore[dest] = new CEData
         {
             ForcedAmmoCategoryDefName = data.ForcedAmmoCategoryDefName,
             PrimaryMagazineCount = data.PrimaryMagazineCount,
             MinAmmoCount = data.MinAmmoCount,
+            WeightedAmmoCategories = data.WeightedAmmoCategories?.Select(w => w.DeepClone()).ToList(),
+            ShieldMoney = data.ShieldMoney,
+            ShieldChance = data.ShieldChance,
+            ForceShieldMaterial = data.ForceShieldMaterial,
+            ShieldTags = data.ShieldTags != null ? [..data.ShieldTags] : null,
+            ShieldMaterialFilter = shieldFilterCopy,
+            ForcedSidearm = data.ForcedSidearm?.DeepClone(),
+            Sidearms = data.Sidearms?.Select(s => s.DeepClone()).ToList(),
+            PrimaryAttachments = data.PrimaryAttachments?.DeepClone(),
         };
     }
 
@@ -123,4 +255,38 @@ public class CEModule : ITotalControlModule
     {
         tabs.Add(new Tab("FactionLoadout_Tab_CE".Translate(), ui => CEUI.DrawTab(ui, edit, defaultKind)));
     }
+
+    // --- Conversion helpers ---
+
+    private static SidearmOption ConvertSidearm(SidearmData d) =>
+        new()
+        {
+            sidearmMoney = d.SidearmMoney ?? default,
+            magazineCount = d.MagazineCount ?? default,
+            weaponTags = d.WeaponTags != null ? [..d.WeaponTags] : null,
+            generateChance = d.GenerateChance ?? 1f,
+            attachments = d.Attachments is { IsEmpty: false } ? ConvertAttachment(d.Attachments) : null,
+        };
+
+    private static AttachmentOption ConvertAttachment(AttachmentData d) =>
+        new()
+        {
+            attachmentCount = d.AttachmentCount ?? default,
+            attachmentTags = d.AttachmentTags != null ? [..d.AttachmentTags] : null,
+        };
+
+    private static WeightedAmmoCategory ConvertWeightedAmmo(WeightedAmmoCategoryData d)
+    {
+        AmmoCategoryDef def = DefDatabase<AmmoCategoryDef>.GetNamedSilentFail(d.AmmoCategoryDefName);
+        if (def == null)
+        {
+            ModCore.Warn($"CE module: Could not resolve AmmoCategoryDef '{d.AmmoCategoryDefName}' for weighted ammo.");
+            return null;
+        }
+
+        WeightedAmmoCategory w = new() { ammoCategory = def, chance = d.Chance };
+        return w;
+    }
+
+    private static bool HasEntries<T>(List<T> list) => list is { Count: > 0 };
 }
