@@ -32,6 +32,9 @@ public static class CEUI
         ui.GapLine();
         DrawWeightedAmmoCategoriesSection(ui, data);
 
+        DrawSectionHeader(ui, "FactionLoadout_CE_Section_WeaponAmmoMap".Translate());
+        DrawWeaponAmmoMappingsSection(ui, data, edit);
+
         DrawSectionHeader(ui, "FactionLoadout_CE_Section_Shield".Translate());
         DrawShieldMoneyRow(ui, data, defExt);
         ui.GapLine();
@@ -224,6 +227,184 @@ public static class CEUI
                 data.WeightedAmmoCategories.Add(new WeightedAmmoCategoryData { AmmoCategoryDefName = selected.defName, Chance = 1f });
             });
         }
+    }
+
+    private static void DrawWeaponAmmoMappingsSection(Listing_Standard ui, CEData data, PawnKindEdit edit)
+    {
+        // Collect weapons/tags configured in the main Weapon tab, deduplicating by key
+        List<string> shownKeys = [];
+
+        if (edit.SpecificWeapons != null)
+        {
+            foreach (SpecRequirementEdit spec in edit.SpecificWeapons)
+            {
+                if (spec.Thing == null) continue;
+                string key = spec.Thing.defName;
+                if (shownKeys.Contains(key)) continue;
+                shownKeys.Add(key);
+                DrawWeaponAmmoMappingRow(ui, data, key, false, spec.Thing.LabelCap.ToString());
+            }
+        }
+
+        if (edit.WeaponTags != null)
+        {
+            foreach (string tag in edit.WeaponTags)
+            {
+                if (string.IsNullOrWhiteSpace(tag)) continue;
+                string key = tag;
+                if (shownKeys.Contains("tag:" + key)) continue;
+                shownKeys.Add("tag:" + key);
+                DrawWeaponAmmoMappingRow(ui, data, key, true, "tag: " + tag);
+            }
+        }
+
+        if (shownKeys.Count == 0)
+        {
+            Rect hint = ui.GetRect(RowH);
+            Text.Anchor = TextAnchor.MiddleLeft;
+            GUI.color = Color.gray;
+            Widgets.Label(hint, "FactionLoadout_CE_WeaponAmmoMap_Hint".Translate());
+            GUI.color = Color.white;
+            Text.Anchor = TextAnchor.UpperLeft;
+            return;
+        }
+
+        // Prune orphaned mapping entries whose source weapon/tag was removed from the main tab
+        if (data.WeaponAmmoMappings != null)
+        {
+            data.WeaponAmmoMappings.RemoveAll(m =>
+            {
+                string k = m.IsTag ? "tag:" + m.WeaponKey : m.WeaponKey;
+                return !shownKeys.Contains(k);
+            });
+            if (data.WeaponAmmoMappings.Count == 0) { data.WeaponAmmoMappings = null; }
+        }
+    }
+
+    private static void DrawWeaponAmmoMappingRow(
+        Listing_Standard ui, CEData data, string weaponKey, bool isTag, string weaponLabel)
+    {
+        // Find existing mapping entry
+        WeaponAmmoMapEntry entry = null;
+        int entryIdx = -1;
+        if (data.WeaponAmmoMappings != null)
+        {
+            for (int i = 0; i < data.WeaponAmmoMappings.Count; i++)
+            {
+                if (data.WeaponAmmoMappings[i].WeaponKey == weaponKey
+                    && data.WeaponAmmoMappings[i].IsTag == isTag)
+                {
+                    entry = data.WeaponAmmoMappings[i];
+                    entryIdx = i;
+                    break;
+                }
+            }
+        }
+
+        // Header row: weapon label + Clear or Override button
+        Rect headerRow = ui.GetRect(RowH);
+        Text.Anchor = TextAnchor.MiddleLeft;
+        Widgets.Label(headerRow.LeftHalf(), weaponLabel);
+        Text.Anchor = TextAnchor.UpperLeft;
+
+        if (entry != null)
+        {
+            if (Widgets.ButtonText(headerRow.RightHalf().RightPart(0.4f), "FactionLoadout_Clear".Translate()))
+            {
+                data.WeaponAmmoMappings.RemoveAt(entryIdx);
+                if (data.WeaponAmmoMappings.Count == 0) { data.WeaponAmmoMappings = null; }
+                return;
+            }
+
+            // Per-choice rows: ammo category button + chance field + remove button
+            entry.Choices ??= [];
+            int toRemove = -1;
+            for (int i = 0; i < entry.Choices.Count; i++)
+            {
+                WeightedAmmoCategoryData choice = entry.Choices[i];
+                Rect row = ui.GetRect(RowH);
+
+                AmmoCategoryDef resolved = DefDatabase<AmmoCategoryDef>.GetNamedSilentFail(choice.AmmoCategoryDefName);
+                string catLabel = resolved != null
+                    ? resolved.LabelCap.ToString()
+                    : (choice.AmmoCategoryDefName != null ? choice.AmmoCategoryDefName + " (?)" : "(select…)");
+
+                if (Widgets.ButtonText(row.LeftPart(0.4f), catLabel))
+                {
+                    int capturedI = i;
+                    List<WeightedAmmoCategoryData> capturedChoices = entry.Choices;
+                    OpenAmmoCategoryMenuForChoices(catDef =>
+                        capturedChoices[capturedI].AmmoCategoryDefName = catDef.defName);
+                }
+
+                Text.Anchor = TextAnchor.MiddleRight;
+                Widgets.Label(row.LeftPart(0.63f).RightPart(0.42f), "FactionLoadout_CE_Chance".Translate() + ":");
+                Text.Anchor = TextAnchor.UpperLeft;
+
+                float chance = choice.Chance;
+                string chanceBuf = chance.ToString("F2");
+                Widgets.TextFieldNumeric(row.LeftPart(0.77f).RightPart(0.15f), ref chance, ref chanceBuf, 0f, 999f);
+                choice.Chance = chance;
+
+                if (Widgets.ButtonText(row.RightPart(0.21f), "FactionLoadout_Clear".Translate()))
+                {
+                    toRemove = i;
+                }
+            }
+
+            if (toRemove >= 0) { entry.Choices.RemoveAt(toRemove); }
+
+            Rect addRow = ui.GetRect(RowH);
+            if (Widgets.ButtonText(addRow.LeftPart(0.5f), "FactionLoadout_CE_AddAmmoCategory".Translate()))
+            {
+                List<WeightedAmmoCategoryData> capturedChoices = entry.Choices;
+                OpenAmmoCategoryMenuForChoices(catDef =>
+                    capturedChoices.Add(new WeightedAmmoCategoryData
+                    {
+                        AmmoCategoryDefName = catDef.defName,
+                        Chance = 1f,
+                    }));
+            }
+        }
+        else
+        {
+            // Override: open picker immediately; only create entry on selection
+            if (Widgets.ButtonText(headerRow.RightHalf().RightPart(0.4f), "FactionLoadout_Override".Translate()))
+            {
+                CEData capturedData = data;
+                string capturedKey = weaponKey;
+                bool capturedIsTag = isTag;
+                OpenAmmoCategoryMenuForChoices(catDef =>
+                {
+                    capturedData.WeaponAmmoMappings ??= [];
+                    capturedData.WeaponAmmoMappings.Add(new WeaponAmmoMapEntry
+                    {
+                        WeaponKey = capturedKey,
+                        IsTag = capturedIsTag,
+                        Choices =
+                        [
+                            new WeightedAmmoCategoryData
+                            {
+                                AmmoCategoryDefName = catDef.defName,
+                                Chance = 1f,
+                            },
+                        ],
+                    });
+                });
+            }
+        }
+
+        ui.GapLine();
+    }
+
+    /// <summary>Opens the ammo category float-menu and calls <paramref name="onSelect"/> with the chosen def.</summary>
+    private static void OpenAmmoCategoryMenuForChoices(System.Action<AmmoCategoryDef> onSelect)
+    {
+        List<AmmoCategoryDef> allCats = DefDatabase<AmmoCategoryDef>.AllDefsListForReading
+            .OrderBy(d => d.LabelCap.ToString())
+            .ToList();
+        var items = CustomFloatMenu.MakeItems(allCats, d => new MenuItemText(d, d.LabelCap, tooltip: d.description));
+        CustomFloatMenu.Open(items, item => onSelect(item.GetPayload<AmmoCategoryDef>()));
     }
 
     #endregion

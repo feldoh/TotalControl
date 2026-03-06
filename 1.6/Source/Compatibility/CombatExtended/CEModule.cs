@@ -21,6 +21,29 @@ public class CEModule : ITotalControlModule
     // Per-PawnKindEdit data storage
     private static readonly Dictionary<PawnKindEdit, CEData> dataStore = new();
 
+    /// <summary>
+    /// Pre-resolved per-weapon ammo mappings keyed by cloned PawnKindDef.
+    /// Built during Apply() so the Harmony patch has zero def-lookup cost at generation time.
+    ///
+    /// Although the key type is PawnKindDef, this is effectively a (faction × kindDef) map:
+    /// TC clones each PawnKindDef once per faction (clone name: {original}_TCCln_{faction}),
+    /// so every key in this dictionary is a distinct object. pawn.kindDef at generation time
+    /// returns the same clone that Apply() registered, making the lookup inherently faction-aware.
+    /// </summary>
+    public static readonly Dictionary<PawnKindDef, ResolvedWeaponAmmoEntry[]> KindDefMappings = new();
+
+    /// <summary>
+    /// A single pre-resolved weapon→ammo mapping entry.
+    /// WeaponKey is either a ThingDef.defName (IsTag=false) or a weapon tag (IsTag=true).
+    /// Choices are CE's own WeightedAmmoCategory instances, fully resolved at Apply() time.
+    /// </summary>
+    public struct ResolvedWeaponAmmoEntry
+    {
+        public string WeaponKey;
+        public bool IsTag;
+        public List<WeightedAmmoCategory> Choices;
+    }
+
     public void Initialize() { }
 
     public static CEData GetData(PawnKindEdit edit)
@@ -118,6 +141,11 @@ public class CEModule : ITotalControlModule
             data.PrimaryAttachments = null;
         }
 
+        // --- Per-Weapon Ammo Mappings ---
+        List<WeaponAmmoMapEntry> weaponAmmoMappings = data.WeaponAmmoMappings;
+        Scribe_Collections.Look(ref weaponAmmoMappings, "weaponAmmoMappings", LookMode.Deep);
+        data.WeaponAmmoMappings = weaponAmmoMappings?.Count > 0 ? weaponAmmoMappings : null;
+
         // Remove the entry if everything is cleared
         if (Scribe.mode == LoadSaveMode.PostLoadInit && data.IsEmpty)
         {
@@ -157,6 +185,8 @@ public class CEModule : ITotalControlModule
                 ? globalData.Sidearms
                 : null;
         AttachmentData primaryAttachments = data?.PrimaryAttachments ?? globalData?.PrimaryAttachments;
+        List<WeaponAmmoMapEntry> weaponAmmoMappings = MergeMappings(
+            data?.WeaponAmmoMappings, globalData?.WeaponAmmoMappings);
 
         bool hasAnything =
             ammoCategoryName != null
@@ -170,10 +200,12 @@ public class CEModule : ITotalControlModule
             || shieldFilter != null
             || forcedSidearm != null
             || sidearms != null
-            || primaryAttachments != null;
+            || primaryAttachments != null
+            || HasEntries(weaponAmmoMappings);
 
         if (!hasAnything)
         {
+            KindDefMappings.Remove(def);
             return;
         }
 
@@ -217,6 +249,36 @@ public class CEModule : ITotalControlModule
         if (forcedSidearm != null) ext.forcedSidearm = ConvertSidearm(forcedSidearm);
         if (sidearms != null) ext.sidearms = sidearms.Select(ConvertSidearm).ToList();
         if (primaryAttachments is { IsEmpty: false }) ext.primaryAttachments = ConvertAttachment(primaryAttachments);
+
+        // Build per-weapon ammo lookup cache (all def resolution happens here, not at gen time)
+        if (HasEntries(weaponAmmoMappings))
+        {
+            ResolvedWeaponAmmoEntry[] resolved = weaponAmmoMappings
+                .Select(m => new ResolvedWeaponAmmoEntry
+                {
+                    WeaponKey = m.WeaponKey,
+                    IsTag = m.IsTag,
+                    Choices = m.Choices
+                        ?.Select(ConvertWeightedAmmo)
+                        .Where(c => c != null)
+                        .ToList(),
+                })
+                .Where(r => r.WeaponKey != null && r.Choices?.Count > 0)
+                .ToArray();
+
+            if (resolved.Length > 0)
+            {
+                KindDefMappings[def] = resolved;
+            }
+            else
+            {
+                KindDefMappings.Remove(def);
+            }
+        }
+        else
+        {
+            KindDefMappings.Remove(def);
+        }
     }
 
     public void CopyData(PawnKindEdit source, PawnKindEdit dest)
@@ -248,6 +310,7 @@ public class CEModule : ITotalControlModule
             ForcedSidearm = data.ForcedSidearm?.DeepClone(),
             Sidearms = data.Sidearms?.Select(s => s.DeepClone()).ToList(),
             PrimaryAttachments = data.PrimaryAttachments?.DeepClone(),
+            WeaponAmmoMappings = data.WeaponAmmoMappings?.Select(e => e.DeepClone()).ToList(),
         };
     }
 
@@ -289,4 +352,34 @@ public class CEModule : ITotalControlModule
     }
 
     private static bool HasEntries<T>(List<T> list) => list is { Count: > 0 };
+
+    /// <summary>
+    /// Merges per-weapon ammo mappings from a specific edit and a global edit.
+    /// Specific-edit entries take precedence over global entries for the same WeaponKey.
+    /// Entries from global that are not overridden are appended.
+    /// </summary>
+    private static List<WeaponAmmoMapEntry> MergeMappings(
+        List<WeaponAmmoMapEntry> specific, List<WeaponAmmoMapEntry> global)
+    {
+        if (!HasEntries(specific) && !HasEntries(global)) { return null; }
+        if (!HasEntries(global)) { return specific; }
+        if (!HasEntries(specific)) { return global; }
+
+        // Specific entries win; add global entries whose key isn't already covered
+        List<WeaponAmmoMapEntry> merged = [..specific];
+        foreach (WeaponAmmoMapEntry g in global)
+        {
+            bool overridden = false;
+            foreach (WeaponAmmoMapEntry s in specific)
+            {
+                if (s.WeaponKey == g.WeaponKey && s.IsTag == g.IsTag)
+                {
+                    overridden = true;
+                    break;
+                }
+            }
+            if (!overridden) { merged.Add(g); }
+        }
+        return merged;
+    }
 }

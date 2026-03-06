@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Verse;
 
 namespace TotalControlCECompat;
@@ -97,6 +98,42 @@ public class SidearmData : IExposable
         };
 }
 
+/// <summary>
+/// Maps a specific weapon (by ThingDef defName or weapon tag) to a weighted list of ammo
+/// categories. Used by the per-weapon ammo mapping feature to select ammo conditionally based
+/// on which weapon a pawn was actually given at generation time.
+/// </summary>
+public class WeaponAmmoMapEntry : IExposable
+{
+    /// <summary>ThingDef.defName of the weapon, or a weapon tag string.</summary>
+    public string WeaponKey;
+
+    /// <summary>If true, WeaponKey is a weapon tag; if false it is a ThingDef.defName.</summary>
+    public bool IsTag;
+
+    /// <summary>
+    /// Weighted ammo category choices. Reuses WeightedAmmoCategoryData so the UI and
+    /// serialization patterns are identical to the global weighted ammo section.
+    /// A single forced category is stored as a list with one entry.
+    /// </summary>
+    public List<WeightedAmmoCategoryData> Choices;
+
+    public void ExposeData()
+    {
+        Scribe_Values.Look(ref WeaponKey, "weaponKey", null);
+        Scribe_Values.Look(ref IsTag, "isTag", false);
+        Scribe_Collections.Look(ref Choices, "choices", LookMode.Deep);
+    }
+
+    public WeaponAmmoMapEntry DeepClone() =>
+        new()
+        {
+            WeaponKey = WeaponKey,
+            IsTag = IsTag,
+            Choices = Choices?.Select(c => c.DeepClone()).ToList(),
+        };
+}
+
 /// <summary>Data for WeightedAmmoCategory from CE.</summary>
 public class WeightedAmmoCategoryData : IExposable
 {
@@ -164,6 +201,15 @@ public class CEData
     /// <summary>Attachment configuration for the primary weapon. Null = no override.</summary>
     public AttachmentData PrimaryAttachments;
 
+    // --- Per-Weapon Ammo Mappings ---
+
+    /// <summary>
+    /// Maps specific weapons or weapon tags to weighted ammo category choices.
+    /// Applied at pawn-generation time via a Harmony patch on GenerateLoadoutFor,
+    /// overriding the global ForcedAmmoCategory/WeightedAmmoCategories for that pawn.
+    /// </summary>
+    public List<WeaponAmmoMapEntry> WeaponAmmoMappings;
+
     public bool IsEmpty =>
         ForcedAmmoCategoryDefName == null
         && PrimaryMagazineCount == null
@@ -176,5 +222,6 @@ public class CEData
         && ShieldMaterialFilter == null
         && ForcedSidearm == null
         && (Sidearms == null || Sidearms.Count == 0)
-        && PrimaryAttachments == null;
+        && PrimaryAttachments == null
+        && (WeaponAmmoMappings == null || WeaponAmmoMappings.Count == 0);
 }

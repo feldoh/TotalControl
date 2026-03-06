@@ -110,6 +110,10 @@
     <FactionLoadout_CE_GenerateChance>Generate Chance</FactionLoadout_CE_GenerateChance>
     <FactionLoadout_CE_WeaponTags>Weapon Tags</FactionLoadout_CE_WeaponTags>
 
+    <!-- CE: Per-weapon ammo mapping section -->
+    <FactionLoadout_CE_Section_WeaponAmmoMap>Per-Weapon Ammo</FactionLoadout_CE_Section_WeaponAmmoMap>
+    <FactionLoadout_CE_WeaponAmmoMap_Hint>(configure weapons in the Weapon tab first)</FactionLoadout_CE_WeaponAmmoMap_Hint>
+
     <!-- CE: Attachments section -->
     <FactionLoadout_CE_Section_Attachments>Attachments</FactionLoadout_CE_Section_Attachments>
     <FactionLoadout_CE_PrimaryAttachments>Primary Attachments</FactionLoadout_CE_PrimaryAttachments>
