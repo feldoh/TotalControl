@@ -49,14 +49,7 @@ public class UIHelpers
     /// Draws a nullable <see cref="FloatRange"/> override row.
     /// Shows min/max text fields when overridden, or a hint + Override button when not.
     /// </summary>
-    public static void DrawFloatRangeRow(
-        Listing_Standard ui,
-        string label,
-        ref FloatRange? field,
-        float minLimit,
-        float maxLimit,
-        FloatRange defaultSeed
-    )
+    public static void DrawFloatRangeRow(Listing_Standard ui, string label, ref FloatRange? field, float minLimit, float maxLimit, FloatRange defaultSeed)
     {
         bool hasOverride = field.HasValue;
         Rect row = ui.GetRect(OverrideRowH);
@@ -108,15 +101,7 @@ public class UIHelpers
     /// Draws a nullable float slider override row.
     /// Shows a horizontal slider when overridden, or a hint + Override button when not.
     /// </summary>
-    public static void DrawFloatSliderRow(
-        Listing_Standard ui,
-        string label,
-        ref float? field,
-        float minLimit,
-        float maxLimit,
-        float defaultSeed,
-        bool asPercent = false
-    )
+    public static void DrawFloatSliderRow(Listing_Standard ui, string label, ref float? field, float minLimit, float maxLimit, float defaultSeed, bool asPercent = false)
     {
         bool hasOverride = field.HasValue;
         Rect row = ui.GetRect(OverrideRowH);
@@ -186,16 +171,18 @@ public class UIHelpers
         Rect addRow = ui.GetRect(OverrideRowH);
         if (Widgets.ButtonText(addRow.LeftPart(0.45f), "FactionLoadout_AddTag".Translate()))
         {
-            Find.WindowStack.Add(new Dialog_TextEntry(
-                "FactionLoadout_AddTagDesc".Translate(),
-                newTag =>
-                {
-                    if (!string.IsNullOrWhiteSpace(newTag))
+            Find.WindowStack.Add(
+                new Dialog_TextEntry(
+                    "FactionLoadout_AddTagDesc".Translate(),
+                    newTag =>
                     {
-                        captured.Add(newTag.Trim());
+                        if (!string.IsNullOrWhiteSpace(newTag))
+                        {
+                            captured.Add(newTag.Trim());
+                        }
                     }
-                }
-            ));
+                )
+            );
         }
     }
 }

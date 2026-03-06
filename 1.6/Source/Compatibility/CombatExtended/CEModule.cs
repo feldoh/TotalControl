@@ -162,31 +162,27 @@ public class CEModule : ITotalControlModule
         string ammoCategoryName = data?.ForcedAmmoCategoryDefName ?? globalData?.ForcedAmmoCategoryDefName;
         FloatRange? magCount = data?.PrimaryMagazineCount ?? globalData?.PrimaryMagazineCount;
         int? minAmmo = data?.MinAmmoCount ?? globalData?.MinAmmoCount;
-        List<WeightedAmmoCategoryData> weightedAmmo = HasEntries(data?.WeightedAmmoCategories)
-            ? data?.WeightedAmmoCategories
-            : HasEntries(globalData?.WeightedAmmoCategories)
-                ? globalData?.WeightedAmmoCategories
-                : null;
+        List<WeightedAmmoCategoryData> weightedAmmo =
+            HasEntries(data?.WeightedAmmoCategories) ? data?.WeightedAmmoCategories
+            : HasEntries(globalData?.WeightedAmmoCategories) ? globalData?.WeightedAmmoCategories
+            : null;
 
         FloatRange? shieldMoney = data?.ShieldMoney ?? globalData?.ShieldMoney;
         float? shieldChance = data?.ShieldChance ?? globalData?.ShieldChance;
         bool? forceShieldMaterial = data?.ForceShieldMaterial ?? globalData?.ForceShieldMaterial;
-        List<string> shieldTags = HasEntries(data?.ShieldTags)
-            ? data?.ShieldTags
-            : HasEntries(globalData?.ShieldTags)
-                ? globalData?.ShieldTags
-                : null;
+        List<string> shieldTags =
+            HasEntries(data?.ShieldTags) ? data?.ShieldTags
+            : HasEntries(globalData?.ShieldTags) ? globalData?.ShieldTags
+            : null;
         ThingFilter shieldFilter = data?.ShieldMaterialFilter ?? globalData?.ShieldMaterialFilter;
 
         SidearmData forcedSidearm = data?.ForcedSidearm ?? globalData?.ForcedSidearm;
-        List<SidearmData> sidearms = HasEntries(data?.Sidearms)
-            ? data.Sidearms
-            : HasEntries(globalData?.Sidearms)
-                ? globalData.Sidearms
-                : null;
+        List<SidearmData> sidearms =
+            HasEntries(data?.Sidearms) ? data.Sidearms
+            : HasEntries(globalData?.Sidearms) ? globalData.Sidearms
+            : null;
         AttachmentData primaryAttachments = data?.PrimaryAttachments ?? globalData?.PrimaryAttachments;
-        List<WeaponAmmoMapEntry> weaponAmmoMappings = MergeMappings(
-            data?.WeaponAmmoMappings, globalData?.WeaponAmmoMappings);
+        List<WeaponAmmoMapEntry> weaponAmmoMappings = MergeMappings(data?.WeaponAmmoMappings, globalData?.WeaponAmmoMappings);
 
         bool hasAnything =
             ammoCategoryName != null
@@ -229,26 +225,35 @@ public class CEModule : ITotalControlModule
             def.modExtensions.Add(ext);
         }
 
-        if (ammoCategory != null) ext.forcedAmmoCategory = ammoCategory;
-        if (magCount.HasValue) ext.primaryMagazineCount = magCount.Value;
-        if (minAmmo.HasValue) ext.minAmmoCount = minAmmo.Value;
+        if (ammoCategory != null)
+            ext.forcedAmmoCategory = ammoCategory;
+        if (magCount.HasValue)
+            ext.primaryMagazineCount = magCount.Value;
+        if (minAmmo.HasValue)
+            ext.minAmmoCount = minAmmo.Value;
         if (weightedAmmo != null)
         {
-            List<WeightedAmmoCategory> converted = weightedAmmo
-                .Select(ConvertWeightedAmmo)
-                .Where(w => w != null)
-                .ToList();
-            if (converted.Count > 0) ext.weightedAmmoCategories = converted;
+            List<WeightedAmmoCategory> converted = weightedAmmo.Select(ConvertWeightedAmmo).Where(w => w != null).ToList();
+            if (converted.Count > 0)
+                ext.weightedAmmoCategories = converted;
         }
 
-        if (shieldMoney.HasValue) ext.shieldMoney = shieldMoney.Value;
-        if (shieldChance.HasValue) ext.shieldChance = shieldChance.Value;
-        if (forceShieldMaterial.HasValue) ext.forceShieldMaterial = forceShieldMaterial.Value;
-        if (shieldTags != null) ext.shieldTags = [..shieldTags];
-        if (shieldFilter != null) ext.shieldMaterialFilter = shieldFilter;
-        if (forcedSidearm != null) ext.forcedSidearm = ConvertSidearm(forcedSidearm);
-        if (sidearms != null) ext.sidearms = sidearms.Select(ConvertSidearm).ToList();
-        if (primaryAttachments is { IsEmpty: false }) ext.primaryAttachments = ConvertAttachment(primaryAttachments);
+        if (shieldMoney.HasValue)
+            ext.shieldMoney = shieldMoney.Value;
+        if (shieldChance.HasValue)
+            ext.shieldChance = shieldChance.Value;
+        if (forceShieldMaterial.HasValue)
+            ext.forceShieldMaterial = forceShieldMaterial.Value;
+        if (shieldTags != null)
+            ext.shieldTags = [.. shieldTags];
+        if (shieldFilter != null)
+            ext.shieldMaterialFilter = shieldFilter;
+        if (forcedSidearm != null)
+            ext.forcedSidearm = ConvertSidearm(forcedSidearm);
+        if (sidearms != null)
+            ext.sidearms = sidearms.Select(ConvertSidearm).ToList();
+        if (primaryAttachments is { IsEmpty: false })
+            ext.primaryAttachments = ConvertAttachment(primaryAttachments);
 
         // Build per-weapon ammo lookup cache (all def resolution happens here, not at gen time)
         if (HasEntries(weaponAmmoMappings))
@@ -258,10 +263,7 @@ public class CEModule : ITotalControlModule
                 {
                     WeaponKey = m.WeaponKey,
                     IsTag = m.IsTag,
-                    Choices = m.Choices
-                        ?.Select(ConvertWeightedAmmo)
-                        .Where(c => c != null)
-                        .ToList(),
+                    Choices = m.Choices?.Select(ConvertWeightedAmmo).Where(c => c != null).ToList(),
                 })
                 .Where(r => r.WeaponKey != null && r.Choices?.Count > 0)
                 .ToArray();
@@ -305,7 +307,7 @@ public class CEModule : ITotalControlModule
             ShieldMoney = data.ShieldMoney,
             ShieldChance = data.ShieldChance,
             ForceShieldMaterial = data.ForceShieldMaterial,
-            ShieldTags = data.ShieldTags != null ? [..data.ShieldTags] : null,
+            ShieldTags = data.ShieldTags != null ? [.. data.ShieldTags] : null,
             ShieldMaterialFilter = shieldFilterCopy,
             ForcedSidearm = data.ForcedSidearm?.DeepClone(),
             Sidearms = data.Sidearms?.Select(s => s.DeepClone()).ToList(),
@@ -326,17 +328,13 @@ public class CEModule : ITotalControlModule
         {
             sidearmMoney = d.SidearmMoney ?? default,
             magazineCount = d.MagazineCount ?? default,
-            weaponTags = d.WeaponTags != null ? [..d.WeaponTags] : null,
+            weaponTags = d.WeaponTags != null ? [.. d.WeaponTags] : null,
             generateChance = d.GenerateChance ?? 1f,
             attachments = d.Attachments is { IsEmpty: false } ? ConvertAttachment(d.Attachments) : null,
         };
 
     private static AttachmentOption ConvertAttachment(AttachmentData d) =>
-        new()
-        {
-            attachmentCount = d.AttachmentCount ?? default,
-            attachmentTags = d.AttachmentTags != null ? [..d.AttachmentTags] : null,
-        };
+        new() { attachmentCount = d.AttachmentCount ?? default, attachmentTags = d.AttachmentTags != null ? [.. d.AttachmentTags] : null };
 
     private static WeightedAmmoCategory ConvertWeightedAmmo(WeightedAmmoCategoryData d)
     {
@@ -358,15 +356,23 @@ public class CEModule : ITotalControlModule
     /// Specific-edit entries take precedence over global entries for the same WeaponKey.
     /// Entries from global that are not overridden are appended.
     /// </summary>
-    private static List<WeaponAmmoMapEntry> MergeMappings(
-        List<WeaponAmmoMapEntry> specific, List<WeaponAmmoMapEntry> global)
+    private static List<WeaponAmmoMapEntry> MergeMappings(List<WeaponAmmoMapEntry> specific, List<WeaponAmmoMapEntry> global)
     {
-        if (!HasEntries(specific) && !HasEntries(global)) { return null; }
-        if (!HasEntries(global)) { return specific; }
-        if (!HasEntries(specific)) { return global; }
+        if (!HasEntries(specific) && !HasEntries(global))
+        {
+            return null;
+        }
+        if (!HasEntries(global))
+        {
+            return specific;
+        }
+        if (!HasEntries(specific))
+        {
+            return global;
+        }
 
         // Specific entries win; add global entries whose key isn't already covered
-        List<WeaponAmmoMapEntry> merged = [..specific];
+        List<WeaponAmmoMapEntry> merged = [.. specific];
         foreach (WeaponAmmoMapEntry g in global)
         {
             bool overridden = false;
@@ -378,7 +384,10 @@ public class CEModule : ITotalControlModule
                     break;
                 }
             }
-            if (!overridden) { merged.Add(g); }
+            if (!overridden)
+            {
+                merged.Add(g);
+            }
         }
         return merged;
     }

@@ -26,12 +26,7 @@ public class AttachmentData : IExposable
         Scribe_Collections.Look(ref AttachmentTags, "tags", LookMode.Value);
     }
 
-    public AttachmentData DeepClone() =>
-        new()
-        {
-            AttachmentCount = AttachmentCount,
-            AttachmentTags = AttachmentTags != null ? [..AttachmentTags] : null,
-        };
+    public AttachmentData DeepClone() => new() { AttachmentCount = AttachmentCount, AttachmentTags = AttachmentTags != null ? [.. AttachmentTags] : null };
 }
 
 /// <summary>Data for SidearmOption from CE.</summary>
@@ -92,7 +87,7 @@ public class SidearmData : IExposable
         {
             SidearmMoney = SidearmMoney,
             MagazineCount = MagazineCount,
-            WeaponTags = WeaponTags != null ? [..WeaponTags] : null,
+            WeaponTags = WeaponTags != null ? [.. WeaponTags] : null,
             GenerateChance = GenerateChance,
             Attachments = Attachments?.DeepClone(),
         };

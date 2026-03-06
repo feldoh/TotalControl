@@ -106,16 +106,17 @@ public static class CEUI
 
     private static void OpenAmmoCategoryMenu(CEData data)
     {
-        List<AmmoCategoryDef> allCategories = DefDatabase<AmmoCategoryDef>.AllDefsListForReading
-            .OrderBy(d => d.LabelCap.ToString())
-            .ToList();
+        List<AmmoCategoryDef> allCategories = DefDatabase<AmmoCategoryDef>.AllDefsListForReading.OrderBy(d => d.LabelCap.ToString()).ToList();
 
         var items = CustomFloatMenu.MakeItems(allCategories, d => new MenuItemText(d, d.LabelCap, tooltip: d.description));
-        CustomFloatMenu.Open(items, item =>
-        {
-            AmmoCategoryDef selected = item.GetPayload<AmmoCategoryDef>();
-            data.ForcedAmmoCategoryDefName = selected.defName;
-        });
+        CustomFloatMenu.Open(
+            items,
+            item =>
+            {
+                AmmoCategoryDef selected = item.GetPayload<AmmoCategoryDef>();
+                data.ForcedAmmoCategoryDefName = selected.defName;
+            }
+        );
     }
 
     private static void DrawMagazineCountRow(Listing_Standard ui, CEData data, LoadoutPropertiesExtension defExt)
@@ -216,16 +217,17 @@ public static class CEUI
         Rect addRow = ui.GetRect(RowH);
         if (Widgets.ButtonText(addRow.LeftPart(0.5f), "FactionLoadout_CE_AddAmmoCategory".Translate()))
         {
-            List<AmmoCategoryDef> allCats = DefDatabase<AmmoCategoryDef>.AllDefsListForReading
-                .OrderBy(d => d.LabelCap.ToString())
-                .ToList();
+            List<AmmoCategoryDef> allCats = DefDatabase<AmmoCategoryDef>.AllDefsListForReading.OrderBy(d => d.LabelCap.ToString()).ToList();
             var items = CustomFloatMenu.MakeItems(allCats, d => new MenuItemText(d, d.LabelCap, tooltip: d.description));
-            CustomFloatMenu.Open(items, item =>
-            {
-                AmmoCategoryDef selected = item.GetPayload<AmmoCategoryDef>();
-                data.WeightedAmmoCategories ??= [];
-                data.WeightedAmmoCategories.Add(new WeightedAmmoCategoryData { AmmoCategoryDefName = selected.defName, Chance = 1f });
-            });
+            CustomFloatMenu.Open(
+                items,
+                item =>
+                {
+                    AmmoCategoryDef selected = item.GetPayload<AmmoCategoryDef>();
+                    data.WeightedAmmoCategories ??= [];
+                    data.WeightedAmmoCategories.Add(new WeightedAmmoCategoryData { AmmoCategoryDefName = selected.defName, Chance = 1f });
+                }
+            );
         }
     }
 
@@ -238,9 +240,11 @@ public static class CEUI
         {
             foreach (SpecRequirementEdit spec in edit.SpecificWeapons)
             {
-                if (spec.Thing == null) continue;
+                if (spec.Thing == null)
+                    continue;
                 string key = spec.Thing.defName;
-                if (shownKeys.Contains(key)) continue;
+                if (shownKeys.Contains(key))
+                    continue;
                 shownKeys.Add(key);
                 DrawWeaponAmmoMappingRow(ui, data, key, false, spec.Thing.LabelCap.ToString());
             }
@@ -250,9 +254,11 @@ public static class CEUI
         {
             foreach (string tag in edit.WeaponTags)
             {
-                if (string.IsNullOrWhiteSpace(tag)) continue;
+                if (string.IsNullOrWhiteSpace(tag))
+                    continue;
                 string key = tag;
-                if (shownKeys.Contains("tag:" + key)) continue;
+                if (shownKeys.Contains("tag:" + key))
+                    continue;
                 shownKeys.Add("tag:" + key);
                 DrawWeaponAmmoMappingRow(ui, data, key, true, "tag: " + tag);
             }
@@ -277,12 +283,14 @@ public static class CEUI
                 string k = m.IsTag ? "tag:" + m.WeaponKey : m.WeaponKey;
                 return !shownKeys.Contains(k);
             });
-            if (data.WeaponAmmoMappings.Count == 0) { data.WeaponAmmoMappings = null; }
+            if (data.WeaponAmmoMappings.Count == 0)
+            {
+                data.WeaponAmmoMappings = null;
+            }
         }
     }
 
-    private static void DrawWeaponAmmoMappingRow(
-        Listing_Standard ui, CEData data, string weaponKey, bool isTag, string weaponLabel)
+    private static void DrawWeaponAmmoMappingRow(Listing_Standard ui, CEData data, string weaponKey, bool isTag, string weaponLabel)
     {
         // Find existing mapping entry
         WeaponAmmoMapEntry entry = null;
@@ -291,8 +299,7 @@ public static class CEUI
         {
             for (int i = 0; i < data.WeaponAmmoMappings.Count; i++)
             {
-                if (data.WeaponAmmoMappings[i].WeaponKey == weaponKey
-                    && data.WeaponAmmoMappings[i].IsTag == isTag)
+                if (data.WeaponAmmoMappings[i].WeaponKey == weaponKey && data.WeaponAmmoMappings[i].IsTag == isTag)
                 {
                     entry = data.WeaponAmmoMappings[i];
                     entryIdx = i;
@@ -312,7 +319,10 @@ public static class CEUI
             if (Widgets.ButtonText(headerRow.RightHalf().RightPart(0.4f), "FactionLoadout_Clear".Translate()))
             {
                 data.WeaponAmmoMappings.RemoveAt(entryIdx);
-                if (data.WeaponAmmoMappings.Count == 0) { data.WeaponAmmoMappings = null; }
+                if (data.WeaponAmmoMappings.Count == 0)
+                {
+                    data.WeaponAmmoMappings = null;
+                }
                 return;
             }
 
@@ -325,16 +335,13 @@ public static class CEUI
                 Rect row = ui.GetRect(RowH);
 
                 AmmoCategoryDef resolved = DefDatabase<AmmoCategoryDef>.GetNamedSilentFail(choice.AmmoCategoryDefName);
-                string catLabel = resolved != null
-                    ? resolved.LabelCap.ToString()
-                    : (choice.AmmoCategoryDefName != null ? choice.AmmoCategoryDefName + " (?)" : "(select…)");
+                string catLabel = resolved != null ? resolved.LabelCap.ToString() : (choice.AmmoCategoryDefName != null ? choice.AmmoCategoryDefName + " (?)" : "(select…)");
 
                 if (Widgets.ButtonText(row.LeftPart(0.4f), catLabel))
                 {
                     int capturedI = i;
                     List<WeightedAmmoCategoryData> capturedChoices = entry.Choices;
-                    OpenAmmoCategoryMenuForChoices(catDef =>
-                        capturedChoices[capturedI].AmmoCategoryDefName = catDef.defName);
+                    OpenAmmoCategoryMenuForChoices(catDef => capturedChoices[capturedI].AmmoCategoryDefName = catDef.defName);
                 }
 
                 Text.Anchor = TextAnchor.MiddleRight;
@@ -352,18 +359,16 @@ public static class CEUI
                 }
             }
 
-            if (toRemove >= 0) { entry.Choices.RemoveAt(toRemove); }
+            if (toRemove >= 0)
+            {
+                entry.Choices.RemoveAt(toRemove);
+            }
 
             Rect addRow = ui.GetRect(RowH);
             if (Widgets.ButtonText(addRow.LeftPart(0.5f), "FactionLoadout_CE_AddAmmoCategory".Translate()))
             {
                 List<WeightedAmmoCategoryData> capturedChoices = entry.Choices;
-                OpenAmmoCategoryMenuForChoices(catDef =>
-                    capturedChoices.Add(new WeightedAmmoCategoryData
-                    {
-                        AmmoCategoryDefName = catDef.defName,
-                        Chance = 1f,
-                    }));
+                OpenAmmoCategoryMenuForChoices(catDef => capturedChoices.Add(new WeightedAmmoCategoryData { AmmoCategoryDefName = catDef.defName, Chance = 1f }));
             }
         }
         else
@@ -377,19 +382,14 @@ public static class CEUI
                 OpenAmmoCategoryMenuForChoices(catDef =>
                 {
                     capturedData.WeaponAmmoMappings ??= [];
-                    capturedData.WeaponAmmoMappings.Add(new WeaponAmmoMapEntry
-                    {
-                        WeaponKey = capturedKey,
-                        IsTag = capturedIsTag,
-                        Choices =
-                        [
-                            new WeightedAmmoCategoryData
-                            {
-                                AmmoCategoryDefName = catDef.defName,
-                                Chance = 1f,
-                            },
-                        ],
-                    });
+                    capturedData.WeaponAmmoMappings.Add(
+                        new WeaponAmmoMapEntry
+                        {
+                            WeaponKey = capturedKey,
+                            IsTag = capturedIsTag,
+                            Choices = [new WeightedAmmoCategoryData { AmmoCategoryDefName = catDef.defName, Chance = 1f }],
+                        }
+                    );
                 });
             }
         }
@@ -400,9 +400,7 @@ public static class CEUI
     /// <summary>Opens the ammo category float-menu and calls <paramref name="onSelect"/> with the chosen def.</summary>
     private static void OpenAmmoCategoryMenuForChoices(System.Action<AmmoCategoryDef> onSelect)
     {
-        List<AmmoCategoryDef> allCats = DefDatabase<AmmoCategoryDef>.AllDefsListForReading
-            .OrderBy(d => d.LabelCap.ToString())
-            .ToList();
+        List<AmmoCategoryDef> allCats = DefDatabase<AmmoCategoryDef>.AllDefsListForReading.OrderBy(d => d.LabelCap.ToString()).ToList();
         var items = CustomFloatMenu.MakeItems(allCats, d => new MenuItemText(d, d.LabelCap, tooltip: d.description));
         CustomFloatMenu.Open(items, item => onSelect(item.GetPayload<AmmoCategoryDef>()));
     }
@@ -427,15 +425,7 @@ public static class CEUI
     private static void DrawShieldChanceRow(Listing_Standard ui, CEData data, LoadoutPropertiesExtension defExt)
     {
         float defVal = defExt?.shieldChance ?? 0f;
-        UIHelpers.DrawFloatSliderRow(
-            ui,
-            "FactionLoadout_CE_ShieldChance".Translate(),
-            ref data.ShieldChance,
-            0f,
-            1f,
-            defVal > 0f ? defVal : 0.5f,
-            asPercent: true
-        );
+        UIHelpers.DrawFloatSliderRow(ui, "FactionLoadout_CE_ShieldChance".Translate(), ref data.ShieldChance, 0f, 1f, defVal > 0f ? defVal : 0.5f, asPercent: true);
     }
 
     private static void DrawForceShieldMaterialRow(Listing_Standard ui, CEData data, LoadoutPropertiesExtension defExt)
@@ -604,35 +594,13 @@ public static class CEUI
     {
         string prefix = indent ? "  " : "";
 
-        UIHelpers.DrawFloatRangeRow(
-            ui,
-            prefix + "FactionLoadout_CE_SidearmMoney".Translate(),
-            ref s.SidearmMoney,
-            0f,
-            99999f,
-            new FloatRange(100f, 500f)
-        );
+        UIHelpers.DrawFloatRangeRow(ui, prefix + "FactionLoadout_CE_SidearmMoney".Translate(), ref s.SidearmMoney, 0f, 99999f, new FloatRange(100f, 500f));
         ui.Gap(2f);
 
-        UIHelpers.DrawFloatRangeRow(
-            ui,
-            prefix + "FactionLoadout_CE_MagazineCount".Translate(),
-            ref s.MagazineCount,
-            0f,
-            99f,
-            new FloatRange(1f, 3f)
-        );
+        UIHelpers.DrawFloatRangeRow(ui, prefix + "FactionLoadout_CE_MagazineCount".Translate(), ref s.MagazineCount, 0f, 99f, new FloatRange(1f, 3f));
         ui.Gap(2f);
 
-        UIHelpers.DrawFloatSliderRow(
-            ui,
-            prefix + "FactionLoadout_CE_GenerateChance".Translate(),
-            ref s.GenerateChance,
-            0f,
-            1f,
-            1f,
-            asPercent: true
-        );
+        UIHelpers.DrawFloatSliderRow(ui, prefix + "FactionLoadout_CE_GenerateChance".Translate(), ref s.GenerateChance, 0f, 1f, 1f, asPercent: true);
         ui.Gap(2f);
 
         Text.Anchor = TextAnchor.MiddleLeft;
@@ -671,14 +639,7 @@ public static class CEUI
 
             ui.Gap(2f);
 
-            UIHelpers.DrawFloatRangeRow(
-                ui,
-                "  " + "FactionLoadout_CE_AttachmentCount".Translate(),
-                ref att.AttachmentCount,
-                0f,
-                99f,
-                new FloatRange(1f, 2f)
-            );
+            UIHelpers.DrawFloatRangeRow(ui, "  " + "FactionLoadout_CE_AttachmentCount".Translate(), ref att.AttachmentCount, 0f, 99f, new FloatRange(1f, 2f));
             ui.Gap(2f);
 
             Text.Anchor = TextAnchor.MiddleLeft;

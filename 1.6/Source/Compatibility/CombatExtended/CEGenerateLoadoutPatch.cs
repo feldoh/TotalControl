@@ -19,8 +19,7 @@ namespace TotalControlCECompat;
 /// All AmmoCategoryDef resolution happens at Apply() time in <see cref="CEModule"/>
 /// (cached in <see cref="CEModule.KindDefMappings"/>) — zero def-lookup cost here.
 /// </summary>
-[HarmonyPatch(typeof(LoadoutPropertiesExtension),
-    nameof(LoadoutPropertiesExtension.GenerateLoadoutFor))]
+[HarmonyPatch(typeof(LoadoutPropertiesExtension), nameof(LoadoutPropertiesExtension.GenerateLoadoutFor))]
 public static class CEGenerateLoadoutPatch
 {
     /// <summary>Saved originals so Postfix can restore them.</summary>
@@ -31,8 +30,7 @@ public static class CEGenerateLoadoutPatch
         public bool Modified;
     }
 
-    public static void Prefix(LoadoutPropertiesExtension __instance, Pawn pawn,
-        ref PatchState __state)
+    public static void Prefix(LoadoutPropertiesExtension __instance, Pawn pawn, ref PatchState __state)
     {
         __state = new PatchState
         {
@@ -47,7 +45,10 @@ public static class CEGenerateLoadoutPatch
         }
 
         ThingWithComps weapon = pawn.equipment?.Primary;
-        if (weapon == null) { return; }
+        if (weapon == null)
+        {
+            return;
+        }
 
         string weaponDefName = weapon.def.defName;
         List<string> weaponTags = weapon.def.weaponTags;
@@ -75,7 +76,10 @@ public static class CEGenerateLoadoutPatch
             }
         }
 
-        if (match == null) { return; }
+        if (match == null)
+        {
+            return;
+        }
 
         // Delegate weighted selection to CE's own logic via weightedAmmoCategories
         __instance.forcedAmmoCategory = null;
@@ -85,7 +89,10 @@ public static class CEGenerateLoadoutPatch
 
     public static void Postfix(LoadoutPropertiesExtension __instance, ref PatchState __state)
     {
-        if (!__state.Modified) { return; }
+        if (!__state.Modified)
+        {
+            return;
+        }
 
         __instance.forcedAmmoCategory = __state.SavedForcedCategory;
         __instance.weightedAmmoCategories = __state.SavedWeightedCategories;
