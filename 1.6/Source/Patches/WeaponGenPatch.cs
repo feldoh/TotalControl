@@ -58,6 +58,7 @@ public static class WeaponGenPatch
         if (pawn.apparel == null)
             return;
 
+        bool primarySet = false;
         foreach (var item in GetWhatToGive())
         {
             if (item.Thing == null)
@@ -76,9 +77,27 @@ public static class WeaponGenPatch
                 continue;
             }
 
-            if (created.def.equipmentType == EquipmentType.Primary && pawn.equipment.Primary != null)
-                pawn.equipment.Remove(pawn.equipment.Primary);
-            pawn.equipment.AddEquipment(created);
+            if (created.def.equipmentType == EquipmentType.Primary)
+            {
+                if (!primarySet)
+                {
+                    // First primary weapon: take the equipment slot, displacing any vanilla-generated weapon
+                    if (pawn.equipment.Primary != null)
+                        pawn.equipment.Remove(pawn.equipment.Primary);
+                    pawn.equipment.AddEquipment(created);
+                    primarySet = true;
+                }
+                else
+                {
+                    // Additional pool primaries go to inventory so sidearm mods (Simple Sidearms, CE)
+                    // can register them automatically. Gracefully ignored in vanilla.
+                    pawn.inventory.innerContainer.TryAdd(created);
+                }
+            }
+            else
+            {
+                pawn.equipment.AddEquipment(created);
+            }
         }
     }
 
