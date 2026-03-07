@@ -106,6 +106,12 @@ public class ModCore : Mod
             AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
             postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchCore), nameof(PawnGenPatchCore.Postfix)))
         );
+        // ConditionalLoadoutPatch fires after PawnGenPatchCore on the same method so the pawn
+        // is fully assembled (equipment + apparel + inventory all set) before we check triggers.
+        harmony.Patch(
+            AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
+            postfix: new HarmonyMethod(typeof(ConditionalLoadoutPatch), nameof(ConditionalLoadoutPatch.Postfix))
+        );
         harmony.Patch(
             AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GenerateRandomAge)),
             prefix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenAgePatchCore), nameof(PawnGenAgePatchCore.Prefix)))

@@ -23,6 +23,7 @@
     <FactionLoadout_Tab_Weapon>Weapon</FactionLoadout_Tab_Weapon>
     <FactionLoadout_Tab_ImplantsAndBionics>Implants &amp; Bionics</FactionLoadout_Tab_ImplantsAndBionics>
     <FactionLoadout_Tab_Inventory>Inventory</FactionLoadout_Tab_Inventory>
+    <FactionLoadout_Tab_Conditionals>Conditionals</FactionLoadout_Tab_Conditionals>
     <FactionLoadout_Tab_RaidPoints>Raid Points</FactionLoadout_Tab_RaidPoints>
     <FactionLoadout_Tab_RaidLoot>Raid Loot</FactionLoadout_Tab_RaidLoot>
     <FactionLoadout_Edit>Edit</FactionLoadout_Edit>
@@ -110,4 +111,14 @@
     <FactionLoadout_PackagedPresetWarning>This preset is bundled with {0}. Saving will overwrite the source file — Steam updates may reset it. Consider using "Copy to my presets" instead.</FactionLoadout_PackagedPresetWarning>
     <FactionLoadout_CopySuffix>(copy)</FactionLoadout_CopySuffix>
     <FactionLoadout_SaveToSourceFile>Save to source file</FactionLoadout_SaveToSourceFile>
+
+    <!-- Conditionals tab -->
+    <FactionLoadout_Tab_Conditionals>Conditionals</FactionLoadout_Tab_Conditionals>
+    <FactionLoadout_AddConditionalRule>+ Add Rule</FactionLoadout_AddConditionalRule>
+    <FactionLoadout_NoConditionalRules>(no rules configured)</FactionLoadout_NoConditionalRules>
+    <FactionLoadout_SelectTrigger>(select item...)</FactionLoadout_SelectTrigger>
+    <FactionLoadout_Conditional_ThenWeapons>THEN give weapons:</FactionLoadout_Conditional_ThenWeapons>
+    <FactionLoadout_Conditional_ThenApparel>THEN give apparel:</FactionLoadout_Conditional_ThenApparel>
+    <FactionLoadout_Conditional_ThenInventory>THEN give inventory:</FactionLoadout_Conditional_ThenInventory>
+    <FactionLoadout_Conditional_AddInventoryItem>+ Add Inventory Item</FactionLoadout_Conditional_AddInventoryItem>
 </LanguageData>

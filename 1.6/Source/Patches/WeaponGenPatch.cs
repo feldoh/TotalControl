@@ -139,7 +139,7 @@ public static class WeaponGenPatch
             yield return selected;
     }
 
-    static ThingWithComps GenerateNewWeapon(Pawn pawn, SpecRequirementEdit spec)
+    public static ThingWithComps GenerateNewWeapon(Pawn pawn, SpecRequirementEdit spec)
     {
         var thing = ThingMaker.MakeThing(spec.Thing, spec.Material) as ThingWithComps;
         if (thing == null)

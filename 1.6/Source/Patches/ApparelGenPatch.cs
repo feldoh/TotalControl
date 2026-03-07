@@ -194,7 +194,7 @@ public static class ApparelGenPatch
             yield return selected;
     }
 
-    private static Apparel GenerateNewApparel(Pawn pawn, SpecRequirementEdit spec)
+    public static Apparel GenerateNewApparel(Pawn pawn, SpecRequirementEdit spec)
     {
         Thing thing = ThingMaker.MakeThing(spec.Thing, spec.Material);
         if (thing == null)

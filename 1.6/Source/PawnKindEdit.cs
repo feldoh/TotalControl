@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml;
 using FactionLoadout.Modules;
+using FactionLoadout.Patches;
 using FactionLoadout.Util;
 using HarmonyLib;
 using RimWorld;
@@ -25,6 +26,7 @@ public class PawnKindEdit : IExposable
     {
         List<PawnKindEdit> currentEdits = activeEdits.TryGetValue(pawnKindDef, null);
         activeEdits.Remove(pawnKindDef);
+        ConditionalLoadoutPatch.RemoveIndex(pawnKindDef);
         return currentEdits;
     }
 
@@ -138,6 +140,7 @@ public class PawnKindEdit : IExposable
     public List<ThingDef> TechRequired = null;
     public List<SpecRequirementEdit> SpecificApparel = null;
     public List<SpecRequirementEdit> SpecificWeapons = null;
+    public List<ConditionalLoadoutRule> ConditionalRules = null;
     public FloatRange? ApparelMoney = null;
     public FloatRange? TechMoney = null;
     public FloatRange? WeaponMoney = null;
@@ -218,6 +221,7 @@ public class PawnKindEdit : IExposable
         Scribe_Collections.Look(ref TechRequired, "techRequired", LookMode.Def);
         Scribe_Collections.Look(ref SpecificApparel, "specificApparel", LookMode.Deep);
         Scribe_Collections.Look(ref SpecificWeapons, "specificWeapons", LookMode.Deep);
+        Scribe_Collections.Look(ref ConditionalRules, "conditionalRules", LookMode.Deep);
         Scribe_Deep.Look(ref Inventory, "inventory");
         Scribe_Values.Look(ref IsGlobal, "isGlobal");
         Scribe_Values.Look(ref ReplaceDefaultInventory, "replaceDefaultInventory");
@@ -725,6 +729,9 @@ public class PawnKindEdit : IExposable
                 ModCore.Error($"Error applying module '{module.ModuleName}' (key: {module.ModuleKey}) to {def.defName}", e);
             }
         }
+
+        // Build the per-trigger lookup cache for conditional loadout rules.
+        ConditionalLoadoutPatch.BuildIndex(def, ConditionalRules);
 
         globalEdit = null;
         return def;

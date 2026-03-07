@@ -291,6 +291,7 @@ public class PawnKindEditUI : Window
                         new("FactionLoadout_Tab_Weapon".Translate(), DrawWeaponTab),
                         new("FactionLoadout_Tab_ImplantsAndBionics".Translate(), DrawImplantsAndBionicsTab),
                         new("FactionLoadout_Tab_Inventory".Translate(), DrawInventoryTab),
+                        new("FactionLoadout_Tab_Conditionals".Translate(), DrawConditionalsTab),
                         new("FactionLoadout_Tab_RaidPoints".Translate(), DrawRaidPointsTab),
                         new("FactionLoadout_Tab_RaidLoot".Translate(), DrawRaidLootTab),
                     }
@@ -2877,5 +2878,186 @@ public class PawnKindEditUI : Window
         drawContent(content, active, defaultValue);
         GUI.enabled = true;
         ui.Gap();
+    }
+
+    // =========================================================================
+    // Conditionals Tab
+    // =========================================================================
+
+    private void DrawConditionalsTab(Listing_Standard ui)
+    {
+        Rect addRect = ui.GetRect(28);
+        addRect.width = 160;
+        if (Widgets.ButtonText(addRect, "FactionLoadout_AddConditionalRule".Translate()))
+        {
+            Current.ConditionalRules ??= [];
+            Current.ConditionalRules.Add(new ConditionalLoadoutRule());
+        }
+
+        ui.Gap(6);
+
+        if (Current.ConditionalRules == null || Current.ConditionalRules.Count == 0)
+        {
+            GUI.color = Color.grey;
+            ui.Label("FactionLoadout_NoConditionalRules".Translate());
+            GUI.color = Color.white;
+            return;
+        }
+
+        for (int i = 0; i < Current.ConditionalRules.Count; i++)
+        {
+            ConditionalLoadoutRule rule = Current.ConditionalRules[i];
+            if (DrawConditionalRule(ui, rule))
+            {
+                Current.ConditionalRules.RemoveAt(i);
+                i--;
+            }
+
+            ui.Gap(8);
+        }
+    }
+
+    /// <summary>
+    /// Draws one conditional rule card. Returns true if the rule was removed.
+    /// </summary>
+    private bool DrawConditionalRule(Listing_Standard ui, ConditionalLoadoutRule rule)
+    {
+        // --- Header row: trigger picker + remove button ---
+        Rect headerRow = ui.GetRect(32);
+
+        // IF label
+        Rect ifLabel = new(headerRow.x, headerRow.y, 24, headerRow.height);
+        Widgets.Label(ifLabel, "<b>IF</b>");
+
+        // Trigger picker button
+        string triggerLabel = rule.ResolvedTrigger != null ? rule.ResolvedTrigger.LabelCap : "FactionLoadout_SelectTrigger".Translate().ToString();
+
+        Rect triggerBtn = new(headerRow.x + 28, headerRow.y, 260, headerRow.height);
+        if (Widgets.ButtonText(triggerBtn, triggerLabel))
+        {
+            IEnumerable<ThingDef> defs = DefDatabase<ThingDef>
+                .AllDefsListForReading.Where(d => (d.IsWeapon || d.IsApparel || d.category == ThingCategory.Item) && !d.IsFrame)
+                .OrderBy(d => d.LabelCap.RawText);
+            List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
+            CustomFloatMenu.Open(
+                items,
+                raw =>
+                {
+                    ThingDef picked = raw.GetPayload<ThingDef>();
+                    rule.TriggerDefName = picked.defName;
+                    rule.ResolvedTrigger = picked;
+                }
+            );
+        }
+
+        // Remove button (right-aligned)
+        Rect removeBtn = new(headerRow.xMax - 80, headerRow.y, 78, headerRow.height);
+        GUI.color = Color.red;
+        bool removed = Widgets.ButtonText(removeBtn, "<b>REMOVE</b>");
+        GUI.color = Color.white;
+        if (removed)
+            return true;
+
+        ui.Gap(4);
+
+        // --- THEN weapons ---
+        string wLabel = "FactionLoadout_Conditional_ThenWeapons".Translate();
+        DrawSpecificGear(ui, ref rule.ConsequenceWeapons, wLabel, t => t.IsWeapon, ThingDef.Named("Gun_AssaultRifle"));
+
+        // --- THEN apparel ---
+        string aLabel = "FactionLoadout_Conditional_ThenApparel".Translate();
+        DrawSpecificGear(ui, ref rule.ConsequenceApparel, aLabel, t => t.IsApparel, ThingDefOf.Apparel_Parka);
+
+        // --- THEN inventory ---
+        ui.Label($"<b>{"FactionLoadout_Conditional_ThenInventory".Translate()}</b>");
+
+        if (rule.ConsequenceInventory != null)
+        {
+            for (int j = 0; j < rule.ConsequenceInventory.Count; j++)
+            {
+                ConditionalInventoryItem item = rule.ConsequenceInventory[j];
+                if (DrawConditionalInventoryRow(ui, item))
+                {
+                    rule.ConsequenceInventory.RemoveAt(j);
+                    j--;
+                }
+            }
+        }
+
+        Rect addInvBtn = ui.GetRect(24);
+        addInvBtn.width = 200;
+        if (Widgets.ButtonText(addInvBtn, "FactionLoadout_Conditional_AddInventoryItem".Translate()))
+        {
+            rule.ConsequenceInventory ??= [];
+            rule.ConsequenceInventory.Add(new ConditionalInventoryItem());
+        }
+
+        ui.Gap(4);
+        return false;
+    }
+
+    /// <summary>
+    /// Draws one inventory consequence row. Returns true if the item was removed.
+    /// </summary>
+    private bool DrawConditionalInventoryRow(Listing_Standard ui, ConditionalInventoryItem item)
+    {
+        Rect row = ui.GetRect(28);
+
+        // Def picker button
+        string defLabel = item.ResolvedThing != null ? item.ResolvedThing.LabelCap : "FactionLoadout_SelectTrigger".Translate().ToString();
+        Rect defBtn = new(row.x, row.y, 200, row.height);
+        if (Widgets.ButtonText(defBtn, defLabel))
+        {
+            IEnumerable<ThingDef> defs = DefDatabase<ThingDef>
+                .AllDefsListForReading.Where(d => d.category == ThingCategory.Item && !d.IsFrame && !d.IsWeapon && !d.IsApparel)
+                .OrderBy(d => d.LabelCap.RawText);
+            List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
+            CustomFloatMenu.Open(
+                items,
+                raw =>
+                {
+                    ThingDef picked = raw.GetPayload<ThingDef>();
+                    item.ThingDefName = picked.defName;
+                    item.ResolvedThing = picked;
+                }
+            );
+        }
+
+        // Count range min/max
+        int min = item.CountRange.min;
+        int max = item.CountRange.max;
+        item.BufferA ??= min.ToString();
+        item.BufferB ??= max.ToString();
+
+        Rect minRect = new(row.x + 205, row.y, 80, row.height);
+        Widgets.TextFieldNumericLabeled(minRect, "Min: ", ref min, ref item.BufferA, 1);
+
+        Rect maxRect = new(row.x + 290, row.y, 80, row.height);
+        Widgets.TextFieldNumericLabeled(maxRect, "Max: ", ref max, ref item.BufferB, 1);
+
+        item.CountRange = new IntRange(min, max);
+
+        // Quality dropdown (optional)
+        Rect qualRect = new(row.x + 375, row.y, 110, row.height);
+        string qualLabel = item.Quality.HasValue ? item.Quality.Value.GetLabel() : "Any";
+        if (Widgets.ButtonText(qualRect, $"Q: {qualLabel}"))
+        {
+            IEnumerable<object> values = Enum.GetValues(typeof(QualityCategory)).Cast<object>();
+            List<FloatMenuOption> options = [new FloatMenuOption("Any", () => item.Quality = null)];
+            foreach (QualityCategory q in Enum.GetValues(typeof(QualityCategory)))
+            {
+                QualityCategory captured = q;
+                options.Add(new FloatMenuOption(captured.GetLabel(), () => item.Quality = captured));
+            }
+            Find.WindowStack.Add(new FloatMenu(options));
+        }
+
+        // Remove button
+        Rect removeRect = new(row.xMax - 80, row.y, 78, row.height);
+        GUI.color = Color.red;
+        bool removed = Widgets.ButtonText(removeRect, "<b>REMOVE</b>");
+        GUI.color = Color.white;
+
+        return removed;
     }
 }
