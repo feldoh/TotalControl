@@ -156,4 +156,10 @@
     <FactionLoadout_PackagedPresetWarning>This preset is bundled with {0}. Saving will overwrite the source file — Steam updates may reset it. Consider using "Copy to my presets" instead.</FactionLoadout_PackagedPresetWarning>
     <FactionLoadout_CopySuffix>(copy)</FactionLoadout_CopySuffix>
     <FactionLoadout_SaveToSourceFile>Save to source file</FactionLoadout_SaveToSourceFile>
+
+    <!-- CE: Sidearms mutual exclusion hint + generation warnings -->
+    <FactionLoadout_CE_SidearmListSuppressed>(Sidearms list ignored — Forced Sidearm is active)</FactionLoadout_CE_SidearmListSuppressed>
+    <FactionLoadout_CE_Warn_NoTags>⚠ No weapon tags set — sidearm will not generate (add at least one tag)</FactionLoadout_CE_Warn_NoTags>
+    <FactionLoadout_CE_Warn_NoMoney>⚠ Money range is zero — no weapon can be afforded (set a budget, e.g. 100–500)</FactionLoadout_CE_Warn_NoMoney>
+    <FactionLoadout_CE_Note_Disabled>(disabled — generate chance is 0%, increase to enable)</FactionLoadout_CE_Note_Disabled>
 </LanguageData>

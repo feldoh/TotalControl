@@ -49,7 +49,16 @@ public static class CEUI
         DrawSectionHeader(ui, "FactionLoadout_CE_Section_Sidearms".Translate());
         DrawForcedSidearmSection(ui, data);
         ui.GapLine();
-        DrawSidearmsListSection(ui, data);
+        if (data.ForcedSidearm != null)
+        {
+            GUI.color = Color.grey;
+            ui.Label("FactionLoadout_CE_SidearmListSuppressed".Translate());
+            GUI.color = Color.white;
+        }
+        else
+        {
+            DrawSidearmsListSection(ui, data);
+        }
 
         DrawSectionHeader(ui, "FactionLoadout_CE_Section_Attachments".Translate());
         DrawPrimaryAttachmentsSection(ui, data);
@@ -520,11 +529,51 @@ public static class CEUI
 
     #region Sidearms
 
+    /// <summary>
+    /// Returns configuration errors that will prevent this sidearm from generating a weapon,
+    /// mirroring CE's TryGenerateWeaponWithAmmoFor guard conditions.
+    /// Returns an empty list when the entry is valid (or intentionally disabled via 0% chance).
+    /// </summary>
+    private static List<string> GetSidearmIssues(SidearmData s)
+    {
+        List<string> issues = [];
+
+        // CE guard: weaponTags.NullOrEmpty() → immediate return, nothing generated
+        if (s.WeaponTags == null || s.WeaponTags.Count == 0)
+            issues.Add("FactionLoadout_CE_Warn_NoTags".Translate());
+
+        // CE guard: sidearmMoney.RandomInRange == 0 → w.Price <= 0 never true → nothing qualifies
+        if (s.SidearmMoney == null || (s.SidearmMoney.Value.min <= 0f && s.SidearmMoney.Value.max <= 0f))
+            issues.Add("FactionLoadout_CE_Warn_NoMoney".Translate());
+
+        // Note: generate chance 0 is intentional (temporary disable) — not included here.
+        // It is shown separately as a grey note in DrawSidearmDataFields.
+
+        return issues;
+    }
+
+    /// <summary>
+    /// Returns true when the entry is intentionally disabled via a 0% generate chance.
+    /// This is not an error — the user may be keeping the config for later use.
+    /// </summary>
+    private static bool IsSidearmDisabled(SidearmData s) => s.GenerateChance.HasValue && s.GenerateChance.Value <= 0f;
+
     private static void DrawForcedSidearmSection(Listing_Standard ui, CEData data)
     {
         Rect headerRow = ui.GetRect(RowH);
         Text.Anchor = TextAnchor.MiddleLeft;
-        Widgets.Label(headerRow.LeftHalf(), "FactionLoadout_CE_ForcedSidearm".Translate());
+
+        if (data.ForcedSidearm != null && GetSidearmIssues(data.ForcedSidearm).Count > 0)
+        {
+            GUI.color = Color.yellow;
+            Widgets.Label(headerRow.LeftHalf(), "⚠ " + "FactionLoadout_CE_ForcedSidearm".Translate());
+            GUI.color = Color.white;
+        }
+        else
+        {
+            Widgets.Label(headerRow.LeftHalf(), "FactionLoadout_CE_ForcedSidearm".Translate());
+        }
+
         Text.Anchor = TextAnchor.UpperLeft;
 
         if (data.ForcedSidearm != null)
@@ -561,7 +610,19 @@ public static class CEUI
         {
             Rect itemHeader = ui.GetRect(RowH);
             Text.Anchor = TextAnchor.MiddleLeft;
-            Widgets.Label(itemHeader.LeftHalf(), $"  [{i + 1}]");
+
+            List<string> issues = GetSidearmIssues(data.Sidearms[i]);
+            if (issues.Count > 0)
+            {
+                GUI.color = Color.yellow;
+                Widgets.Label(itemHeader.LeftHalf(), $"  ⚠ [{i + 1}]");
+                GUI.color = Color.white;
+            }
+            else
+            {
+                Widgets.Label(itemHeader.LeftHalf(), $"  [{i + 1}]");
+            }
+
             Text.Anchor = TextAnchor.UpperLeft;
 
             if (Widgets.ButtonText(itemHeader.RightHalf().RightPart(0.4f), "FactionLoadout_Clear".Translate()))
@@ -593,6 +654,28 @@ public static class CEUI
     private static void DrawSidearmDataFields(Listing_Standard ui, SidearmData s, bool indent)
     {
         string prefix = indent ? "  " : "";
+
+        // Show issues that will prevent this sidearm from generating
+        List<string> issues = GetSidearmIssues(s);
+        if (issues.Count > 0)
+        {
+            GUI.color = Color.yellow;
+            foreach (string issue in issues)
+            {
+                Widgets.Label(ui.GetRect(Text.LineHeight), prefix + issue);
+            }
+            GUI.color = Color.white;
+            ui.Gap(4f);
+        }
+
+        // Show grey note when intentionally disabled via 0% generate chance
+        if (IsSidearmDisabled(s))
+        {
+            GUI.color = Color.grey;
+            Widgets.Label(ui.GetRect(Text.LineHeight), prefix + "FactionLoadout_CE_Note_Disabled".Translate());
+            GUI.color = Color.white;
+            ui.Gap(4f);
+        }
 
         UIHelpers.DrawFloatRangeRow(ui, prefix + "FactionLoadout_CE_SidearmMoney".Translate(), ref s.SidearmMoney, 0f, 99999f, new FloatRange(100f, 500f));
         ui.Gap(2f);
