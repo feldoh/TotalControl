@@ -198,7 +198,8 @@ public class FactionEdit : IExposable
     /// When <see cref="PawnGroupMakerEdits"/> is set, reads from it; otherwise reads
     /// from the live <see cref="FactionDef"/>.
     /// </summary>
-    public IEnumerable<PawnKindDef> GetAllKindDefsForUI() => PawnGroupMakerEdits != null ? PawnGroupMakerEdits.SelectMany(g => g.GetAllKinds()).Distinct() : GetAllPawnKinds(Faction.Def);
+    public IEnumerable<PawnKindDef> GetAllKindDefsForUI() =>
+        PawnGroupMakerEdits != null ? PawnGroupMakerEdits.SelectMany(g => g.GetAllKinds()).Distinct() : GetAllPawnKinds(Faction.Def);
 
     /// <summary>
     /// Returns the set of pawnkinds that have a <see cref="PawnKindEdit"/> in
@@ -207,8 +208,11 @@ public class FactionEdit : IExposable
     /// </summary>
     public HashSet<PawnKindDef> GetOrphanedKinds()
     {
-        HashSet<PawnKindDef> inGroups = new(GetAllKindDefsForUI());
-        return KindEdits.Where(e => e.Def != null && !e.IsGlobal && !inGroups.Contains(e.Def)).Select(e => e.Def).ToHashSet();
+        // Normalise clone defs back to originals before comparing — after Apply(),
+        // faction def group makers contain cloned PawnKindDefs (e.g. Archer_TCCln_Gentle)
+        // while edit.Def references the original (Archer).
+        HashSet<string> inGroups = GetAllKindDefsForUI().Select(k => PawnKindEdit.NormaliseDef(k).defName).ToHashSet();
+        return KindEdits.Where(e => e.Def != null && !e.IsGlobal && !inGroups.Contains(e.Def.defName)).Select(e => e.Def).ToHashSet();
     }
 
     #endregion

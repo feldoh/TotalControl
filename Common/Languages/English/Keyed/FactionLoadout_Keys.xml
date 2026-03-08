@@ -116,7 +116,7 @@
     <FactionLoadout_SpawnGroups_Summary>{0} groups</FactionLoadout_SpawnGroups_Summary>
     <FactionLoadout_SpawnGroups_SummaryModified>{0} groups  ·  modified</FactionLoadout_SpawnGroups_SummaryModified>
     <FactionLoadout_SpawnGroups_EditButton>Edit Spawn Groups</FactionLoadout_SpawnGroups_EditButton>
-    <FactionLoadout_SpawnGroups_OrphanWarning>⚠ {0} pawnkind(s) have edits but aren't in any spawn group — they won't appear in game. Click to open Group Editor.</FactionLoadout_SpawnGroups_OrphanWarning>
+    <FactionLoadout_SpawnGroups_OrphanWarning>⚠ Not in any spawn group: {0}</FactionLoadout_SpawnGroups_OrphanWarning>
     <FactionLoadout_SpawnGroups_OrphanKindTooltip>This pawnkind is not in any spawn group. Your edits are preserved, but it won't appear in game until added to a group via Edit Spawn Groups.</FactionLoadout_SpawnGroups_OrphanKindTooltip>
 
     <!-- Group Editor window -->

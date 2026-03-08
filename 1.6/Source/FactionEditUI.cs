@@ -26,8 +26,8 @@ public class FactionEditUI : Window
     private readonly HashSet<PawnKindDef> tempKinds = new();
     private bool _ThingIDPatch = false;
     private Vector2 overridesScrollPos;
-    private float overridesContentHeight = 500f;
-    private float overridesScrollInnerHeight = 500f;
+    private float overridesContentHeight = 0f;
+    private float overridesScrollInnerHeight = 10000f;
 
     public FactionEditUI(FactionEdit fac)
     {
@@ -199,14 +199,16 @@ public class FactionEditUI : Window
             if (Widgets.ButtonText(editGroupsBtn, "FactionLoadout_SpawnGroups_EditButton".Translate()))
                 GroupEditorUI.OpenEditor(Current);
 
-            // Orphan warning row (conditional)
+            // Orphan warning (conditional) — lists which pawnkinds are missing from groups
             HashSet<PawnKindDef> orphaned = Current?.GetOrphanedKinds() ?? [];
             if (orphaned.Count > 0)
             {
-                Rect warnRow = inner.GetRect(24f);
+                string names = orphaned.Select(k => k.LabelCap.ToString()).OrderBy(n => n).ToCommaList();
+                string warnText = "FactionLoadout_SpawnGroups_OrphanWarning".Translate(names);
+                float warnH = Text.CalcHeight(warnText, inner.ColumnWidth);
+                Rect warnRow = inner.GetRect(warnH);
                 GUI.color = new Color(1f, 0.6f, 0.1f);
-                if (Widgets.ButtonText(warnRow, "FactionLoadout_SpawnGroups_OrphanWarning".Translate(orphaned.Count), drawBackground: false))
-                    GroupEditorUI.OpenEditor(Current);
+                Widgets.Label(warnRow, warnText);
                 GUI.color = Color.white;
             }
         }
@@ -573,7 +575,6 @@ public class Dialog_XenotypeEdit : Window
 {
     private readonly FactionEdit _edit;
     private Vector2 _scrollPos;
-    private float _contentHeight = 200f;
 
     public Dialog_XenotypeEdit(FactionEdit edit)
     {
@@ -609,14 +610,18 @@ public class Dialog_XenotypeEdit : Window
             const float addButtonsHeight = 70f;
             float scrollH = Mathf.Max(30f, inRect.height - ui.CurHeight - addButtonsHeight);
             Rect scrollOutRect = ui.GetRect(scrollH);
-            Rect innerRect = new(0f, 0f, scrollOutRect.width - 16f, Mathf.Max(_contentHeight, scrollH));
+            // Compute inner height directly from item count — avoids feedback loops where
+            // Listing_Standard.CurHeight is clamped to the inner rect, preventing growth.
+            const float ItemRowH = 32f; // SliderLabeledWithDelete: GetRect(30) + Gap(2)
+            float contentH = _edit.xenotypeChances.Count * ItemRowH;
+            Rect innerRect = new(0f, 0f, scrollOutRect.width - 16f, Mathf.Max(contentH, scrollH));
 
             Widgets.BeginScrollView(scrollOutRect, ref _scrollPos, innerRect);
             Listing_Standard inner = new();
             inner.Begin(innerRect);
 
             List<string> toDelete = [];
-            foreach (string key in _edit.xenotypeChances.Keys.ToList())
+            foreach (string key in _edit.xenotypeChances.Keys.OrderBy(k => DefDatabase<XenotypeDef>.GetNamedSilentFail(k)?.LabelCap.ToString() ?? k).ToList())
                 _edit.xenotypeChances[key] = UIHelpers.SliderLabeledWithDelete(
                     inner,
                     $"{DefDatabase<XenotypeDef>.GetNamedSilentFail(key)?.LabelCap ?? key}: {_edit.xenotypeChances[key].ToStringPercent()}",
@@ -632,7 +637,6 @@ public class Dialog_XenotypeEdit : Window
             foreach (string delete in toDelete)
                 _edit.xenotypeChances.Remove(delete);
 
-            _contentHeight = inner.CurHeight;
             inner.End();
             Widgets.EndScrollView();
 

@@ -20,8 +20,6 @@ public class GroupEditorUI : Window
     private readonly HashSet<int> _expanded = [];
 
     private Vector2 _scrollPos;
-    private float _contentHeight = 300f;
-    private float _scrollInnerHeight = 300f;
 
     // Cached list of RaidStrategyDefs for the block-strategies dropdown.
     private static List<RaidStrategyDef> _allRaidStrategies;
@@ -52,7 +50,7 @@ public class GroupEditorUI : Window
         closeOnClickedOutside = false;
     }
 
-    public override Vector2 InitialSize => new(640f, 560f);
+    public override Vector2 InitialSize => new(720f, 640f);
 
     public override void DoWindowContents(Rect inRect)
     {
@@ -103,10 +101,11 @@ public class GroupEditorUI : Window
 
         GUI.color = Color.white;
 
-        // Scroll view
+        // Scroll view — inner rect sized from data model to avoid feedback loops
         float scrollOutH = Mathf.Max(60f, inRect.height - ui.CurHeight - 8f);
         Rect scrollOutRect = ui.GetRect(scrollOutH);
-        Rect scrollViewRect = new(0f, 0f, scrollOutRect.width - 16f, Mathf.Max(_scrollInnerHeight, scrollOutH));
+        float contentH = CalcTotalContentHeight(groups) + 20f; // 20f safety margin
+        Rect scrollViewRect = new(0f, 0f, scrollOutRect.width - 16f, Mathf.Max(contentH, scrollOutH));
 
         Widgets.BeginScrollView(scrollOutRect, ref _scrollPos, scrollViewRect);
         Listing_Standard inner = new();
@@ -123,14 +122,64 @@ public class GroupEditorUI : Window
             DrawGroupList(inner, groups);
         }
 
-        float newH = inner.CurHeight;
-        _scrollInnerHeight = newH > _contentHeight + 5f ? newH + 200f : newH;
-        _contentHeight = newH;
-
         inner.End();
         Widgets.EndScrollView();
 
         ui.End();
+    }
+
+    // ── Height calculation (drives scroll inner rect sizing) ──────────────
+
+    private float CalcTotalContentHeight(List<PawnGroupMakerEdit> groups)
+    {
+        if (groups.Count == 0)
+            return 30f; // "(none)" label
+
+        float h = 0f;
+        for (int i = 0; i < groups.Count; i++)
+        {
+            h += 28f; // header row
+            if (_expanded.Contains(i))
+            {
+                h += CalcExpandedGroupHeight(groups[i]);
+                h += 12f; // GapLine after body
+            }
+        }
+
+        return h;
+    }
+
+    private static float CalcExpandedGroupHeight(PawnGroupMakerEdit group)
+    {
+        float h = 0f;
+        h += 28f; // group type
+        h += 28f; // commonality
+        h += 28f; // max points
+        h += 28f; // block strategies
+        h += 12f; // GapLine
+        h += CalcPawnListHeight(group.Options);
+        h += CalcPawnListHeight(group.Guards);
+        h += CalcPawnListHeight(group.Traders);
+        h += CalcPawnListHeight(group.Carriers);
+        h += 4f; // Gap(4f)
+        return h;
+    }
+
+    private static float CalcPawnListHeight(List<PawnGenOptionEdit> list)
+    {
+        float h = 24f; // section header
+        h += 2f; // Gap(2f)
+        if (list.Count == 0)
+        {
+            h += 24f; // "(none)" label (~Text.LineHeight + verticalSpacing)
+        }
+        else
+        {
+            h += list.Count * 24f; // each pawn row
+        }
+
+        h += 12f; // GapLine
+        return h;
     }
 
     private void DrawGroupList(Listing_Standard ui, List<PawnGroupMakerEdit> groups)
@@ -409,8 +458,9 @@ public class GroupEditorUI : Window
     {
         // Section header row
         Rect headerRow = ui.GetRect(24f);
-        Rect headerLabel = new(headerRow.x, headerRow.y, headerRow.width - 80f, headerRow.height);
-        Rect addBtn = new(headerRow.xMax - 80f, headerRow.y, 78f, 22f);
+        float addBtnW = Mathf.Max(120f, Text.CalcSize(addButtonLabel).x + 16f);
+        Rect headerLabel = new(headerRow.x, headerRow.y, headerRow.width - addBtnW - 4f, headerRow.height);
+        Rect addBtn = new(headerRow.xMax - addBtnW, headerRow.y, addBtnW, 22f);
 
         Text.Anchor = TextAnchor.MiddleLeft;
         GUI.color = Color.white;
@@ -465,14 +515,14 @@ public class GroupEditorUI : Window
                 if (missing)
                     GUI.color = Color.grey;
 
-                Rect nameLbl = new(row.x, row.y, row.width - 120f, row.height);
+                Rect nameLbl = new(row.x, row.y, row.width - 148f, row.height);
                 Text.Anchor = TextAnchor.MiddleLeft;
                 Widgets.Label(nameLbl, missing ? $"<color=grey>{kindLabel} (missing)</color>" : kindLabel);
                 Text.Anchor = TextAnchor.UpperLeft;
                 GUI.color = Color.white;
 
                 // "weight" label
-                Rect weightLbl = new(row.xMax - 118f, row.y, 38f, row.height);
+                Rect weightLbl = new(row.xMax - 146f, row.y, 48f, row.height);
                 GUI.color = Color.grey;
                 Text.Anchor = TextAnchor.MiddleLeft;
                 Widgets.Label(weightLbl, "FactionLoadout_GroupEditor_WeightLabel".Translate());
@@ -481,7 +531,7 @@ public class GroupEditorUI : Window
                 TooltipHandler.TipRegion(weightLbl, "FactionLoadout_GroupEditor_WeightTooltip".Translate());
 
                 // Weight field
-                Rect weightField = new(row.xMax - 78f, row.y + 1f, 50f, 22f);
+                Rect weightField = new(row.xMax - 86f, row.y + 1f, 56f, 22f);
                 if (!_numBuffers.TryGetValue((groupIndex, entryBufKey), out string wbuf))
                     wbuf = entry.SelectionWeight.ToString("0.##");
 
@@ -595,7 +645,7 @@ public class Dialog_PawnKindPicker : Window
 
     private string _search = "";
     private Vector2 _scrollPos;
-    private float _contentHeight = 400f;
+    private float _contentHeight = 0f;
     private string _manualEntry = "";
 
     // Cached sorted pawnkind list.
