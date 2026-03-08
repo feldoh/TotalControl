@@ -117,7 +117,7 @@ public static class CEUI
     {
         List<AmmoCategoryDef> allCategories = DefDatabase<AmmoCategoryDef>.AllDefsListForReading.OrderBy(d => d.LabelCap.ToString()).ToList();
 
-        var items = CustomFloatMenu.MakeItems(allCategories, d => new MenuItemText(d, d.LabelCap, tooltip: d.description));
+        var items = CustomFloatMenu.MakeItems(allCategories, d => new MenuItemText(d, $"{d.LabelCap} ({d.defName})", tooltip: d.description));
         CustomFloatMenu.Open(
             items,
             item =>
@@ -227,7 +227,7 @@ public static class CEUI
         if (Widgets.ButtonText(addRow.LeftPart(0.5f), "FactionLoadout_CE_AddAmmoCategory".Translate()))
         {
             List<AmmoCategoryDef> allCats = DefDatabase<AmmoCategoryDef>.AllDefsListForReading.OrderBy(d => d.LabelCap.ToString()).ToList();
-            var items = CustomFloatMenu.MakeItems(allCats, d => new MenuItemText(d, d.LabelCap, tooltip: d.description));
+            var items = CustomFloatMenu.MakeItems(allCats, d => new MenuItemText(d, $"{d.LabelCap} ({d.defName})", tooltip: d.description));
             CustomFloatMenu.Open(
                 items,
                 item =>
@@ -410,7 +410,7 @@ public static class CEUI
     private static void OpenAmmoCategoryMenuForChoices(System.Action<AmmoCategoryDef> onSelect)
     {
         List<AmmoCategoryDef> allCats = DefDatabase<AmmoCategoryDef>.AllDefsListForReading.OrderBy(d => d.LabelCap.ToString()).ToList();
-        var items = CustomFloatMenu.MakeItems(allCats, d => new MenuItemText(d, d.LabelCap, tooltip: d.description));
+        var items = CustomFloatMenu.MakeItems(allCats, d => new MenuItemText(d, $"{d.LabelCap} ({d.defName})", tooltip: d.description));
         CustomFloatMenu.Open(items, item => onSelect(item.GetPayload<AmmoCategoryDef>()));
     }
 
@@ -690,7 +690,7 @@ public static class CEUI
         Widgets.Label(ui.GetRect(Text.LineHeight), prefix + "FactionLoadout_CE_WeaponTags".Translate());
         Text.Anchor = TextAnchor.UpperLeft;
         s.WeaponTags ??= [];
-        UIHelpers.DrawStringListSection(ui, s.WeaponTags, indent: true);
+        UIHelpers.DrawStringListSection(ui, s.WeaponTags, PawnKindEditUI.AllWeaponsTags ?? [], indent: true);
         ui.Gap(2f);
 
         DrawAttachmentDataInline(ui, ref s.Attachments, prefix + "FactionLoadout_CE_Attachments".Translate());

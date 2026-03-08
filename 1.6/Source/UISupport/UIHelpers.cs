@@ -185,4 +185,48 @@ public class UIHelpers
             );
         }
     }
+
+    /// <summary>
+    /// Draws a list of string tags with per-item remove buttons and an "Add new…" button
+    /// that opens a <see cref="CustomFloatMenu"/> populated from <paramref name="allTags"/>.
+    /// The <paramref name="list"/> must be non-null; initialize with <c>??= []</c> before calling.
+    /// </summary>
+    public static void DrawStringListSection(Listing_Standard ui, List<string> list, System.Collections.Generic.IEnumerable<string> allTags, bool indent = false)
+    {
+        string prefix = indent ? "    " : "  ";
+        int toRemove = -1;
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            Rect row = ui.GetRect(OverrideRowH);
+            Text.Anchor = TextAnchor.MiddleLeft;
+            Widgets.Label(row.LeftPart(0.75f), prefix + list[i]);
+            Text.Anchor = TextAnchor.UpperLeft;
+            if (Widgets.ButtonText(row.RightPart(0.22f), "FactionLoadout_Clear".Translate()))
+            {
+                toRemove = i;
+            }
+        }
+
+        if (toRemove >= 0)
+        {
+            list.RemoveAt(toRemove);
+        }
+
+        List<string> captured = list;
+        Rect addRow = ui.GetRect(OverrideRowH);
+        if (Widgets.ButtonText(addRow.LeftPart(0.45f), "FactionLoadout_AddTag".Translate()))
+        {
+            List<MenuItemBase> items = CustomFloatMenu.MakeItems(allTags, t => new MenuItemText(t, t));
+            CustomFloatMenu.Open(
+                items,
+                raw =>
+                {
+                    string t = raw.GetPayload<string>();
+                    if (!captured.Contains(t))
+                        captured.Add(t);
+                }
+            );
+        }
+    }
 }
