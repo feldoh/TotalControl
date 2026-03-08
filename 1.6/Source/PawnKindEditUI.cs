@@ -61,6 +61,39 @@ public class PawnKindEditUI : Window
         }
     }
 
+    public static string BuildApparelTooltip(ThingDef def)
+    {
+        if (def?.apparel == null)
+        {
+            return def?.description;
+        }
+
+        var parts = new System.Text.StringBuilder();
+
+        if (def.apparel.layers?.Count > 0)
+        {
+            string layers = string.Join(", ", def.apparel.layers.Select(l => !string.IsNullOrEmpty(l.LabelCap) ? l.LabelCap.ToString() : l.defName));
+            parts.AppendLine("FactionLoadout_Apparel_Layers".Translate(layers).ToString());
+        }
+
+        if (def.apparel.bodyPartGroups?.Count > 0)
+        {
+            string coverage = string.Join(", ", def.apparel.bodyPartGroups.Select(b => !string.IsNullOrEmpty(b.LabelCap) ? b.LabelCap.ToString() : b.defName));
+            parts.AppendLine("FactionLoadout_Apparel_Coverage".Translate(coverage).ToString());
+        }
+
+        if (!string.IsNullOrEmpty(def.description))
+        {
+            if (parts.Length > 0)
+            {
+                parts.AppendLine();
+            }
+            parts.Append(def.description);
+        }
+
+        return parts.Length > 0 ? parts.ToString().TrimEnd() : null;
+    }
+
     private static void ScanDefs()
     {
         if (AllTechHediffTags != null)
@@ -1086,10 +1119,23 @@ public class PawnKindEditUI : Window
             defSel.width = 220;
             defSel.height = 50;
             Widgets.DrawHighlightIfMouseover(defSel);
+            TooltipHandler.TipRegion(defSel, "FactionLoadout_LeftClickToChange".Translate() + "\n" + "FactionLoadout_RightClickToInspect".Translate());
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && Mouse.IsOver(defSel))
+            {
+                if (Verse.Current.ProgramState == ProgramState.Playing)
+                {
+                    Find.WindowStack.Add(new Dialog_InfoCard(item.Thing));
+                }
+                else
+                {
+                    Find.WindowStack.Add(new Dialog_ApparelInfo(item.Thing));
+                }
+                Event.current.Use();
+            }
             if (Widgets.ButtonInvisible(defSel))
             {
                 IEnumerable<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading.Where(thingFilter);
-                List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, BuildApparelTooltip(d)));
                 CustomFloatMenu.Open(
                     items,
                     raw =>

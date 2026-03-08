@@ -175,4 +175,10 @@
     <FactionLoadout_GroupEditor_DeleteConfirmTitle>Delete Group?</FactionLoadout_GroupEditor_DeleteConfirmTitle>
     <FactionLoadout_GroupEditor_DeleteConfirmBody>This will remove the group from the faction. Any pawnkinds it contained may become orphaned.</FactionLoadout_GroupEditor_DeleteConfirmBody>
     <FactionLoadout_GroupEditor_DeleteConfirmButton>Delete</FactionLoadout_GroupEditor_DeleteConfirmButton>
+
+    <!-- Apparel item inspect (issue #38) -->
+    <FactionLoadout_LeftClickToChange>Left-click to change item</FactionLoadout_LeftClickToChange>
+    <FactionLoadout_RightClickToInspect>Right-click to inspect</FactionLoadout_RightClickToInspect>
+    <FactionLoadout_Apparel_Layers>Layers: {0}</FactionLoadout_Apparel_Layers>
+    <FactionLoadout_Apparel_Coverage>Coverage: {0}</FactionLoadout_Apparel_Coverage>
 </LanguageData>
