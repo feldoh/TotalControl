@@ -147,7 +147,8 @@ public static class CombatExtendedUI
     private static void DrawMagazineCountRow(Listing_Standard ui, CEData data, LoadoutPropertiesExtension defExt)
     {
         FloatRange defVal = defExt?.primaryMagazineCount ?? FloatRange.Zero;
-        int magMin = _textBufIdx++, magMax = _textBufIdx++;
+        int magMin = _textBufIdx++,
+            magMax = _textBufIdx++;
         UIHelpers.DrawFloatRangeRow(
             ui,
             "FactionLoadout_CE_PrimaryMagazineCount".Translate(),
@@ -442,7 +443,8 @@ public static class CombatExtendedUI
     private static void DrawShieldMoneyRow(Listing_Standard ui, CEData data, LoadoutPropertiesExtension defExt)
     {
         FloatRange defVal = defExt?.shieldMoney ?? FloatRange.Zero;
-        int shieldMin = _textBufIdx++, shieldMax = _textBufIdx++;
+        int shieldMin = _textBufIdx++,
+            shieldMax = _textBufIdx++;
         UIHelpers.DrawFloatRangeRow(
             ui,
             "FactionLoadout_CE_ShieldMoney".Translate(),
@@ -701,12 +703,32 @@ public static class CombatExtendedUI
             ui.Gap(4f);
         }
 
-        int smMin = _textBufIdx++, smMax = _textBufIdx++;
-        UIHelpers.DrawFloatRangeRow(ui, prefix + "FactionLoadout_CE_SidearmMoney".Translate(), ref s.SidearmMoney, 0f, 99999f, new FloatRange(100f, 500f), ref _textBufs[smMin], ref _textBufs[smMax]);
+        int smMin = _textBufIdx++,
+            smMax = _textBufIdx++;
+        UIHelpers.DrawFloatRangeRow(
+            ui,
+            prefix + "FactionLoadout_CE_SidearmMoney".Translate(),
+            ref s.SidearmMoney,
+            0f,
+            99999f,
+            new FloatRange(100f, 500f),
+            ref _textBufs[smMin],
+            ref _textBufs[smMax]
+        );
         ui.Gap(2f);
 
-        int mcMin = _textBufIdx++, mcMax = _textBufIdx++;
-        UIHelpers.DrawFloatRangeRow(ui, prefix + "FactionLoadout_CE_MagazineCount".Translate(), ref s.MagazineCount, 0f, 99f, new FloatRange(1f, 3f), ref _textBufs[mcMin], ref _textBufs[mcMax]);
+        int mcMin = _textBufIdx++,
+            mcMax = _textBufIdx++;
+        UIHelpers.DrawFloatRangeRow(
+            ui,
+            prefix + "FactionLoadout_CE_MagazineCount".Translate(),
+            ref s.MagazineCount,
+            0f,
+            99f,
+            new FloatRange(1f, 3f),
+            ref _textBufs[mcMin],
+            ref _textBufs[mcMax]
+        );
         ui.Gap(2f);
 
         UIHelpers.DrawFloatSliderRow(ui, prefix + "FactionLoadout_CE_GenerateChance".Translate(), ref s.GenerateChance, 0f, 1f, 1f, asPercent: true);
@@ -748,8 +770,18 @@ public static class CombatExtendedUI
 
             ui.Gap(2f);
 
-            int acMin = _textBufIdx++, acMax = _textBufIdx++;
-            UIHelpers.DrawFloatRangeRow(ui, "  " + "FactionLoadout_CE_AttachmentCount".Translate(), ref att.AttachmentCount, 0f, 99f, new FloatRange(1f, 2f), ref _textBufs[acMin], ref _textBufs[acMax]);
+            int acMin = _textBufIdx++,
+                acMax = _textBufIdx++;
+            UIHelpers.DrawFloatRangeRow(
+                ui,
+                "  " + "FactionLoadout_CE_AttachmentCount".Translate(),
+                ref att.AttachmentCount,
+                0f,
+                99f,
+                new FloatRange(1f, 2f),
+                ref _textBufs[acMin],
+                ref _textBufs[acMax]
+            );
             ui.Gap(2f);
 
             Text.Anchor = TextAnchor.MiddleLeft;

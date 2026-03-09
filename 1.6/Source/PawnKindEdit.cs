@@ -19,15 +19,12 @@ public class PawnKindEdit : IExposable
     public static Dictionary<PawnKindDef, PawnKindDef> replacementToOriginal = new();
 
     /// <summary>
-    /// Pre-cached apparel blacklists built at apply time: cloned PawnKindDef → blacklisted ThingDefs.
+    /// Pre-cached blacklists built at apply time: cloned PawnKindDef → blacklisted ThingDefs.
     /// Includes both global and specific edits merged. Keyed by cloned def for O(1) lookup at generation time.
     /// </summary>
     public static Dictionary<PawnKindDef, HashSet<ThingDef>> ApparelBlacklistCache = new();
-
-    /// <summary>
-    /// Pre-cached weapon blacklists built at apply time: cloned PawnKindDef → blacklisted ThingDefs.
-    /// </summary>
     public static Dictionary<PawnKindDef, HashSet<ThingDef>> WeaponBlacklistCache = new();
+
     public static RulePackDef FakeRulePack = new() { defName = "NONE" };
 
     public static void RecordReplacement(PawnKindDef original, PawnKindDef replacement) => replacementToOriginal.SetOrAdd(replacement, original);
@@ -106,35 +103,24 @@ public class PawnKindEdit : IExposable
 
     private void BuildBlacklistCaches(PawnKindDef def, PawnKindEdit global)
     {
-        var apparelBl = new HashSet<ThingDef>();
-        if (global?.ApparelBlacklist != null)
-            foreach (DefRef<ThingDef> r in global.ApparelBlacklist)
-                if (r.HasValue)
-                    apparelBl.Add(r.Def);
-        if (ApparelBlacklist != null)
-            foreach (DefRef<ThingDef> r in ApparelBlacklist)
-                if (r.HasValue)
-                    apparelBl.Add(r.Def);
+        HashSet<ThingDef> apparelBl = (global?.ApparelBlacklist ?? Enumerable.Empty<DefRef<ThingDef>>())
+            .ConcatIfNotNull(ApparelBlacklist)
+            .Where(r => r.HasValue)
+            .Select(r => r.Def)
+            .ToHashSet();
         if (apparelBl.Count > 0)
             ApparelBlacklistCache[def] = apparelBl;
 
-        var weaponBl = new HashSet<ThingDef>();
-        if (global?.WeaponBlacklist != null)
-            foreach (DefRef<ThingDef> r in global.WeaponBlacklist)
-                if (r.HasValue)
-                    weaponBl.Add(r.Def);
-        if (WeaponBlacklist != null)
-            foreach (DefRef<ThingDef> r in WeaponBlacklist)
-                if (r.HasValue)
-                    weaponBl.Add(r.Def);
+        HashSet<ThingDef> weaponBl = (global?.WeaponBlacklist ?? Enumerable.Empty<DefRef<ThingDef>>())
+            .ConcatIfNotNull(WeaponBlacklist)
+            .Where(r => r.HasValue)
+            .Select(r => r.Def)
+            .ToHashSet();
         if (weaponBl.Count > 0)
             WeaponBlacklistCache[def] = weaponBl;
     }
 
-    public FactionEdit ParentEdit
-    {
-        get { return Preset.LoadedPresets.SelectMany(preset => preset.factionChanges).FirstOrDefault(change => change.KindEdits.Contains(this)); }
-    }
+    public FactionEdit ParentEdit => Preset.LoadedPresets.SelectMany(preset => preset.factionChanges).FirstOrDefault(change => change.KindEdits.Contains(this));
 
     [NoCopy]
     public PawnKindDef Def;
