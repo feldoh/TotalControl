@@ -109,20 +109,24 @@ public class PawnKindEdit : IExposable
         var apparelBl = new HashSet<ThingDef>();
         if (global?.ApparelBlacklist != null)
             foreach (DefRef<ThingDef> r in global.ApparelBlacklist)
-                if (r.HasValue) apparelBl.Add(r.Def);
+                if (r.HasValue)
+                    apparelBl.Add(r.Def);
         if (ApparelBlacklist != null)
             foreach (DefRef<ThingDef> r in ApparelBlacklist)
-                if (r.HasValue) apparelBl.Add(r.Def);
+                if (r.HasValue)
+                    apparelBl.Add(r.Def);
         if (apparelBl.Count > 0)
             ApparelBlacklistCache[def] = apparelBl;
 
         var weaponBl = new HashSet<ThingDef>();
         if (global?.WeaponBlacklist != null)
             foreach (DefRef<ThingDef> r in global.WeaponBlacklist)
-                if (r.HasValue) weaponBl.Add(r.Def);
+                if (r.HasValue)
+                    weaponBl.Add(r.Def);
         if (WeaponBlacklist != null)
             foreach (DefRef<ThingDef> r in WeaponBlacklist)
-                if (r.HasValue) weaponBl.Add(r.Def);
+                if (r.HasValue)
+                    weaponBl.Add(r.Def);
         if (weaponBl.Count > 0)
             WeaponBlacklistCache[def] = weaponBl;
     }

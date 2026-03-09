@@ -675,8 +675,14 @@ public class Dialog_PawnKindPicker : Window
         ui.Label("<b>" + "FactionLoadout_GroupEditor_PickerTitle".Translate(_roleName) + "</b>");
         ui.Gap(4f);
 
-        // Search field
-        _search = ui.TextEntry(_search);
+        // Search field — reset scroll when query changes so results are always visible at top
+        string newSearch = ui.TextEntry(_search);
+        if (newSearch != _search)
+        {
+            _search = newSearch;
+            _scrollPos = Vector2.zero;
+        }
+
         ui.Gap(4f);
 
         // Scroll list
@@ -685,7 +691,10 @@ public class Dialog_PawnKindPicker : Window
         List<PawnKindDef> filtered = string.IsNullOrWhiteSpace(_search)
             ? _allKinds
             : _allKinds
-                .Where(k => k.LabelCap.ToString().IndexOf(_search, StringComparison.OrdinalIgnoreCase) >= 0 || k.defName.IndexOf(_search, StringComparison.OrdinalIgnoreCase) >= 0)
+                .Where(k =>
+                    (k.LabelCap.ToString() ?? string.Empty).IndexOf(_search, StringComparison.OrdinalIgnoreCase) >= 0
+                    || (k.defName ?? string.Empty).IndexOf(_search, StringComparison.OrdinalIgnoreCase) >= 0
+                )
                 .ToList();
 
         float itemH = 24f;
