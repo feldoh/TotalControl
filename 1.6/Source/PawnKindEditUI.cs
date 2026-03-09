@@ -17,7 +17,7 @@ public class PawnKindEditUI : Window
 {
     private static List<string> AllTechHediffTags;
     private static List<string> AllApparelTags;
-    private static List<string> AllWeaponsTags;
+    public static List<string> AllWeaponsTags;
     private static List<BodyTypeDef> AllBodyTypes;
     private static List<ThingDef> AllApparel;
     private static List<ThingDef> AllWeapons;
@@ -1732,7 +1732,14 @@ public class PawnKindEditUI : Window
     private void DrawRaidPointsTab(Listing_Standard ui)
     {
         DrawOverride(ui, DefaultKind.combatPower, ref Current.CombatPower, "FactionLoadout_CombatPower".Translate().ToString(), DrawCombatPower, pasteGet: e => e.CombatPower);
-        DrawOverride(ui, DefaultKind.appearsRandomlyInCombatGroups, ref Current.AppearsRandomlyInCombatGroups, "FactionLoadout_AppearsRandomlyInCombatGroups".Translate().ToString(), DrawAppearsRandomlyInCombatGroups, pasteGet: e => e.AppearsRandomlyInCombatGroups);
+        DrawOverride(
+            ui,
+            DefaultKind.appearsRandomlyInCombatGroups,
+            ref Current.AppearsRandomlyInCombatGroups,
+            "FactionLoadout_AppearsRandomlyInCombatGroups".Translate().ToString(),
+            DrawAppearsRandomlyInCombatGroups,
+            pasteGet: e => e.AppearsRandomlyInCombatGroups
+        );
 
         if (!Current.IsGlobal)
             return;

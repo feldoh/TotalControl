@@ -37,6 +37,10 @@
             <Private>false</Private>
             <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
         </ProjectReference>
+        <ProjectReference Include="../Compatibility/CombatExtended/TotalControlCECompat.csproj">
+            <Private>false</Private>
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
     </ItemGroup>
 
     <!-- No source files — this project compiles nothing -->
