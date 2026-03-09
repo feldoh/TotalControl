@@ -48,8 +48,14 @@ public class UIHelpers
     /// <summary>
     /// Draws a nullable <see cref="FloatRange"/> override row.
     /// Shows min/max text fields when overridden, or a hint + Override button when not.
+    /// <para>
+    /// <paramref name="minBuf"/> and <paramref name="maxBuf"/> must be caller-owned strings that
+    /// persist across frames (e.g., fields on the backing data object). Pass null-initialized
+    /// fields; this method initialises them lazily on the first draw after override is activated.
+    /// Both are set to null when the override is cleared so they re-initialise correctly next time.
+    /// </para>
     /// </summary>
-    public static void DrawFloatRangeRow(Listing_Standard ui, string label, ref FloatRange? field, float minLimit, float maxLimit, FloatRange defaultSeed)
+    public static void DrawFloatRangeRow(Listing_Standard ui, string label, ref FloatRange? field, float minLimit, float maxLimit, FloatRange defaultSeed, ref string minBuf, ref string maxBuf)
     {
         bool hasOverride = field.HasValue;
         Rect row = ui.GetRect(OverrideRowH);
@@ -65,8 +71,8 @@ public class UIHelpers
             FloatRange current = field.Value;
             float min = current.min;
             float max = current.max;
-            string minBuf = min.ToString("F0");
-            string maxBuf = max.ToString("F0");
+            minBuf ??= min.ToString("F0");
+            maxBuf ??= max.ToString("F0");
 
             Rect minRect = fieldRect.LeftPart(0.28f);
             Rect dashRect = fieldRect.LeftPart(0.5f).RightPart(0.12f);
@@ -83,16 +89,20 @@ public class UIHelpers
             if (Widgets.ButtonText(clearRect, "FactionLoadout_Clear".Translate()))
             {
                 field = null;
+                minBuf = null;
+                maxBuf = null;
             }
         }
         else
         {
             Text.Anchor = TextAnchor.MiddleLeft;
-            Widgets.Label(fieldRect.LeftPart(0.55f), "(–)");
+            Widgets.Label(fieldRect.LeftPart(0.55f), $"({defaultSeed.min:F0}–{defaultSeed.max:F0})");
             Text.Anchor = TextAnchor.UpperLeft;
             if (Widgets.ButtonText(fieldRect.RightPart(0.4f), "FactionLoadout_Override".Translate()))
             {
                 field = defaultSeed;
+                minBuf = null;
+                maxBuf = null;
             }
         }
     }

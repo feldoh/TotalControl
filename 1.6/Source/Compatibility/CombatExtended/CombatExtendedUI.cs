@@ -10,18 +10,34 @@ namespace TotalControlCECompat;
 
 /// <summary>
 /// UI drawing for the Combat Extended loadout tab.
-/// Organised into four sections: Ammo, Shield, Sidearms, and Attachments.
-/// Generic helpers (DrawFloatRangeRow, DrawFloatSliderRow, DrawStringListSection,
-/// Window_ThingFilterEditor) live in FactionLoadout.UISupport so other modules can reuse them.
 /// </summary>
-public static class CEUI
+public static class CombatExtendedUI
 {
     private const float RowH = UIHelpers.OverrideRowH;
+
+    // --- UI-state text buffers ---
+    // TextFieldNumeric requires caller-owned string buffers that persist across frames.
+    // We use an indexed array (reset to index 0 each draw, cleared when the active CE edit changes
+    private static readonly string[] _textBufs = new string[128];
+    private static int _textBufIdx;
+    private static CEData _lastCEData;
+
+    private static void BeginDraw(CEData data)
+    {
+        if (!ReferenceEquals(data, _lastCEData))
+        {
+            _lastCEData = data;
+            System.Array.Clear(_textBufs, 0, _textBufs.Length);
+        }
+
+        _textBufIdx = 0;
+    }
 
     public static void DrawTab(Listing_Standard ui, PawnKindEdit edit, PawnKindDef defaultKind)
     {
         CEData data = CEModule.GetOrCreateData(edit);
         LoadoutPropertiesExtension defExt = defaultKind?.GetModExtension<LoadoutPropertiesExtension>();
+        BeginDraw(data);
 
         DrawSectionHeader(ui, "FactionLoadout_CE_Section_Ammo".Translate());
         DrawAmmoCategoryRow(ui, data, defExt);
@@ -131,13 +147,16 @@ public static class CEUI
     private static void DrawMagazineCountRow(Listing_Standard ui, CEData data, LoadoutPropertiesExtension defExt)
     {
         FloatRange defVal = defExt?.primaryMagazineCount ?? FloatRange.Zero;
+        int magMin = _textBufIdx++, magMax = _textBufIdx++;
         UIHelpers.DrawFloatRangeRow(
             ui,
             "FactionLoadout_CE_PrimaryMagazineCount".Translate(),
             ref data.PrimaryMagazineCount,
             0f,
             99f,
-            defVal != FloatRange.Zero ? defVal : new FloatRange(1f, 3f)
+            defVal != FloatRange.Zero ? defVal : new FloatRange(1f, 3f),
+            ref _textBufs[magMin],
+            ref _textBufs[magMax]
         );
     }
 
@@ -207,8 +226,9 @@ public static class CEUI
             Rect removeRect = row.RightPart(0.22f);
 
             float chance = entry.Chance;
-            string chanceBuf = chance.ToString("F2");
-            Widgets.TextFieldNumeric(chanceField, ref chance, ref chanceBuf, 0f, 999f);
+            int chanceSlot = _textBufIdx++;
+            _textBufs[chanceSlot] ??= chance.ToString("F2");
+            Widgets.TextFieldNumeric(chanceField, ref chance, ref _textBufs[chanceSlot], 0f, 999f);
             entry.Chance = chance;
 
             if (Widgets.ButtonText(removeRect, "FactionLoadout_Clear".Translate()))
@@ -358,8 +378,9 @@ public static class CEUI
                 Text.Anchor = TextAnchor.UpperLeft;
 
                 float chance = choice.Chance;
-                string chanceBuf = chance.ToString("F2");
-                Widgets.TextFieldNumeric(row.LeftPart(0.77f).RightPart(0.15f), ref chance, ref chanceBuf, 0f, 999f);
+                int choiceSlot = _textBufIdx++;
+                _textBufs[choiceSlot] ??= chance.ToString("F2");
+                Widgets.TextFieldNumeric(row.LeftPart(0.77f).RightPart(0.15f), ref chance, ref _textBufs[choiceSlot], 0f, 999f);
                 choice.Chance = chance;
 
                 if (Widgets.ButtonText(row.RightPart(0.21f), "FactionLoadout_Clear".Translate()))
@@ -421,13 +442,16 @@ public static class CEUI
     private static void DrawShieldMoneyRow(Listing_Standard ui, CEData data, LoadoutPropertiesExtension defExt)
     {
         FloatRange defVal = defExt?.shieldMoney ?? FloatRange.Zero;
+        int shieldMin = _textBufIdx++, shieldMax = _textBufIdx++;
         UIHelpers.DrawFloatRangeRow(
             ui,
             "FactionLoadout_CE_ShieldMoney".Translate(),
             ref data.ShieldMoney,
             0f,
             99999f,
-            defVal != FloatRange.Zero ? defVal : new FloatRange(100f, 500f)
+            defVal != FloatRange.Zero ? defVal : new FloatRange(100f, 500f),
+            ref _textBufs[shieldMin],
+            ref _textBufs[shieldMax]
         );
     }
 
@@ -677,10 +701,12 @@ public static class CEUI
             ui.Gap(4f);
         }
 
-        UIHelpers.DrawFloatRangeRow(ui, prefix + "FactionLoadout_CE_SidearmMoney".Translate(), ref s.SidearmMoney, 0f, 99999f, new FloatRange(100f, 500f));
+        int smMin = _textBufIdx++, smMax = _textBufIdx++;
+        UIHelpers.DrawFloatRangeRow(ui, prefix + "FactionLoadout_CE_SidearmMoney".Translate(), ref s.SidearmMoney, 0f, 99999f, new FloatRange(100f, 500f), ref _textBufs[smMin], ref _textBufs[smMax]);
         ui.Gap(2f);
 
-        UIHelpers.DrawFloatRangeRow(ui, prefix + "FactionLoadout_CE_MagazineCount".Translate(), ref s.MagazineCount, 0f, 99f, new FloatRange(1f, 3f));
+        int mcMin = _textBufIdx++, mcMax = _textBufIdx++;
+        UIHelpers.DrawFloatRangeRow(ui, prefix + "FactionLoadout_CE_MagazineCount".Translate(), ref s.MagazineCount, 0f, 99f, new FloatRange(1f, 3f), ref _textBufs[mcMin], ref _textBufs[mcMax]);
         ui.Gap(2f);
 
         UIHelpers.DrawFloatSliderRow(ui, prefix + "FactionLoadout_CE_GenerateChance".Translate(), ref s.GenerateChance, 0f, 1f, 1f, asPercent: true);
@@ -722,7 +748,8 @@ public static class CEUI
 
             ui.Gap(2f);
 
-            UIHelpers.DrawFloatRangeRow(ui, "  " + "FactionLoadout_CE_AttachmentCount".Translate(), ref att.AttachmentCount, 0f, 99f, new FloatRange(1f, 2f));
+            int acMin = _textBufIdx++, acMax = _textBufIdx++;
+            UIHelpers.DrawFloatRangeRow(ui, "  " + "FactionLoadout_CE_AttachmentCount".Translate(), ref att.AttachmentCount, 0f, 99f, new FloatRange(1f, 2f), ref _textBufs[acMin], ref _textBufs[acMax]);
             ui.Gap(2f);
 
             Text.Anchor = TextAnchor.MiddleLeft;

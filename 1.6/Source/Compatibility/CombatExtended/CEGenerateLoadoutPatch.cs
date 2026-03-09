@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CombatExtended;
 using HarmonyLib;
@@ -6,23 +7,22 @@ using Verse;
 namespace TotalControlCECompat;
 
 /// <summary>
-/// Harmony Prefix+Postfix on <see cref="LoadoutPropertiesExtension.GenerateLoadoutFor"/>.
+/// Harmony Prefix+Finalizer on <see cref="LoadoutPropertiesExtension.GenerateLoadoutFor"/>.
 ///
 /// Purpose: implement per-weapon ammo mapping. By the time CE's postfix calls
 /// GenerateLoadoutFor, TC's WeaponGenPatch has already placed the pawn's weapon
 /// (it runs first via HarmonyMethod.before). We inspect pawn.equipment.Primary,
 /// look up any configured per-weapon ammo choices, and temporarily override
 /// forcedAmmoCategory / weightedAmmoCategories so CE's own weighted-selection
-/// logic picks the right ammo. The Postfix restores the originals so the
-/// PawnKindDef extension is not permanently mutated.
+/// logic picks the right ammo. The Finalizer restores the originals
+/// so the PawnKindDef extension is not permanently mutated even if the original throws.
 ///
 /// All AmmoCategoryDef resolution happens at Apply() time in <see cref="CEModule"/>
-/// (cached in <see cref="CEModule.KindDefMappings"/>) — zero def-lookup cost here.
 /// </summary>
 [HarmonyPatch(typeof(LoadoutPropertiesExtension), nameof(LoadoutPropertiesExtension.GenerateLoadoutFor))]
 public static class CEGenerateLoadoutPatch
 {
-    /// <summary>Saved originals so Postfix can restore them.</summary>
+    /// <summary>Saved originals so Finalizer can restore them.</summary>
     public struct PatchState
     {
         public AmmoCategoryDef SavedForcedCategory;
@@ -87,14 +87,14 @@ public static class CEGenerateLoadoutPatch
         __state.Modified = true;
     }
 
-    public static void Postfix(LoadoutPropertiesExtension __instance, ref PatchState __state)
+    public static Exception Finalizer(LoadoutPropertiesExtension __instance, PatchState __state, Exception __exception)
     {
-        if (!__state.Modified)
+        if (__state.Modified)
         {
-            return;
+            __instance.forcedAmmoCategory = __state.SavedForcedCategory;
+            __instance.weightedAmmoCategories = __state.SavedWeightedCategories;
         }
 
-        __instance.forcedAmmoCategory = __state.SavedForcedCategory;
-        __instance.weightedAmmoCategories = __state.SavedWeightedCategories;
+        return __exception;
     }
 }

@@ -318,7 +318,7 @@ public class CEModule : ITotalControlModule
 
     public void AddTabs(PawnKindEdit edit, PawnKindDef defaultKind, List<Tab> tabs)
     {
-        tabs.Add(new Tab("FactionLoadout_Tab_CE".Translate(), ui => CEUI.DrawTab(ui, edit, defaultKind)));
+        tabs.Add(new Tab("FactionLoadout_Tab_CE".Translate(), ui => CombatExtendedUI.DrawTab(ui, edit, defaultKind)));
     }
 
     // --- Conversion helpers ---
