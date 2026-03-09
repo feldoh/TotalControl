@@ -17,6 +17,9 @@
     <FactionLoadout_Desc_RaidLoot>Amount of loot this faction will drop by raid points.\nEach point is like points on a graph. Consider (300, 0) and (500, 150):\nThey'll bring nothing until 300 then gradually become more lucrative between 300 and 500, then remain the same.\nIf you use the same left number twice, last one wins.</FactionLoadout_Desc_RaidLoot>
     <FactionLoadout_FactionDefault>Set to faction default</FactionLoadout_FactionDefault>
     <FactionLoadout_Clear>Clear</FactionLoadout_Clear>
+    <FactionLoadout_Override>Override</FactionLoadout_Override>
+    <FactionLoadout_AddTag>Add tag...</FactionLoadout_AddTag>
+    <FactionLoadout_AddTagDesc>Enter tag name:</FactionLoadout_AddTagDesc>
 
     <FactionLoadout_Tab_Appearance>Appearance</FactionLoadout_Tab_Appearance>
     <FactionLoadout_Tab_Apparel>Apparel</FactionLoadout_Tab_Apparel>
@@ -74,6 +77,55 @@
     <FactionLoadout_DefRef_Missing>{0} (missing — from {1})</FactionLoadout_DefRef_Missing>
     <FactionLoadout_DefRef_UnknownMod>unknown mod</FactionLoadout_DefRef_UnknownMod>
     <FactionLoadout_None>None</FactionLoadout_None>
+
+    <!-- Combat Extended Module -->
+    <FactionLoadout_Tab_CE>CE Loadout</FactionLoadout_Tab_CE>
+    <FactionLoadout_CE_ChangeAmmo>Change...</FactionLoadout_CE_ChangeAmmo>
+
+    <!-- CE: Ammo section -->
+    <FactionLoadout_CE_Section_Ammo>Ammo</FactionLoadout_CE_Section_Ammo>
+    <FactionLoadout_CE_ForcedAmmoCategory>Forced Ammo Category</FactionLoadout_CE_ForcedAmmoCategory>
+    <FactionLoadout_CE_PrimaryMagazineCount>Primary Magazine Count</FactionLoadout_CE_PrimaryMagazineCount>
+    <FactionLoadout_CE_MinAmmoCount>Min Ammo Count</FactionLoadout_CE_MinAmmoCount>
+    <FactionLoadout_CE_WeightedAmmoCategories>Weighted Ammo Categories</FactionLoadout_CE_WeightedAmmoCategories>
+    <FactionLoadout_CE_AddAmmoCategory>Add category...</FactionLoadout_CE_AddAmmoCategory>
+    <FactionLoadout_CE_Chance>Chance</FactionLoadout_CE_Chance>
+
+    <!-- CE: Shield section -->
+    <FactionLoadout_CE_Section_Shield>Shield</FactionLoadout_CE_Section_Shield>
+    <FactionLoadout_CE_ShieldMoney>Shield Money Budget</FactionLoadout_CE_ShieldMoney>
+    <FactionLoadout_CE_ShieldChance>Shield Chance</FactionLoadout_CE_ShieldChance>
+    <FactionLoadout_CE_ForceShieldMaterial>Force Shield Material</FactionLoadout_CE_ForceShieldMaterial>
+    <FactionLoadout_CE_ShieldTags>Shield Tags</FactionLoadout_CE_ShieldTags>
+    <FactionLoadout_CE_ShieldMaterialFilter>Shield Material Filter</FactionLoadout_CE_ShieldMaterialFilter>
+    <FactionLoadout_CE_EditFilter>Edit Filter...</FactionLoadout_CE_EditFilter>
+
+    <!-- CE: Sidearms section -->
+    <FactionLoadout_CE_Section_Sidearms>Sidearms</FactionLoadout_CE_Section_Sidearms>
+    <FactionLoadout_CE_ForcedSidearm>Forced Sidearm</FactionLoadout_CE_ForcedSidearm>
+    <FactionLoadout_CE_Sidearms>Sidearms List</FactionLoadout_CE_Sidearms>
+    <FactionLoadout_CE_AddSidearm>Add sidearm</FactionLoadout_CE_AddSidearm>
+    <FactionLoadout_CE_SidearmMoney>Sidearm Money</FactionLoadout_CE_SidearmMoney>
+    <FactionLoadout_CE_MagazineCount>Magazine Count</FactionLoadout_CE_MagazineCount>
+    <FactionLoadout_CE_GenerateChance>Generate Chance</FactionLoadout_CE_GenerateChance>
+    <FactionLoadout_CE_WeaponTags>Weapon Tags</FactionLoadout_CE_WeaponTags>
+
+    <!-- CE: Per-weapon ammo mapping section -->
+    <FactionLoadout_CE_Section_WeaponAmmoMap>Per-Weapon Ammo</FactionLoadout_CE_Section_WeaponAmmoMap>
+    <FactionLoadout_CE_WeaponAmmoMap_Hint>(configure weapons in the Weapon tab first)</FactionLoadout_CE_WeaponAmmoMap_Hint>
+
+    <!-- CE: Attachments section -->
+    <FactionLoadout_CE_Section_Attachments>Attachments</FactionLoadout_CE_Section_Attachments>
+    <FactionLoadout_CE_PrimaryAttachments>Primary Attachments</FactionLoadout_CE_PrimaryAttachments>
+    <FactionLoadout_CE_Attachments>Attachments</FactionLoadout_CE_Attachments>
+    <FactionLoadout_CE_AttachmentCount>Attachment Count</FactionLoadout_CE_AttachmentCount>
+    <FactionLoadout_CE_AttachmentTags>Attachment Tags</FactionLoadout_CE_AttachmentTags>
+
+    <!-- CE: Warnings and notes -->
+    <FactionLoadout_CE_SidearmListSuppressed>(Sidearms list ignored — Forced Sidearm is active)</FactionLoadout_CE_SidearmListSuppressed>
+    <FactionLoadout_CE_Warn_NoTags>⚠ No weapon tags set — sidearm will not generate (add at least one tag)</FactionLoadout_CE_Warn_NoTags>
+    <FactionLoadout_CE_Warn_NoMoney>⚠ Money range is zero — no weapon can be afforded (set a budget, e.g. 100–500)</FactionLoadout_CE_Warn_NoMoney>
+    <FactionLoadout_CE_Note_Disabled>(disabled — generate chance is 0%, increase to enable)</FactionLoadout_CE_Note_Disabled>
 
     <!-- GiddyUp Module -->
     <GiddyUp_Mounts>GiddyUp Mounts</GiddyUp_Mounts>

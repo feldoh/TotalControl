@@ -17,7 +17,7 @@ public class PawnKindEditUI : Window
 {
     private static List<string> AllTechHediffTags;
     private static List<string> AllApparelTags;
-    private static List<string> AllWeaponsTags;
+    public static List<string> AllWeaponsTags;
     private static List<BodyTypeDef> AllBodyTypes;
     private static List<ThingDef> AllApparel;
     private static List<ThingDef> AllWeapons;
