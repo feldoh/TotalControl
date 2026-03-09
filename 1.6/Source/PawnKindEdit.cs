@@ -17,6 +17,17 @@ public class PawnKindEdit : IExposable
 {
     public static Dictionary<PawnKindDef, List<PawnKindEdit>> activeEdits = new();
     public static Dictionary<PawnKindDef, PawnKindDef> replacementToOriginal = new();
+
+    /// <summary>
+    /// Pre-cached apparel blacklists built at apply time: cloned PawnKindDef → blacklisted ThingDefs.
+    /// Includes both global and specific edits merged. Keyed by cloned def for O(1) lookup at generation time.
+    /// </summary>
+    public static Dictionary<PawnKindDef, HashSet<ThingDef>> ApparelBlacklistCache = new();
+
+    /// <summary>
+    /// Pre-cached weapon blacklists built at apply time: cloned PawnKindDef → blacklisted ThingDefs.
+    /// </summary>
+    public static Dictionary<PawnKindDef, HashSet<ThingDef>> WeaponBlacklistCache = new();
     public static RulePackDef FakeRulePack = new() { defName = "NONE" };
 
     public static void RecordReplacement(PawnKindDef original, PawnKindDef replacement) => replacementToOriginal.SetOrAdd(replacement, original);
@@ -93,6 +104,29 @@ public class PawnKindEdit : IExposable
             list.Add(edit);
     }
 
+    private void BuildBlacklistCaches(PawnKindDef def, PawnKindEdit global)
+    {
+        var apparelBl = new HashSet<ThingDef>();
+        if (global?.ApparelBlacklist != null)
+            foreach (DefRef<ThingDef> r in global.ApparelBlacklist)
+                if (r.HasValue) apparelBl.Add(r.Def);
+        if (ApparelBlacklist != null)
+            foreach (DefRef<ThingDef> r in ApparelBlacklist)
+                if (r.HasValue) apparelBl.Add(r.Def);
+        if (apparelBl.Count > 0)
+            ApparelBlacklistCache[def] = apparelBl;
+
+        var weaponBl = new HashSet<ThingDef>();
+        if (global?.WeaponBlacklist != null)
+            foreach (DefRef<ThingDef> r in global.WeaponBlacklist)
+                if (r.HasValue) weaponBl.Add(r.Def);
+        if (WeaponBlacklist != null)
+            foreach (DefRef<ThingDef> r in WeaponBlacklist)
+                if (r.HasValue) weaponBl.Add(r.Def);
+        if (weaponBl.Count > 0)
+            WeaponBlacklistCache[def] = weaponBl;
+    }
+
     public FactionEdit ParentEdit
     {
         get { return Preset.LoadedPresets.SelectMany(preset => preset.factionChanges).FirstOrDefault(change => change.KindEdits.Contains(this)); }
@@ -134,6 +168,8 @@ public class PawnKindEdit : IExposable
     public List<string> WeaponTags = null;
     public List<string> ApparelTags = null;
     public List<string> ApparelDisallowedTags = null;
+    public List<DefRef<ThingDef>> ApparelBlacklist = null;
+    public List<DefRef<ThingDef>> WeaponBlacklist = null;
     public List<ThingDef> ApparelRequired = null;
     public List<ThingDef> TechRequired = null;
     public List<SpecRequirementEdit> SpecificApparel = null;
@@ -214,6 +250,8 @@ public class PawnKindEdit : IExposable
         Scribe_Collections.Look(ref WeaponTags, "weaponTags");
         Scribe_Collections.Look(ref ApparelTags, "apparelTags");
         Scribe_Collections.Look(ref ApparelDisallowedTags, "apparelDisallowedTags");
+        Scribe_Collections.Look(ref ApparelBlacklist, "apparelBlacklist", LookMode.Deep);
+        Scribe_Collections.Look(ref WeaponBlacklist, "weaponBlacklist", LookMode.Deep);
         Scribe_Collections.Look(ref ApparelRequired, "apparelRequired", LookMode.Def);
         Scribe_Collections.Look(ref TechRequired, "techRequired", LookMode.Def);
         Scribe_Collections.Look(ref SpecificApparel, "specificApparel", LookMode.Deep);
@@ -589,7 +627,10 @@ public class PawnKindEdit : IExposable
             return null;
 
         if (addToEdits)
+        {
             AddActiveEdit(def, this);
+            BuildBlacklistCaches(def, global);
+        }
 
         if (ReplaceWith != null)
             return ReplaceWith;

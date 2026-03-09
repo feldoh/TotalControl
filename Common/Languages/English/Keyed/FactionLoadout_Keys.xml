@@ -181,4 +181,6 @@
     <FactionLoadout_RightClickToInspect>Right-click to inspect</FactionLoadout_RightClickToInspect>
     <FactionLoadout_Apparel_Layers>Layers: {0}</FactionLoadout_Apparel_Layers>
     <FactionLoadout_Apparel_Coverage>Coverage: {0}</FactionLoadout_Apparel_Coverage>
+    <FactionLoadout_ApparelBlacklist>Apparel Blacklist</FactionLoadout_ApparelBlacklist>
+    <FactionLoadout_WeaponBlacklist>Weapon Blacklist</FactionLoadout_WeaponBlacklist>
 </LanguageData>

@@ -260,3 +260,20 @@ public static class ApparelGenPatch
         return c;
     }
 }
+
+/// <summary>
+/// Prevents blacklisted ThingDefs from entering vanilla's apparel candidate pool.
+/// Uses lazy per-pawn caching so GetEditsFor is called once per pawn, not once per pair.
+/// </summary>
+[HarmonyPatch(typeof(PawnApparelGenerator), "CanUsePair")]
+public static class CanUsePairBlacklistPatch
+{
+    static void Postfix(ThingStuffPair pair, Pawn pawn, ref bool __result)
+    {
+        if (!__result)
+            return;
+
+        if (PawnKindEdit.ApparelBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
+            __result = false;
+    }
+}
