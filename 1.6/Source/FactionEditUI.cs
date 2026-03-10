@@ -282,22 +282,33 @@ public class FactionEditUI : Window
                     tempKinds.Add(null);
 
                 // Collect all pawnkinds from group edits (if active) or the
-                // live faction def, then also add basicMemberKind and
-                // fixedLeaderKinds which are not inside pawnGroupMakers.
+                // live faction def. When PawnGroupMakerEdits is null,
+                // GetAllKindDefsForUI delegates to GetAllPawnKinds which already
+                // includes basicMemberKind and fixedLeaderKinds.
                 foreach (PawnKindDef kind in Current.GetAllKindDefsForUI())
                 {
                     if (!Current.HasEditFor(kind))
                         tempKinds.Add(kind);
                 }
 
-                // basicMemberKind and fixedLeaderKinds are not covered by
-                // GetAllKindDefsForUI so add them separately.
-                if (Current.Faction.Def?.basicMemberKind != null && !Current.HasEditFor(Current.Faction.Def.basicMemberKind))
-                    tempKinds.Add(Current.Faction.Def.basicMemberKind);
-                if (Current.Faction.Def?.fixedLeaderKinds != null)
-                    foreach (PawnKindDef item in Current.Faction.Def.fixedLeaderKinds)
-                        if (!Current.HasEditFor(item))
-                            tempKinds.Add(item);
+                // basicMemberKind and fixedLeaderKinds are NOT included in the
+                // PawnGroupMaker-based path of GetAllKindDefsForUI (those fields
+                // are not part of any group maker entry). When PawnGroupMakerEdits
+                // is null the GetAllPawnKinds path already covers them, so only
+                // add them here when group edits are active to avoid duplicates.
+                if (Current.PawnGroupMakerEdits != null)
+                {
+                    if (Current.Faction.Def?.basicMemberKind != null && !Current.HasEditFor(Current.Faction.Def.basicMemberKind))
+                        tempKinds.Add(Current.Faction.Def.basicMemberKind);
+                    if (Current.Faction.Def?.fixedLeaderKinds != null)
+                    {
+                        foreach (PawnKindDef item in Current.Faction.Def.fixedLeaderKinds)
+                        {
+                            if (!Current.HasEditFor(item))
+                                tempKinds.Add(item);
+                        }
+                    }
+                }
 
                 foreach (PawnKindDef item in tempKinds)
                     yield return item;

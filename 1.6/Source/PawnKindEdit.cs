@@ -109,15 +109,28 @@ public class PawnKindEdit : IExposable
             .Select(r => r.Def)
             .ToHashSet();
         if (apparelBl.Count > 0)
+        {
             ApparelBlacklistCache[def] = apparelBl;
+        }
+        else
+        {
+            ApparelBlacklistCache.Remove(def);
+        }
 
         HashSet<ThingDef> weaponBl = (global?.WeaponBlacklist ?? Enumerable.Empty<DefRef<ThingDef>>())
             .ConcatIfNotNull(WeaponBlacklist)
             .Where(r => r.HasValue)
             .Select(r => r.Def)
             .ToHashSet();
+
         if (weaponBl.Count > 0)
+        {
             WeaponBlacklistCache[def] = weaponBl;
+        }
+        else
+        {
+            WeaponBlacklistCache.Remove(def);
+        }
     }
 
     public FactionEdit ParentEdit => Preset.LoadedPresets.SelectMany(preset => preset.factionChanges).FirstOrDefault(change => change.KindEdits.Contains(this));

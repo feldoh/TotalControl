@@ -60,8 +60,12 @@ public class GroupEditorUI : Window
             return;
         }
 
-        // Ensure GroupEdits is initialized so we always have a list to work with.
-        List<PawnGroupMakerEdit> groups = _edit.GetOrInitPawnGroupMakerEdits();
+        // Read current edit state without triggering initialization.
+        // GetOrInitPawnGroupMakerEdits() snapshots vanilla groups on first call, which
+        // would mark the faction as having custom configuration even if the user makes
+        // no changes. Initialization happens lazily when the user actually performs a
+        // mutating action (e.g. Add Group) so opening the tab has no side-effects.
+        List<PawnGroupMakerEdit> groups = _edit.PawnGroupMakerEdits;
 
         Listing_Standard ui = new();
         ui.Begin(inRect);
@@ -111,7 +115,13 @@ public class GroupEditorUI : Window
         Listing_Standard inner = new();
         inner.Begin(scrollViewRect);
 
-        if (groups.Count == 0)
+        if (groups == null)
+        {
+            GUI.color = Color.grey;
+            inner.Label("<i>" + "FactionLoadout_GroupEditor_VanillaGroups".Translate() + "</i>");
+            GUI.color = Color.white;
+        }
+        else if (groups.Count == 0)
         {
             GUI.color = Color.grey;
             inner.Label("<i>(" + "FactionLoadout_GroupEditor_NoPawns".Translate() + ")</i>");
@@ -132,8 +142,8 @@ public class GroupEditorUI : Window
 
     private float CalcTotalContentHeight(List<PawnGroupMakerEdit> groups)
     {
-        if (groups.Count == 0)
-            return 30f; // "(none)" label
+        if (groups == null || groups.Count == 0)
+            return 30f; // placeholder / "(none)" label
 
         float h = 0f;
         for (int i = 0; i < groups.Count; i++)
