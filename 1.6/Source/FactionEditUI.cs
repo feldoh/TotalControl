@@ -25,6 +25,7 @@ public class FactionEditUI : Window
     private readonly List<Pawn> pawns = new();
     private readonly HashSet<PawnKindDef> tempKinds = new();
     private bool _ThingIDPatch = false;
+    private bool _previewFailed = false;
     private Vector2 overridesScrollPos;
     private float overridesContentHeight = 0f;
     private float overridesScrollInnerHeight = 10000f;
@@ -437,10 +438,11 @@ public class FactionEditUI : Window
 
         GUI.enabled = isInGame;
         bool f = Input.GetKeyDown(KeyCode.F);
-        if ((ui.ButtonText("Regenerate previews [Hotkey: F]") || pawns.Count == 0 || (f && framesSinceF > 20)) && isInGame)
+        if ((ui.ButtonText("Regenerate previews [Hotkey: F]") || (pawns.Count == 0 && !_previewFailed) || (f && framesSinceF > 20)) && isInGame)
         {
             if (f)
                 framesSinceF = 0;
+            _previewFailed = false;
 
             FactionDef toClone = FactionEdit.TryGetOriginal(Current.Faction.Def.defName) ?? Current.Faction.Def;
             clonedFac = CloningUtility.Clone(toClone);
@@ -474,11 +476,6 @@ public class FactionEditUI : Window
             ThingIDPatch.Active = _ThingIDPatch;
             IdeoUtilityPatch.Active = true;
             FactionUtilityPawnGenPatch.Active = true;
-            foreach (Faction other in Find.FactionManager.AllFactionsListForReading)
-            {
-                if (faction != other)
-                    faction.TryMakeInitialRelationsWith(other);
-            }
 
             foreach (PawnKindDef item in FactionEdit.GetAllPawnKinds(clonedFac))
                 try
