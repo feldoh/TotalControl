@@ -25,9 +25,9 @@ public class FactionEditUI : Window
     private readonly List<Pawn> pawns = new();
     private readonly HashSet<PawnKindDef> tempKinds = new();
     private bool _ThingIDPatch = false;
+    private bool _previewFailed = false;
     private Vector2 overridesScrollPos;
-    private float overridesContentHeight = 500f;
-    private float overridesScrollInnerHeight = 500f;
+    private float overridesContentHeight = 10000f; // measured after first frame; init large so nothing clips
 
     public FactionEditUI(FactionEdit fac)
     {
@@ -114,13 +114,13 @@ public class FactionEditUI : Window
         }
 
         // --- Scrollable overrides ---
-        // Cap scroll height so at least 200px remains for the preview section below.
+        // Outer container fills available space (no content dependency = no feedback loop).
+        // Inner rect uses previous frame's measurement + buffer so content is never clipped.
         const float minFooterHeight = 200f;
-        float scrollOutHeight = Mathf.Clamp(overridesContentHeight, 60f, Mathf.Max(60f, inRect.height - ui.CurHeight - minFooterHeight));
-        Rect scrollOutRect = ui.GetRect(scrollOutHeight);
-        // Use overridesScrollInnerHeight: equals actual content height when stable, temporarily
-        // buffered by +300 for one frame when content grows so newly-expanded items are reachable.
-        Rect scrollViewRect = new(0, 0, scrollOutRect.width - 16f, Mathf.Max(overridesScrollInnerHeight, scrollOutHeight));
+        float scrollOutH = Mathf.Max(60f, inRect.height - ui.CurHeight - minFooterHeight);
+        Rect scrollOutRect = ui.GetRect(scrollOutH);
+        float innerH = Mathf.Max(overridesContentHeight + 100f, scrollOutH);
+        Rect scrollViewRect = new(0f, 0f, scrollOutRect.width - 16f, innerH);
 
         Widgets.BeginScrollView(scrollOutRect, ref overridesScrollPos, scrollViewRect);
         Listing_Standard inner = new();
@@ -147,7 +147,7 @@ public class FactionEditUI : Window
 
         if (
             ModsConfig.BiotechActive
-            && !Current.Faction.IsMissing
+            && Current.Faction is { IsMissing: false }
             && Current.Faction?.Def != Preset.SpecialWildManFaction
             && Current.Faction?.Def != Preset.SpecialFactionlessPawnsFaction
         )
@@ -166,10 +166,58 @@ public class FactionEditUI : Window
                 Find.WindowStack.Add(new Dialog_XenotypeEdit(Current));
         }
 
+        // --- Spawn Groups section ---
+        if (Current.Faction is not { IsMissing: true })
+        {
+            inner.GapLine();
+
+            // Summary row: "Spawn Groups: N groups [Edit Spawn Groups]"
+            Rect groupsRow = inner.GetRect(28f);
+            float editBtnW = 160f;
+            Rect editGroupsBtn = new(groupsRow.xMax - editBtnW, groupsRow.y, editBtnW, 24f);
+
+            Text.Anchor = TextAnchor.MiddleLeft;
+            string groupsSummary;
+            int groupCount;
+            if (Current.PawnGroupMakerEdits != null)
+            {
+                groupCount = Current.PawnGroupMakerEdits.Count;
+                groupsSummary = "FactionLoadout_SpawnGroups_SummaryModified".Translate(groupCount, "FactionLoadout_GroupEditor_NewTag".Translate().ToString().ToLower());
+            }
+            else
+            {
+                groupCount = Current?.Faction?.Def?.pawnGroupMakers?.Count ?? 0;
+                groupsSummary = "FactionLoadout_SpawnGroups_Summary".Translate(groupCount);
+            }
+
+            Rect summaryLabelRect = new(groupsRow.x, groupsRow.y, groupsRow.width - editBtnW - 4f, groupsRow.height);
+            GUI.color = Color.grey;
+            Widgets.Label(summaryLabelRect, "FactionLoadout_SpawnGroups_Label".Translate() + "  " + groupsSummary);
+            GUI.color = Color.white;
+            Text.Anchor = TextAnchor.UpperLeft;
+
+            if (Widgets.ButtonText(editGroupsBtn, "FactionLoadout_SpawnGroups_EditButton".Translate()))
+                GroupEditorUI.OpenEditor(Current);
+
+            // Orphan warning (conditional) — lists which pawnkinds are missing from groups
+            HashSet<PawnKindDef> orphaned = Current?.GetOrphanedKinds() ?? [];
+            if (orphaned.Count > 0)
+            {
+                string names = orphaned.Select(k => k.LabelCap.ToString()).OrderBy(n => n).ToCommaList();
+                string warnText = "FactionLoadout_SpawnGroups_OrphanWarning".Translate(names);
+                float warnH = Text.CalcHeight(warnText, inner.ColumnWidth);
+                Rect warnRow = inner.GetRect(warnH);
+                GUI.color = new Color(1f, 0.6f, 0.1f);
+                Widgets.Label(warnRow, warnText);
+                GUI.color = Color.white;
+            }
+        }
+
         inner.GapLine();
         inner.Label("<b>Loadout Overrides:</b>");
         inner.Gap();
 
+        HashSet<PawnKindDef> orphanedKinds = Current?.GetOrphanedKinds() ?? [];
         foreach (PawnKindEdit edit in Current.KindEdits)
         {
             Rect rect = inner.GetRect(30);
@@ -206,6 +254,18 @@ public class FactionEditUI : Window
             }
 
             rect.x += 28;
+
+            // Orphan warning icon
+            bool isOrphaned = !edit.IsGlobal && edit.Def != null && orphanedKinds.Contains(edit.Def);
+            if (isOrphaned)
+            {
+                GUI.color = Color.yellow;
+                Widgets.Label(new Rect(rect.x, rect.y, 20f, 24f), "⚠");
+                GUI.color = Color.white;
+                TooltipHandler.TipRegion(new Rect(rect.x, rect.y, 20f, 24f), "FactionLoadout_SpawnGroups_OrphanKindTooltip".Translate());
+                rect.x += 22f;
+            }
+
             Widgets.Label(rect, $"<b>{(edit.IsGlobal ? "<color=cyan>Global (affects all faction pawns)</color>" : edit.Def.LabelCap)}</b>");
         }
 
@@ -221,28 +281,34 @@ public class FactionEditUI : Window
                 if (!Current.HasGlobalEditor())
                     tempKinds.Add(null);
 
-                void Register(List<PawnGenOption> list)
+                // Collect all pawnkinds from group edits (if active) or the
+                // live faction def. When PawnGroupMakerEdits is null,
+                // GetAllKindDefsForUI delegates to GetAllPawnKinds which already
+                // includes basicMemberKind and fixedLeaderKinds.
+                foreach (PawnKindDef kind in Current.GetAllKindDefsForUI())
                 {
-                    if (list == null)
-                        return;
-                    foreach (PawnGenOption thing in list)
-                        if (!Current.HasEditFor(thing.kind))
-                            tempKinds.Add(thing.kind);
+                    if (!Current.HasEditFor(kind))
+                        tempKinds.Add(kind);
                 }
 
-                foreach (PawnGroupMaker maker in Current.Faction.Def.pawnGroupMakers ?? Enumerable.Empty<PawnGroupMaker>())
+                // basicMemberKind and fixedLeaderKinds are NOT included in the
+                // PawnGroupMaker-based path of GetAllKindDefsForUI (those fields
+                // are not part of any group maker entry). When PawnGroupMakerEdits
+                // is null the GetAllPawnKinds path already covers them, so only
+                // add them here when group edits are active to avoid duplicates.
+                if (Current.PawnGroupMakerEdits != null)
                 {
-                    Register(maker.options);
-                    Register(maker.guards);
-                    Register(maker.traders);
-                    Register(maker.carriers);
+                    if (Current.Faction.Def?.basicMemberKind != null && !Current.HasEditFor(Current.Faction.Def.basicMemberKind))
+                        tempKinds.Add(Current.Faction.Def.basicMemberKind);
+                    if (Current.Faction.Def?.fixedLeaderKinds != null)
+                    {
+                        foreach (PawnKindDef item in Current.Faction.Def.fixedLeaderKinds)
+                        {
+                            if (!Current.HasEditFor(item))
+                                tempKinds.Add(item);
+                        }
+                    }
                 }
-
-                if (Current.Faction.Def.basicMemberKind != null)
-                    tempKinds.Add(Current.Faction.Def.basicMemberKind);
-                if (Current.Faction.Def.fixedLeaderKinds != null)
-                    foreach (PawnKindDef item in Current.Faction.Def.fixedLeaderKinds)
-                        tempKinds.Add(item);
 
                 foreach (PawnKindDef item in tempKinds)
                     yield return item;
@@ -259,8 +325,8 @@ public class FactionEditUI : Window
                 tempKinds.Clear();
             }
 
-            var kinds = MakeKinds().ToList();
-            var items = CustomFloatMenu.MakeItems(
+            List<PawnKindDef> kinds = MakeKinds().ToList();
+            List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                 kinds,
                 k =>
                     k != null
@@ -287,9 +353,7 @@ public class FactionEditUI : Window
             );
         }
 
-        float newHeight = inner.CurHeight;
-        overridesScrollInnerHeight = newHeight > overridesContentHeight + 5f ? newHeight + 300f : newHeight;
-        overridesContentHeight = newHeight;
+        overridesContentHeight = inner.CurHeight;
         inner.End();
         Widgets.EndScrollView();
 
@@ -308,7 +372,7 @@ public class FactionEditUI : Window
                     ModCore.Log($"  * {item?.LabelCap ?? "<null>"}");
             }
 
-        var isInGame = Verse.Current.Game != null;
+        bool isInGame = Verse.Current.Game != null;
 
         if (!isInGame)
         {
@@ -371,10 +435,11 @@ public class FactionEditUI : Window
 
         GUI.enabled = isInGame;
         bool f = Input.GetKeyDown(KeyCode.F);
-        if ((ui.ButtonText("Regenerate previews [Hotkey: F]") || pawns.Count == 0 || (f && framesSinceF > 20)) && isInGame)
+        if ((ui.ButtonText("Regenerate previews [Hotkey: F]") || (pawns.Count == 0 && !_previewFailed) || (f && framesSinceF > 20)) && isInGame)
         {
             if (f)
                 framesSinceF = 0;
+            _previewFailed = false;
 
             FactionDef toClone = FactionEdit.TryGetOriginal(Current.Faction.Def.defName) ?? Current.Faction.Def;
             clonedFac = CloningUtility.Clone(toClone);
@@ -408,11 +473,6 @@ public class FactionEditUI : Window
             ThingIDPatch.Active = _ThingIDPatch;
             IdeoUtilityPatch.Active = true;
             FactionUtilityPawnGenPatch.Active = true;
-            foreach (Faction other in Find.FactionManager.AllFactionsListForReading)
-            {
-                if (faction != other)
-                    faction.TryMakeInitialRelationsWith(other);
-            }
 
             foreach (PawnKindDef item in FactionEdit.GetAllPawnKinds(clonedFac))
                 try
@@ -520,7 +580,6 @@ public class Dialog_XenotypeEdit : Window
 {
     private readonly FactionEdit _edit;
     private Vector2 _scrollPos;
-    private float _contentHeight = 200f;
 
     public Dialog_XenotypeEdit(FactionEdit edit)
     {
@@ -556,14 +615,18 @@ public class Dialog_XenotypeEdit : Window
             const float addButtonsHeight = 70f;
             float scrollH = Mathf.Max(30f, inRect.height - ui.CurHeight - addButtonsHeight);
             Rect scrollOutRect = ui.GetRect(scrollH);
-            Rect innerRect = new(0f, 0f, scrollOutRect.width - 16f, Mathf.Max(_contentHeight, scrollH));
+            // Compute inner height directly from item count — avoids feedback loops where
+            // Listing_Standard.CurHeight is clamped to the inner rect, preventing growth.
+            const float ItemRowH = 32f; // SliderLabeledWithDelete: GetRect(30) + Gap(2)
+            float contentH = _edit.xenotypeChances.Count * ItemRowH;
+            Rect innerRect = new(0f, 0f, scrollOutRect.width - 16f, Mathf.Max(contentH, scrollH));
 
             Widgets.BeginScrollView(scrollOutRect, ref _scrollPos, innerRect);
             Listing_Standard inner = new();
             inner.Begin(innerRect);
 
             List<string> toDelete = [];
-            foreach (string key in _edit.xenotypeChances.Keys.ToList())
+            foreach (string key in _edit.xenotypeChances.Keys.OrderBy(k => DefDatabase<XenotypeDef>.GetNamedSilentFail(k)?.LabelCap.ToString() ?? k).ToList())
                 _edit.xenotypeChances[key] = UIHelpers.SliderLabeledWithDelete(
                     inner,
                     $"{DefDatabase<XenotypeDef>.GetNamedSilentFail(key)?.LabelCap ?? key}: {_edit.xenotypeChances[key].ToStringPercent()}",
@@ -579,7 +642,6 @@ public class Dialog_XenotypeEdit : Window
             foreach (string delete in toDelete)
                 _edit.xenotypeChances.Remove(delete);
 
-            _contentHeight = inner.CurHeight;
             inner.End();
             Widgets.EndScrollView();
 

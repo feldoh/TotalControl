@@ -42,6 +42,8 @@ public static class ApparelGenPatch
         hairs.Clear();
         beards.Clear();
         hairColors.Clear();
+        apparelRequired.Clear();
+        apparelTagsAllowed.Clear();
         edits = 0;
 
         foreach (PawnKindEdit edit in PawnKindEdit.GetEditsFor(pawn.kindDef, pawn.Faction?.def))
@@ -258,5 +260,23 @@ public static class ApparelGenPatch
         Color c = hairColors.RandomElement();
         c.a = 1f;
         return c;
+    }
+}
+
+/// <summary>
+/// Prevents blacklisted ThingDefs from entering vanilla's apparel candidate pool.
+/// Uses <see cref="PawnKindEdit.ApparelBlacklistCache"/> populated at Apply() time
+/// for O(1) lookup per pair — no per-pawn edit iteration at patch time.
+/// </summary>
+[HarmonyPatch(typeof(PawnApparelGenerator), "CanUsePair")]
+public static class CanUsePairBlacklistPatch
+{
+    static void Postfix(ThingStuffPair pair, Pawn pawn, ref bool __result)
+    {
+        if (!__result)
+            return;
+
+        if (PawnKindEdit.ApparelBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
+            __result = false;
     }
 }

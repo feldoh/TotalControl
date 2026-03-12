@@ -55,7 +55,16 @@ public class UIHelpers
     /// Both are set to null when the override is cleared so they re-initialise correctly next time.
     /// </para>
     /// </summary>
-    public static void DrawFloatRangeRow(Listing_Standard ui, string label, ref FloatRange? field, float minLimit, float maxLimit, FloatRange defaultSeed, ref string minBuf, ref string maxBuf)
+    public static void DrawFloatRangeRow(
+        Listing_Standard ui,
+        string label,
+        ref FloatRange? field,
+        float minLimit,
+        float maxLimit,
+        FloatRange defaultSeed,
+        ref string minBuf,
+        ref string maxBuf
+    )
     {
         bool hasOverride = field.HasValue;
         Rect row = ui.GetRect(OverrideRowH);

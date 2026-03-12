@@ -17,6 +17,14 @@ public class PawnKindEdit : IExposable
 {
     public static Dictionary<PawnKindDef, List<PawnKindEdit>> activeEdits = new();
     public static Dictionary<PawnKindDef, PawnKindDef> replacementToOriginal = new();
+
+    /// <summary>
+    /// Pre-cached blacklists built at apply time: cloned PawnKindDef → blacklisted ThingDefs.
+    /// Includes both global and specific edits merged. Keyed by cloned def for O(1) lookup at generation time.
+    /// </summary>
+    public static Dictionary<PawnKindDef, HashSet<ThingDef>> ApparelBlacklistCache = new();
+    public static Dictionary<PawnKindDef, HashSet<ThingDef>> WeaponBlacklistCache = new();
+
     public static RulePackDef FakeRulePack = new() { defName = "NONE" };
 
     public static void RecordReplacement(PawnKindDef original, PawnKindDef replacement) => replacementToOriginal.SetOrAdd(replacement, original);
@@ -93,10 +101,39 @@ public class PawnKindEdit : IExposable
             list.Add(edit);
     }
 
-    public FactionEdit ParentEdit
+    private void BuildBlacklistCaches(PawnKindDef def, PawnKindEdit global)
     {
-        get { return Preset.LoadedPresets.SelectMany(preset => preset.factionChanges).FirstOrDefault(change => change.KindEdits.Contains(this)); }
+        HashSet<ThingDef> apparelBl = (global?.ApparelBlacklist ?? Enumerable.Empty<DefRef<ThingDef>>())
+            .ConcatIfNotNull(ApparelBlacklist)
+            .Where(r => r.HasValue)
+            .Select(r => r.Def)
+            .ToHashSet();
+        if (apparelBl.Count > 0)
+        {
+            ApparelBlacklistCache[def] = apparelBl;
+        }
+        else
+        {
+            ApparelBlacklistCache.Remove(def);
+        }
+
+        HashSet<ThingDef> weaponBl = (global?.WeaponBlacklist ?? Enumerable.Empty<DefRef<ThingDef>>())
+            .ConcatIfNotNull(WeaponBlacklist)
+            .Where(r => r.HasValue)
+            .Select(r => r.Def)
+            .ToHashSet();
+
+        if (weaponBl.Count > 0)
+        {
+            WeaponBlacklistCache[def] = weaponBl;
+        }
+        else
+        {
+            WeaponBlacklistCache.Remove(def);
+        }
     }
+
+    public FactionEdit ParentEdit => Preset.LoadedPresets.SelectMany(preset => preset.factionChanges).FirstOrDefault(change => change.KindEdits.Contains(this));
 
     [NoCopy]
     public PawnKindDef Def;
@@ -134,6 +171,8 @@ public class PawnKindEdit : IExposable
     public List<string> WeaponTags = null;
     public List<string> ApparelTags = null;
     public List<string> ApparelDisallowedTags = null;
+    public List<DefRef<ThingDef>> ApparelBlacklist = null;
+    public List<DefRef<ThingDef>> WeaponBlacklist = null;
     public List<ThingDef> ApparelRequired = null;
     public List<ThingDef> TechRequired = null;
     public List<SpecRequirementEdit> SpecificApparel = null;
@@ -214,6 +253,8 @@ public class PawnKindEdit : IExposable
         Scribe_Collections.Look(ref WeaponTags, "weaponTags");
         Scribe_Collections.Look(ref ApparelTags, "apparelTags");
         Scribe_Collections.Look(ref ApparelDisallowedTags, "apparelDisallowedTags");
+        Scribe_Collections.Look(ref ApparelBlacklist, "apparelBlacklist", LookMode.Deep);
+        Scribe_Collections.Look(ref WeaponBlacklist, "weaponBlacklist", LookMode.Deep);
         Scribe_Collections.Look(ref ApparelRequired, "apparelRequired", LookMode.Def);
         Scribe_Collections.Look(ref TechRequired, "techRequired", LookMode.Def);
         Scribe_Collections.Look(ref SpecificApparel, "specificApparel", LookMode.Deep);
@@ -282,8 +323,7 @@ public class PawnKindEdit : IExposable
         ExposeModuleData();
     }
 
-    // ── Reflection-based field enumeration (cached at static init time) ──
-
+    //Reflection-based field enumeration (cached at static init time)
     public static readonly FieldInfo[] CopyableFields = typeof(PawnKindEdit)
         .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
         .Where(f => f.GetCustomAttribute<NoCopyAttribute>() == null)
@@ -590,7 +630,10 @@ public class PawnKindEdit : IExposable
             return null;
 
         if (addToEdits)
+        {
             AddActiveEdit(def, this);
+            BuildBlacklistCaches(def, global);
+        }
 
         if (ReplaceWith != null)
             return ReplaceWith;

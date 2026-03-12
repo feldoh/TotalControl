@@ -121,6 +121,12 @@
     <FactionLoadout_CE_AttachmentCount>Attachment Count</FactionLoadout_CE_AttachmentCount>
     <FactionLoadout_CE_AttachmentTags>Attachment Tags</FactionLoadout_CE_AttachmentTags>
 
+    <!-- CE: Warnings and notes -->
+    <FactionLoadout_CE_SidearmListSuppressed>(Sidearms list ignored — Forced Sidearm is active)</FactionLoadout_CE_SidearmListSuppressed>
+    <FactionLoadout_CE_Warn_NoTags>⚠ No weapon tags set — sidearm will not generate (add at least one tag)</FactionLoadout_CE_Warn_NoTags>
+    <FactionLoadout_CE_Warn_NoMoney>⚠ Money range is zero — no weapon can be afforded (set a budget, e.g. 100–500)</FactionLoadout_CE_Warn_NoMoney>
+    <FactionLoadout_CE_Note_Disabled>(disabled — generate chance is 0%, increase to enable)</FactionLoadout_CE_Note_Disabled>
+
     <!-- GiddyUp Module -->
     <GiddyUp_Mounts>GiddyUp Mounts</GiddyUp_Mounts>
     <FactionLoadout_AddMount>Add mount...</FactionLoadout_AddMount>
@@ -157,9 +163,79 @@
     <FactionLoadout_CopySuffix>(copy)</FactionLoadout_CopySuffix>
     <FactionLoadout_SaveToSourceFile>Save to source file</FactionLoadout_SaveToSourceFile>
 
-    <!-- CE: Sidearms mutual exclusion hint + generation warnings -->
-    <FactionLoadout_CE_SidearmListSuppressed>(Sidearms list ignored — Forced Sidearm is active)</FactionLoadout_CE_SidearmListSuppressed>
-    <FactionLoadout_CE_Warn_NoTags>⚠ No weapon tags set — sidearm will not generate (add at least one tag)</FactionLoadout_CE_Warn_NoTags>
-    <FactionLoadout_CE_Warn_NoMoney>⚠ Money range is zero — no weapon can be afforded (set a budget, e.g. 100–500)</FactionLoadout_CE_Warn_NoMoney>
-    <FactionLoadout_CE_Note_Disabled>(disabled — generate chance is 0%, increase to enable)</FactionLoadout_CE_Note_Disabled>
+    <!-- Spawn Groups (FactionEditUI) -->
+    <FactionLoadout_SpawnGroups_Label>Spawn Groups:</FactionLoadout_SpawnGroups_Label>
+    <FactionLoadout_SpawnGroups_Summary>{0} groups</FactionLoadout_SpawnGroups_Summary>
+    <FactionLoadout_SpawnGroups_SummaryModified>{0} groups  ·  modified</FactionLoadout_SpawnGroups_SummaryModified>
+    <FactionLoadout_SpawnGroups_EditButton>Edit Spawn Groups</FactionLoadout_SpawnGroups_EditButton>
+    <FactionLoadout_SpawnGroups_OrphanWarning>⚠ Not in any spawn group: {0}</FactionLoadout_SpawnGroups_OrphanWarning>
+    <FactionLoadout_SpawnGroups_OrphanKindTooltip>This pawnkind is not in any spawn group. Your edits are preserved, but it won't appear in game until added to a group via Edit Spawn Groups.</FactionLoadout_SpawnGroups_OrphanKindTooltip>
+
+    <!-- Group Editor window -->
+    <FactionLoadout_GroupEditor_Title>Spawn Groups — {0}</FactionLoadout_GroupEditor_Title>
+    <FactionLoadout_GroupEditor_HelpText>These groups control which pawns can appear and under what conditions. A pawnkind must be in at least one group to spawn in game.</FactionLoadout_GroupEditor_HelpText>
+    <FactionLoadout_GroupEditor_AddGroup>+ Add Group</FactionLoadout_GroupEditor_AddGroup>
+    <FactionLoadout_GroupEditor_ResetButton>Reset to Faction Defaults...</FactionLoadout_GroupEditor_ResetButton>
+    <FactionLoadout_GroupEditor_PawnCount>{0} pawns</FactionLoadout_GroupEditor_PawnCount>
+    <FactionLoadout_GroupEditor_NewTag>NEW</FactionLoadout_GroupEditor_NewTag>
+    <FactionLoadout_GroupEditor_EmptyWarning>⚠ empty</FactionLoadout_GroupEditor_EmptyWarning>
+    <FactionLoadout_GroupEditor_EmptyGroupTooltip>This group has no pawnkinds assigned. It will fail to generate pawns when selected, which may cause errors in game.</FactionLoadout_GroupEditor_EmptyGroupTooltip>
+
+    <!-- Expanded group fields -->
+    <FactionLoadout_GroupEditor_GroupType>Group Type:</FactionLoadout_GroupEditor_GroupType>
+    <FactionLoadout_GroupEditor_GroupTypeTooltip>The kind of group this is (e.g. Combat, Trade). Determines which game systems can select it.</FactionLoadout_GroupEditor_GroupTypeTooltip>
+    <FactionLoadout_GroupEditor_Commonality>Commonality:</FactionLoadout_GroupEditor_Commonality>
+    <FactionLoadout_GroupEditor_CommonalityTooltip>Relative chance this group is chosen over other groups of the same type. Not a percentage — it's a weight. Two Combat groups at 100 and 50 are chosen ~67% and ~33% of the time respectively.</FactionLoadout_GroupEditor_CommonalityTooltip>
+    <FactionLoadout_GroupEditor_MaxPoints>Max Group Points:</FactionLoadout_GroupEditor_MaxPoints>
+    <FactionLoadout_GroupEditor_MaxPointsTooltip>The game won't select this group for raids with more threat points than this value. Leave at 9999999 for no cap. Useful to restrict large groups to early-game only.</FactionLoadout_GroupEditor_MaxPointsTooltip>
+    <FactionLoadout_GroupEditor_BlockStrategies>Block Strategies:</FactionLoadout_GroupEditor_BlockStrategies>
+    <FactionLoadout_GroupEditor_BlockStrategiesTooltip>Raid strategies that cannot use this group. For example, blocking "Siege" prevents this group from being chosen during siege attacks.</FactionLoadout_GroupEditor_BlockStrategiesTooltip>
+    <FactionLoadout_GroupEditor_BlockStrategiesNone>None</FactionLoadout_GroupEditor_BlockStrategiesNone>
+
+    <!-- Pawn sub-lists -->
+    <FactionLoadout_GroupEditor_CombatPawns>Combat Pawns</FactionLoadout_GroupEditor_CombatPawns>
+    <FactionLoadout_GroupEditor_CombatPawnsTooltip>The main pawn pool. The game picks from this list randomly, weighted by the values below. These are the fighters in a raid or general group members.</FactionLoadout_GroupEditor_CombatPawnsTooltip>
+    <FactionLoadout_GroupEditor_AddCombatPawn>+ Add Combat Pawn</FactionLoadout_GroupEditor_AddCombatPawn>
+    <FactionLoadout_GroupEditor_Guards>Escort Guards</FactionLoadout_GroupEditor_Guards>
+    <FactionLoadout_GroupEditor_GuardsTooltip>Protective pawns generated in addition to Combat Pawns. Typically elite fighters that escort traders or VIPs.</FactionLoadout_GroupEditor_GuardsTooltip>
+    <FactionLoadout_GroupEditor_AddGuard>+ Add Guard</FactionLoadout_GroupEditor_AddGuard>
+    <FactionLoadout_GroupEditor_Traders>Traders</FactionLoadout_GroupEditor_Traders>
+    <FactionLoadout_GroupEditor_TradersTooltip>Pawns fulfilling the merchant role in a trade caravan. Used in Trade groups alongside Carriers and Guards.</FactionLoadout_GroupEditor_TradersTooltip>
+    <FactionLoadout_GroupEditor_AddTrader>+ Add Trader</FactionLoadout_GroupEditor_AddTrader>
+    <FactionLoadout_GroupEditor_Carriers>Carriers</FactionLoadout_GroupEditor_Carriers>
+    <FactionLoadout_GroupEditor_CarriersTooltip>Pack animals or pawns carrying goods in a trade caravan. Used alongside Traders in Trade groups.</FactionLoadout_GroupEditor_CarriersTooltip>
+    <FactionLoadout_GroupEditor_AddCarrier>+ Add Carrier</FactionLoadout_GroupEditor_AddCarrier>
+    <FactionLoadout_GroupEditor_WeightLabel>weight</FactionLoadout_GroupEditor_WeightLabel>
+    <FactionLoadout_GroupEditor_WeightTooltip>Relative chance of this PawnKind being picked from the pool. Not a percentage. A PawnKind with weight 2.0 alongside one with weight 1.0 is picked ~67% of the time.</FactionLoadout_GroupEditor_WeightTooltip>
+    <FactionLoadout_GroupEditor_NoPawns>(none)</FactionLoadout_GroupEditor_NoPawns>
+    <FactionLoadout_GroupEditor_UnknownKind>&lt;unknown&gt;</FactionLoadout_GroupEditor_UnknownKind>
+    <FactionLoadout_GroupEditor_VanillaGroups>Showing vanilla groups (read-only) — click Customize Groups to start editing</FactionLoadout_GroupEditor_VanillaGroups>
+    <FactionLoadout_GroupEditor_CustomizeGroups>Customize Groups</FactionLoadout_GroupEditor_CustomizeGroups>
+
+    <!-- Pawnkind picker dialog -->
+    <FactionLoadout_GroupEditor_PickerTitle>Add PawnKind to {0}</FactionLoadout_GroupEditor_PickerTitle>
+    <FactionLoadout_GroupEditor_PickerManualLabel>Or enter defName manually:</FactionLoadout_GroupEditor_PickerManualLabel>
+    <FactionLoadout_GroupEditor_PickerManualAdd>Add</FactionLoadout_GroupEditor_PickerManualAdd>
+    <FactionLoadout_GroupEditor_PickerAlreadyAdded>already added</FactionLoadout_GroupEditor_PickerAlreadyAdded>
+    <FactionLoadout_GroupEditor_PickerNoResults>No PawnKinds found.</FactionLoadout_GroupEditor_PickerNoResults>
+
+    <!-- Reset confirm dialog -->
+    <FactionLoadout_GroupEditor_ResetConfirmTitle>Reset Spawn Groups?</FactionLoadout_GroupEditor_ResetConfirmTitle>
+    <FactionLoadout_GroupEditor_ResetConfirmBody>This will discard all group edits and restore the faction's current spawn groups.</FactionLoadout_GroupEditor_ResetConfirmBody>
+    <FactionLoadout_GroupEditor_ResetConfirmOrphans>⚠ {0} PawnKind(s) you added will no longer be in any group and won't spawn:</FactionLoadout_GroupEditor_ResetConfirmOrphans>
+    <FactionLoadout_GroupEditor_ResetConfirmOrphanNote>Their loadout edits will be preserved.</FactionLoadout_GroupEditor_ResetConfirmOrphanNote>
+    <FactionLoadout_GroupEditor_ResetConfirmButton>Reset Groups</FactionLoadout_GroupEditor_ResetConfirmButton>
+
+    <!-- Group delete confirm -->
+    <FactionLoadout_GroupEditor_DeleteConfirmTitle>Delete Group?</FactionLoadout_GroupEditor_DeleteConfirmTitle>
+    <FactionLoadout_GroupEditor_DeleteConfirmBody>This will remove the group from the faction. Any PawnKinds it contained may become orphaned.</FactionLoadout_GroupEditor_DeleteConfirmBody>
+    <FactionLoadout_GroupEditor_DeleteConfirmButton>Delete</FactionLoadout_GroupEditor_DeleteConfirmButton>
+
+    <!-- Apparel item inspect (issue #38) -->
+    <FactionLoadout_LeftClickToChange>Left-click to change item</FactionLoadout_LeftClickToChange>
+    <FactionLoadout_RightClickToInspect>Right-click to inspect</FactionLoadout_RightClickToInspect>
+    <FactionLoadout_Apparel_Layers>Layers: {0}</FactionLoadout_Apparel_Layers>
+    <FactionLoadout_Apparel_Coverage>Coverage: {0}</FactionLoadout_Apparel_Coverage>
+    <FactionLoadout_ApparelBlacklist>Apparel Blacklist</FactionLoadout_ApparelBlacklist>
+    <FactionLoadout_WeaponBlacklist>Weapon Blacklist</FactionLoadout_WeaponBlacklist>
 </LanguageData>
