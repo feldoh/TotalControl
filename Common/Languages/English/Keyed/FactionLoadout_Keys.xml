@@ -208,7 +208,9 @@
     <FactionLoadout_GroupEditor_WeightLabel>weight</FactionLoadout_GroupEditor_WeightLabel>
     <FactionLoadout_GroupEditor_WeightTooltip>Relative chance of this PawnKind being picked from the pool. Not a percentage. A PawnKind with weight 2.0 alongside one with weight 1.0 is picked ~67% of the time.</FactionLoadout_GroupEditor_WeightTooltip>
     <FactionLoadout_GroupEditor_NoPawns>(none)</FactionLoadout_GroupEditor_NoPawns>
-    <FactionLoadout_GroupEditor_VanillaGroups>PawnKindMakers currently unmodified</FactionLoadout_GroupEditor_VanillaGroups>
+    <FactionLoadout_GroupEditor_UnknownKind>&lt;unknown&gt;</FactionLoadout_GroupEditor_UnknownKind>
+    <FactionLoadout_GroupEditor_VanillaGroups>Showing vanilla groups (read-only) — click Customize Groups to start editing</FactionLoadout_GroupEditor_VanillaGroups>
+    <FactionLoadout_GroupEditor_CustomizeGroups>Customize Groups</FactionLoadout_GroupEditor_CustomizeGroups>
 
     <!-- Pawnkind picker dialog -->
     <FactionLoadout_GroupEditor_PickerTitle>Add PawnKind to {0}</FactionLoadout_GroupEditor_PickerTitle>
