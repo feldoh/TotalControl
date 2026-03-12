@@ -27,8 +27,6 @@ public class FactionEditUI : Window
     private bool _ThingIDPatch = false;
     private bool _previewFailed = false;
     private Vector2 overridesScrollPos;
-    private float overridesContentHeight = 0f;
-    private float overridesScrollInnerHeight = 10000f;
 
     public FactionEditUI(FactionEdit fac)
     {
@@ -117,11 +115,12 @@ public class FactionEditUI : Window
         // --- Scrollable overrides ---
         // Cap scroll height so at least 200px remains for the preview section below.
         const float minFooterHeight = 200f;
-        float scrollOutHeight = Mathf.Clamp(overridesContentHeight, 60f, Mathf.Max(60f, inRect.height - ui.CurHeight - minFooterHeight));
+        float available = Mathf.Max(60f, inRect.height - ui.CurHeight - minFooterHeight);
+        float innerW = inRect.width - 16f; // scrollbar width
+        float contentH = CalcOverridesContentHeight(innerW);
+        float scrollOutHeight = Mathf.Clamp(contentH, 60f, available);
         Rect scrollOutRect = ui.GetRect(scrollOutHeight);
-        // Use overridesScrollInnerHeight: equals actual content height when stable, temporarily
-        // buffered by +300 for one frame when content grows so newly-expanded items are reachable.
-        Rect scrollViewRect = new(0, 0, scrollOutRect.width - 16f, Mathf.Max(overridesScrollInnerHeight, scrollOutHeight));
+        Rect scrollViewRect = new(0f, 0f, scrollOutRect.width - 16f, Mathf.Max(contentH, scrollOutHeight));
 
         Widgets.BeginScrollView(scrollOutRect, ref overridesScrollPos, scrollViewRect);
         Listing_Standard inner = new();
@@ -354,9 +353,6 @@ public class FactionEditUI : Window
             );
         }
 
-        float newHeight = inner.CurHeight;
-        overridesScrollInnerHeight = newHeight > overridesContentHeight + 5f ? newHeight + 300f : newHeight;
-        overridesContentHeight = newHeight;
         inner.End();
         Widgets.EndScrollView();
 
@@ -510,6 +506,51 @@ public class FactionEditUI : Window
 
         GUI.enabled = true;
         ui.End();
+    }
+
+    /// <summary>
+    /// Computes the scroll content height from the data model, mirroring the rendering
+    /// logic in DoWindowContents. Must be kept in sync with changes to the inner listing.
+    /// </summary>
+    private float CalcOverridesContentHeight(float contentWidth)
+    {
+        const float vs = 2f; // Listing_Standard.verticalSpacing added by GetRect
+        float h = Text.LineHeight + vs; // Tech Level ButtonTextLabeled
+
+        if (
+            ModsConfig.BiotechActive
+            && Current.Faction is { IsMissing: false }
+            && Current.Faction?.Def != Preset.SpecialWildManFaction
+            && Current.Faction?.Def != Preset.SpecialFactionlessPawnsFaction
+        )
+        {
+            h += 12f; // GapLine
+            h += Text.LineHeight + vs; // xenotype ButtonTextLabeled
+        }
+
+        if (Current.Faction is not { IsMissing: true })
+        {
+            h += 12f; // GapLine
+            h += 28f + vs; // GetRect(28f) for spawn groups summary row
+
+            HashSet<PawnKindDef> orphaned = Current?.GetOrphanedKinds() ?? [];
+            if (orphaned.Count > 0)
+            {
+                string names = orphaned.Select(k => k.LabelCap.ToString()).OrderBy(n => n).ToCommaList();
+                string warnText = "FactionLoadout_SpawnGroups_OrphanWarning".Translate(names);
+                h += Text.CalcHeight(warnText, contentWidth) + vs;
+            }
+        }
+
+        h += 12f; // GapLine
+        h += Text.LineHeight + vs; // Label "Loadout Overrides:" (single line)
+        h += 12f; // Gap()
+        h += Current.KindEdits.Count * (30f + vs); // each KindEdit GetRect(30)
+
+        if (!Current.Faction.IsMissing)
+            h += Text.LineHeight + vs; // "Add new..." ButtonText
+
+        return h + 20f; // safety margin
     }
 
     private void DrawFactionClipboardToolbar(Listing_Standard ui)
