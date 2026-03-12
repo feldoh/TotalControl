@@ -42,6 +42,8 @@ public static class ApparelGenPatch
         hairs.Clear();
         beards.Clear();
         hairColors.Clear();
+        apparelRequired.Clear();
+        apparelTagsAllowed.Clear();
         edits = 0;
 
         foreach (PawnKindEdit edit in PawnKindEdit.GetEditsFor(pawn.kindDef, pawn.Faction?.def))
