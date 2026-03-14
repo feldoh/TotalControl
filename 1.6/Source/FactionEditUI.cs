@@ -387,7 +387,9 @@ public class FactionEditUI : Window
 
             if (count != 0)
             {
-                float w = total.width / count;
+                const float labelH = 26f;
+                float maxIconH = Mathf.Max(total.height - labelH - 10f, 50f);
+                float w = Mathf.Min(total.width / count, maxIconH);
                 for (int i = 0; i < count; i++)
                 {
                     Rect pawnArea = new(total.x + i * w, total.y, w, w);

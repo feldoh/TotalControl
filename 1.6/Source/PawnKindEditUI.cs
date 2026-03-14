@@ -2768,7 +2768,7 @@ public class PawnKindEditUI : Window
         }
         else
         {
-            string txt = Current.IsGlobal ? "---" : $"[Default] {MakeString(default)}";
+            string txt = Current.IsGlobal ? "---" : $"[Default] {MakeString(defaultTags)}";
             Widgets.Label(rect.GetCentered(txt), txt);
         }
     }
