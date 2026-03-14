@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using FactionLoadout.Modules;
 using FactionLoadout.UISupport;
 using FactionLoadout.Util;
@@ -68,7 +69,7 @@ public class PawnKindEditUI : Window
             return def?.description;
         }
 
-        var parts = new System.Text.StringBuilder();
+        var parts = new StringBuilder();
 
         if (def.apparel.layers?.Count > 0)
         {
@@ -216,8 +217,8 @@ public class PawnKindEditUI : Window
         AllBackstoryCategories = [.. backstoryCategories];
         AllBackstoryCategories.Sort();
 
-        childBackstories.Sort((a, b) => string.Compare(BackstoryLabel(a), BackstoryLabel(b), System.StringComparison.InvariantCulture));
-        adultBackstories.Sort((a, b) => string.Compare(BackstoryLabel(a), BackstoryLabel(b), System.StringComparison.InvariantCulture));
+        childBackstories.Sort((a, b) => string.Compare(BackstoryLabel(a), BackstoryLabel(b), StringComparison.InvariantCulture));
+        adultBackstories.Sort((a, b) => string.Compare(BackstoryLabel(a), BackstoryLabel(b), StringComparison.InvariantCulture));
         AllChildhoodBackstories = childBackstories;
         AllAdulthoodBackstories = adultBackstories;
         AllBackstoryDefs = [.. childBackstories];
@@ -317,16 +318,15 @@ public class PawnKindEditUI : Window
             if (!isAnimal)
             {
                 tabs.AddRange(
-                    new Tab[]
-                    {
-                        new("FactionLoadout_Tab_Appearance".Translate(), DrawAppearanceTab),
-                        new("FactionLoadout_Tab_Apparel".Translate(), DrawApparelTab),
-                        new("FactionLoadout_Tab_Weapon".Translate(), DrawWeaponTab),
-                        new("FactionLoadout_Tab_ImplantsAndBionics".Translate(), DrawImplantsAndBionicsTab),
-                        new("FactionLoadout_Tab_Inventory".Translate(), DrawInventoryTab),
-                        new("FactionLoadout_Tab_RaidPoints".Translate(), DrawRaidPointsTab),
-                        new("FactionLoadout_Tab_RaidLoot".Translate(), DrawRaidLootTab),
-                    }
+                    [
+                        new Tab("FactionLoadout_Tab_Appearance".Translate(), DrawAppearanceTab),
+                        new Tab("FactionLoadout_Tab_Apparel".Translate(), DrawApparelTab),
+                        new Tab("FactionLoadout_Tab_Weapon".Translate(), DrawWeaponTab),
+                        new Tab("FactionLoadout_Tab_ImplantsAndBionics".Translate(), DrawImplantsAndBionicsTab),
+                        new Tab("FactionLoadout_Tab_Inventory".Translate(), DrawInventoryTab),
+                        new Tab("FactionLoadout_Tab_RaidPoints".Translate(), DrawRaidPointsTab),
+                        new Tab("FactionLoadout_Tab_RaidLoot".Translate(), DrawRaidLootTab)
+                    ]
                 );
                 if (VFEAncientsReflectionHelper.ModLoaded.Value)
                     tabs.Add(new Tab("VFE Ancients", DrawAncientsTab));
@@ -760,7 +760,7 @@ public class PawnKindEditUI : Window
             {
                 return $"<i>{"FactionLoadout_None".Translate()}</i>";
             }
-            string raw = string.Join(", ", list.Select(d => GetLabel(d)));
+            string raw = string.Join(", ", list.Select(GetLabel));
             if (raw.Length > 43)
             {
                 raw = raw.Substring(0, 40) + "...";
@@ -1074,7 +1074,7 @@ public class PawnKindEditUI : Window
             content.height = 28;
             content.width = 250;
             if (Widgets.ButtonText(content, "<b>Add New</b>"))
-                edits.Add(new SpecRequirementEdit() { Thing = defaultThing });
+                edits.Add(new SpecRequirementEdit { Thing = defaultThing });
         }
         else
         {
@@ -1402,8 +1402,7 @@ public class PawnKindEditUI : Window
                 );
             }
 
-            Rect chanceRect;
-            chanceRect = modeButton.ExpandedBy(-5);
+            Rect chanceRect = modeButton.ExpandedBy(-5);
             chanceRect.y += 34;
             chanceRect.height = 30;
             if (item.SelectionMode != ApparelSelectionMode.AlwaysTake)
@@ -1476,7 +1475,7 @@ public class PawnKindEditUI : Window
             content.height = 28;
             content.width = 250;
             if (Widgets.ButtonText(content, "<b>Add New</b>"))
-                edits.Add(new ForcedHediff() { HediffDef = defaultHediffDef });
+                edits.Add(new ForcedHediff { HediffDef = defaultHediffDef });
         }
         else
         {
@@ -1681,7 +1680,7 @@ public class PawnKindEditUI : Window
         );
         DrawOverride(ui, DefaultKind.techHediffsChance, ref Current.TechHediffChance, "Implants & Bionics Chance", DrawTechChance, pasteGet: e => e.TechHediffChance);
         DrawOverride(ui, DefaultKind.techHediffsMaxAmount, ref Current.TechHediffsMaxAmount, "Max # of Implants & Bionics", DrawMaxTech, pasteGet: e => e.TechHediffsMaxAmount);
-        DrawSpecificHediffs(ui, ref Current.ForcedHediffs, "Required Hediffs (advanced)", t => true, HediffDefOf.Scaria);
+        DrawSpecificHediffs(ui, ref Current.ForcedHediffs, "Required Hediffs (advanced)", _ => true, HediffDefOf.Scaria);
     }
 
     private void DrawAncientsTab(Listing_Standard ui)
@@ -1720,7 +1719,7 @@ public class PawnKindEditUI : Window
 
     private void DrawXenotypeTab(Listing_Standard ui)
     {
-        DrawSpecificGenes(ui, ref Current.ForcedGenes, "Required Genes (advanced)", t => true, AllGeneDefs.First());
+        DrawSpecificGenes(ui, ref Current.ForcedGenes, "Required Genes (advanced)", _ => true, AllGeneDefs.First());
 
         DrawForceSpecificXenos(ui);
         if (!Current.ForceSpecificXenos)
@@ -1889,7 +1888,7 @@ public class PawnKindEditUI : Window
             curve[i] = point;
             if (Widgets.ButtonText(pointRect.RightHalf().RightHalf(), "Remove".Translate()))
             {
-                curve.Points.Remove(point);
+                curve.Points.RemoveAt(i);
                 curvePointBuffer.RemoveAt(i);
             }
 
@@ -1920,7 +1919,7 @@ public class PawnKindEditUI : Window
         float height = 32;
         InventoryOptionEdit field = Current.Inventory;
 
-        ui.Label($"<b>Inventory</b>");
+        ui.Label("<b>Inventory</b>");
         Rect rect = ui.GetRect(height);
         bool active = field != null;
         if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
@@ -2083,9 +2082,13 @@ public class PawnKindEditUI : Window
     private void DrawEnumSelector<T>(Rect rect, bool active, T? field, T defaultValue, Action<T> apply, Func<T, string> makeName = null)
         where T : struct
     {
-        string Name(T t)
+        string Name(T? t)
         {
-            return makeName == null ? t.ToString() : makeName(t);
+            if (t is { } safeT)
+            {
+                return makeName == null ? t.ToString() : makeName(safeT);
+            }
+            return "UNKNOWN";
         }
 
         IEnumerable<object> MakeEnumerable(IEnumerable normal)
@@ -2097,7 +2100,7 @@ public class PawnKindEditUI : Window
         if (
             !Widgets.ButtonText(
                 rect,
-                active ? Name(field.Value)
+                active ? Name(field)
                     : Current.IsGlobal ? "---"
                     : $"[Default] {Name(defaultValue)}"
             )
@@ -2155,6 +2158,7 @@ public class PawnKindEditUI : Window
     {
         if (active)
         {
+            Color currentApparelColor = Current.ApparelColor ?? Color.white;
             Rect label = rect;
             label = label.ExpandedBy(-3);
             label.width = 100;
@@ -2166,20 +2170,20 @@ public class PawnKindEditUI : Window
             Widgets.Label(label, "Pick color: ");
             if (Mouse.IsOver(picker))
             {
-                Color border = Color.white - Current.ApparelColor.Value;
+                Color border = Color.white - currentApparelColor;
                 border.a = 1;
-                border = Color.Lerp(border, Current.ApparelColor.Value, 0.2f);
-                Widgets.DrawBoxSolidWithOutline(picker, Current.ApparelColor.Value, border, 2);
+                border = Color.Lerp(border, currentApparelColor, 0.2f);
+                Widgets.DrawBoxSolidWithOutline(picker, currentApparelColor, border, 2);
             }
             else
             {
-                Widgets.DrawBoxSolid(picker, Current.ApparelColor.Value);
+                Widgets.DrawBoxSolid(picker, currentApparelColor);
             }
 
             if (Widgets.ButtonInvisible(picker))
                 Find.WindowStack.Add(
                     new Window_ColorPicker(
-                        Current.ApparelColor.Value,
+                        currentApparelColor,
                         col =>
                         {
                             col.a = 1f;
@@ -2256,12 +2260,13 @@ public class PawnKindEditUI : Window
 
     private void DrawMaxTech(Rect rect, bool active, int _)
     {
+        int currentTechHediffsMaxAmount = Current.TechHediffsMaxAmount ?? 1;
         if (maxTechBuffer == null && active)
-            maxTechBuffer = Current.TechHediffsMaxAmount.Value.ToString();
+            maxTechBuffer = currentTechHediffsMaxAmount.ToString();
 
         if (active)
         {
-            int value = Current.TechHediffsMaxAmount.Value;
+            int value = currentTechHediffsMaxAmount;
             Widgets.IntEntry(rect, ref value, ref maxTechBuffer);
             Current.TechHediffsMaxAmount = value;
         }
@@ -2368,7 +2373,7 @@ public class PawnKindEditUI : Window
         DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.ApparelTags, Current.Def.apparelTags, AllApparelTags);
     }
 
-    private void DrawDisallowedApparelTags(Rect rect, bool active, List<string> defaultTags)
+    private void DrawDisallowedApparelTags(Rect rect, bool active)
     {
         DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.ApparelDisallowedTags, Current.Def.apparelDisallowTags, AllApparelTags);
     }
@@ -2496,11 +2501,9 @@ public class PawnKindEditUI : Window
 
             return toReturn;
         }
-        else
-        {
-            string txt = Current.IsGlobal ? "---" : $"[Default] {MakeString(defaultThings)}";
-            Widgets.Label(rect.GetCentered(txt), txt);
-        }
+
+        string txt = Current.IsGlobal ? "---" : $"[Default] {MakeString(defaultThings)}";
+        Widgets.Label(rect.GetCentered(txt), txt);
 
         return null;
     }
@@ -2538,7 +2541,7 @@ public class PawnKindEditUI : Window
         }
         else
         {
-            string txt = Current.IsGlobal ? "---" : $"[Default] 1";
+            string txt = Current.IsGlobal ? "---" : "[Default] 1";
             Widgets.Label(rect.GetCentered(txt), txt);
         }
     }
@@ -2563,7 +2566,7 @@ public class PawnKindEditUI : Window
         }
         else
         {
-            string txt = Current.IsGlobal ? "---" : $"[Default] 1";
+            string txt = Current.IsGlobal ? "---" : "[Default] 1";
             Widgets.Label(rect.GetCentered(txt), txt);
         }
     }
@@ -2611,6 +2614,7 @@ public class PawnKindEditUI : Window
     {
         if (active)
         {
+            current ??= defaultRange;
             int value = (int)current.Value.min;
             Rect left = rect;
             left.width = 220;
@@ -2832,7 +2836,7 @@ public class PawnKindEditUI : Window
 
         if (Widgets.ButtonText(new Rect(rect.x, rect.y, toggleW, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
         {
-            field = active ? (T?)null : defaultValue;
+            field = active ? null : defaultValue;
             active = !active;
         }
 
