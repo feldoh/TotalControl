@@ -20,6 +20,7 @@ public class FactionEdit : IExposable
 
     public DefRef<FactionDef> Faction = new();
     public List<PawnKindEdit> KindEdits = [];
+    public List<PawnGroupMakerEdit> PawnGroupMakerEdits = null;
     public Dictionary<string, float> xenotypeChances = [];
     public Dictionary<XenotypeDef, float> xenotypeChancesByDef = [];
     public bool OverrideFactionXenotypes = false;
@@ -33,18 +34,6 @@ public class FactionEdit : IExposable
         return replacement ?? original;
     }
 
-    public IEnumerable<PawnGroupMaker> GroupMakers
-    {
-        get
-        {
-            if (!Faction.HasValue || Faction.Def.pawnGroupMakers == null)
-                yield break;
-
-            foreach (PawnGroupMaker maker in Faction.Def.pawnGroupMakers)
-                yield return maker;
-        }
-    }
-
     public void ExposeData()
     {
         Scribe_Values.Look(ref Active, "active", true);
@@ -56,6 +45,7 @@ public class FactionEdit : IExposable
         if (Scribe.mode == LoadSaveMode.Saving)
             MaterializeXenotypeChances();
         Scribe_Values.Look(ref OverrideFactionXenotypes, "overrideFactionXenotypes", false);
+        Scribe_Collections.Look(ref PawnGroupMakerEdits, "groupEdits", LookMode.Deep);
         if (Scribe.mode != LoadSaveMode.PostLoadInit)
             return;
 
@@ -139,6 +129,8 @@ public class FactionEdit : IExposable
 
     public static IReadOnlyList<PawnKindDef> GetAllPawnKinds(FactionDef def)
     {
+        if (def == null)
+            return [];
         HashSet<PawnKindDef> kinds = (def.pawnGroupMakers ?? Enumerable.Empty<PawnGroupMaker>())
             .SelectMany(group =>
                 Enumerable.Empty<PawnGenOption>().ConcatIfNotNull(group.options).ConcatIfNotNull(group.traders).ConcatIfNotNull(group.carriers).ConcatIfNotNull(group.guards)
@@ -172,6 +164,59 @@ public class FactionEdit : IExposable
         return def;
     }
 
+    #region PawnGroupMakers
+
+    /// <summary>
+    /// Lazily snapshots the original faction's pawnGroupMakers into
+    /// <see cref="PawnGroupMakerEdits"/> on first call. Returns the existing list if
+    /// already initialised.
+    /// </summary>
+    public List<PawnGroupMakerEdit> GetOrInitPawnGroupMakerEdits()
+    {
+        if (PawnGroupMakerEdits != null)
+            return PawnGroupMakerEdits;
+
+        FactionDef def = Faction.Def;
+        if (def?.pawnGroupMakers == null)
+        {
+            PawnGroupMakerEdits = [];
+            return PawnGroupMakerEdits;
+        }
+
+        PawnGroupMakerEdits = def.pawnGroupMakers.Select(PawnGroupMakerEdit.FromPawnGroupMaker).ToList();
+        return PawnGroupMakerEdits;
+    }
+
+    /// <summary>Clears <see cref="PawnGroupMakerEdits"/>, restoring live faction defaults.</summary>
+    public void ResetGroupEdits()
+    {
+        PawnGroupMakerEdits = null;
+    }
+
+    /// <summary>
+    /// Returns all pawnkind defs known to TC for the "Add new…" discovery.
+    /// When <see cref="PawnGroupMakerEdits"/> is set, reads from it; otherwise reads
+    /// from the live <see cref="FactionDef"/>.
+    /// </summary>
+    public IEnumerable<PawnKindDef> GetAllKindDefsForUI() =>
+        PawnGroupMakerEdits != null ? PawnGroupMakerEdits.SelectMany(g => g.GetAllKinds()).Distinct() : GetAllPawnKinds(Faction.Def);
+
+    /// <summary>
+    /// Returns the set of pawnkinds that have a <see cref="PawnKindEdit"/> in
+    /// this faction edit but are not present in any spawn group.  These are
+    /// "orphaned" and are unlikely to appear in game unless they are spawned by code or other triggers.
+    /// </summary>
+    public HashSet<PawnKindDef> GetOrphanedKinds()
+    {
+        // Normalise clone defs back to originals before comparing — after Apply(),
+        // faction def group makers contain cloned PawnKindDefs (e.g. Archer_TCCln_Gentle)
+        // while edit.Def references the original (Archer).
+        HashSet<string> inGroups = GetAllKindDefsForUI().Select(k => PawnKindEdit.NormaliseDef(k).defName).ToHashSet();
+        return KindEdits.Where(e => e.Def != null && !e.IsGlobal && !inGroups.Contains(e.Def.defName)).Select(e => e.Def).ToHashSet();
+    }
+
+    #endregion
+
     public bool HasEditFor(PawnKindDef def)
     {
         return GetEditFor(def) != null;
@@ -202,6 +247,14 @@ public class FactionEdit : IExposable
         //    def.apparelStuffFilter = ApparelStuffFilter;
 
         def = EnsureOriginal(def);
+
+        // Apply group edits before discovering pawnkinds so that newly added
+        // pawnkinds are visible to the rest of the Apply() pipeline.
+        if (PawnGroupMakerEdits != null)
+        {
+            def.pawnGroupMakers = PawnGroupMakerEdits.Select(e => e.ToPawnGroupMaker()).ToList();
+        }
+
         PawnKindEdit global = GetGlobalEditor();
         if ((global?.RaidCommonalityFromPointsCurve?.PointsCount ?? 0) > 0)
             def.raidCommonalityFromPointsCurve = global.RaidCommonalityFromPointsCurve;
@@ -275,6 +328,8 @@ public class FactionEdit : IExposable
         OverrideFactionXenotypes = source.OverrideFactionXenotypes;
         xenotypeChances = source.xenotypeChances != null ? new Dictionary<string, float>(source.xenotypeChances) : [];
         xenotypeChancesByDef = source.xenotypeChancesByDef != null ? new Dictionary<XenotypeDef, float>(source.xenotypeChancesByDef) : [];
+        // Group edits are not copied by the faction-level clipboard — they are
+        // structural changes that should not be blindly overwritten.
     }
 
     public override string ToString()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
@@ -11,52 +11,45 @@ namespace FactionLoadout.Patches;
 [HarmonyPatch(typeof(PawnApparelGenerator), "GenerateStartingApparelFor")]
 public static class ApparelGenPatch
 {
-    private static HashSet<ThingDef> apparelRequired = [];
-    private static HashSet<string> apparelTagsAllowed = [];
-    private static List<SpecRequirementEdit> always = [];
-    private static List<SpecRequirementEdit> chance = [];
-    private static List<SpecRequirementEdit> pool1 = [];
-    private static List<SpecRequirementEdit> pool2 = [];
-    private static List<SpecRequirementEdit> pool3 = [];
-    private static List<SpecRequirementEdit> pool4 = [];
-    private static List<HairDef> hairs = [];
-    private static List<BeardDef> beards = [];
-    private static List<Color> hairColors = [];
-    private static int edits;
-    private static bool anyForceNaked = false;
-    private static bool anyForceOnlySelected = false;
+    public class AccumulatedApparelEdits
+    {
+        public HashSet<ThingDef> apparelRequired = [];
+        public HashSet<string> apparelTagsAllowed = [];
+        public List<SpecRequirementEdit> always = [];
+        public List<SpecRequirementEdit> chance = [];
+        public List<SpecRequirementEdit> pool1 = [];
+        public List<SpecRequirementEdit> pool2 = [];
+        public List<SpecRequirementEdit> pool3 = [];
+        public List<SpecRequirementEdit> pool4 = [];
+        public List<HairDef> hairs = [];
+        public List<BeardDef> beards = [];
+        public List<Color> hairColors = [];
+        public int editCount;
+        public bool anyForceNaked;
+        public bool anyForceOnlySelected;
+    }
 
     private static void Postfix(Pawn pawn)
     {
         if (pawn == null)
             return;
 
-        anyForceNaked = false;
-        anyForceOnlySelected = false;
-        always.Clear();
-        chance.Clear();
-        pool1.Clear();
-        pool2.Clear();
-        pool3.Clear();
-        pool4.Clear();
-        hairs.Clear();
-        beards.Clear();
-        hairColors.Clear();
-        edits = 0;
-
+        var edits = new AccumulatedApparelEdits();
         foreach (PawnKindEdit edit in PawnKindEdit.GetEditsFor(pawn.kindDef, pawn.Faction?.def))
         {
-            Accumulate(edit);
-            edits++;
+            Accumulate(edits, edit);
+            edits.editCount++;
         }
 
-        if (anyForceNaked)
+        if (edits.anyForceNaked)
             pawn.apparel?.DestroyAll();
 
-        if (anyForceOnlySelected)
+        if (edits.anyForceOnlySelected)
         {
             List<Apparel> enumerable =
-                pawn.apparel?.WornApparel?.Where(a => !apparelRequired.Contains(a.def) && !(a.def?.apparel?.tags ?? []).Any(t => apparelTagsAllowed.Contains(t))).ToList() ?? [];
+                pawn.apparel?.WornApparel?.Where(a => !edits.apparelRequired.Contains(a.def) && !(a.def?.apparel?.tags ?? []).Any(t => edits.apparelTagsAllowed.Contains(t)))
+                    .ToList()
+                ?? [];
             foreach (Apparel a in enumerable)
             {
                 ModCore.Debug(a.def.LabelCap + "Destroyed");
@@ -64,12 +57,12 @@ public static class ApparelGenPatch
             }
         }
 
-        if (edits > 0 && pawn.RaceProps.ToolUser)
-            ForceGiveClothes(pawn);
+        if (edits.editCount > 0 && pawn.RaceProps.ToolUser)
+            ForceGiveClothes(pawn, edits);
 
-        HairDef hair = GetForcedHair();
-        BeardDef beard = GetForcedBeard();
-        Color? color = GetForcedHairColor();
+        HairDef hair = GetForcedHair(edits);
+        BeardDef beard = GetForcedBeard(edits);
+        Color? color = GetForcedHairColor(edits);
         if (pawn.story == null)
             return;
         if (beard != null && pawn.style != null && pawn.style.beardDef != beard)
@@ -88,12 +81,12 @@ public static class ApparelGenPatch
         }
     }
 
-    private static void ForceGiveClothes(Pawn pawn)
+    private static void ForceGiveClothes(Pawn pawn, AccumulatedApparelEdits edits)
     {
         if (pawn.apparel == null)
             return;
 
-        foreach (SpecRequirementEdit item in GetWhatToGive(pawn))
+        foreach (SpecRequirementEdit item in GetWhatToGive(pawn, edits))
         {
             if (item.Thing == null)
                 continue;
@@ -115,28 +108,28 @@ public static class ApparelGenPatch
         }
     }
 
-    private static void Accumulate(PawnKindEdit edit)
+    private static void Accumulate(AccumulatedApparelEdits edits, PawnKindEdit edit)
     {
         if (edit.CustomHair != null)
-            hairs.AddRange(edit.CustomHair);
+            edits.hairs.AddRange(edit.CustomHair);
 
         if (edit.CustomBeards != null)
-            beards.AddRange(edit.CustomBeards);
+            edits.beards.AddRange(edit.CustomBeards);
 
         if (edit.CustomHairColors != null)
-            hairColors.AddRange(edit.CustomHairColors);
+            edits.hairColors.AddRange(edit.CustomHairColors);
 
         if (edit.ForceNaked)
         {
-            anyForceNaked = true;
+            edits.anyForceNaked = true;
             return;
         }
 
         if (edit.ForceOnlySelected)
-            anyForceOnlySelected = true;
+            edits.anyForceOnlySelected = true;
 
-        apparelRequired.AddRange(edit.ApparelRequired ?? []);
-        apparelTagsAllowed.AddRange(edit.ApparelTags ?? []);
+        edits.apparelRequired.AddRange(edit.ApparelRequired ?? []);
+        edits.apparelTagsAllowed.AddRange(edit.ApparelTags ?? []);
 
         if (edit.SpecificApparel == null)
             return;
@@ -145,22 +138,22 @@ public static class ApparelGenPatch
             switch (item.SelectionMode)
             {
                 case ApparelSelectionMode.AlwaysTake:
-                    always.Add(item);
+                    edits.always.Add(item);
                     break;
                 case ApparelSelectionMode.RandomChance:
-                    chance.Add(item);
+                    edits.chance.Add(item);
                     break;
                 case ApparelSelectionMode.FromPool1:
-                    pool1.Add(item);
+                    edits.pool1.Add(item);
                     break;
                 case ApparelSelectionMode.FromPool2:
-                    pool2.Add(item);
+                    edits.pool2.Add(item);
                     break;
                 case ApparelSelectionMode.FromPool3:
-                    pool3.Add(item);
+                    edits.pool3.Add(item);
                     break;
                 case ApparelSelectionMode.FromPool4:
-                    pool4.Add(item);
+                    edits.pool4.Add(item);
                     break;
                 default:
                     Log.Warning($"Unknown selection mode '{item.SelectionMode} for '{item.Thing.LabelCap}'");
@@ -168,28 +161,28 @@ public static class ApparelGenPatch
             }
     }
 
-    private static IEnumerable<SpecRequirementEdit> GetWhatToGive(Pawn pawn)
+    private static IEnumerable<SpecRequirementEdit> GetWhatToGive(Pawn pawn, AccumulatedApparelEdits edits)
     {
-        foreach (SpecRequirementEdit item in always)
+        foreach (SpecRequirementEdit item in edits.always)
             yield return item;
 
-        foreach (SpecRequirementEdit item in chance)
+        foreach (SpecRequirementEdit item in edits.chance)
             if (Rand.Chance(item.SelectionChance))
                 yield return item;
 
-        SpecRequirementEdit selected = pool1.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
+        SpecRequirementEdit selected = edits.pool1.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool2.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = edits.pool2.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool3.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = edits.pool3.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
 
-        selected = pool4.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
+        selected = edits.pool4.Where(a => a.Thing?.apparel?.PawnCanWear(pawn) ?? true).RandomElementByWeightWithFallback(i => i.SelectionChance);
         if (selected != null)
             yield return selected;
     }
@@ -230,33 +223,51 @@ public static class ApparelGenPatch
         return app;
     }
 
-    private static HairDef GetForcedHair()
+    private static HairDef GetForcedHair(AccumulatedApparelEdits edits)
     {
-        if (hairs.Count == 0)
+        if (edits.hairs.Count == 0)
             return null;
 
-        hairs.RemoveAll(h => h == null);
-        hairs.RemoveDuplicates((a, b) => a == b);
-        return hairs.Count > 0 ? hairs.RandomElement() : null;
+        edits.hairs.RemoveAll(h => h == null);
+        edits.hairs.RemoveDuplicates((a, b) => a == b);
+        return edits.hairs.Count > 0 ? edits.hairs.RandomElement() : null;
     }
 
-    private static BeardDef GetForcedBeard()
+    private static BeardDef GetForcedBeard(AccumulatedApparelEdits edits)
     {
-        if (beards.Count == 0)
+        if (edits.beards.Count == 0)
             return null;
 
-        beards.RemoveAll(h => h == null);
-        beards.RemoveDuplicates((a, b) => a == b);
-        return beards.Count > 0 ? beards.RandomElement() : null;
+        edits.beards.RemoveAll(h => h == null);
+        edits.beards.RemoveDuplicates((a, b) => a == b);
+        return edits.beards.Count > 0 ? edits.beards.RandomElement() : null;
     }
 
-    private static Color? GetForcedHairColor()
+    private static Color? GetForcedHairColor(AccumulatedApparelEdits edits)
     {
-        if (hairColors.Count == 0)
+        if (edits.hairColors.Count == 0)
             return null;
 
-        Color c = hairColors.RandomElement();
+        Color c = edits.hairColors.RandomElement();
         c.a = 1f;
         return c;
+    }
+}
+
+/// <summary>
+/// Prevents blacklisted ThingDefs from entering vanilla's apparel candidate pool.
+/// Uses <see cref="PawnKindEdit.ApparelBlacklistCache"/> populated at Apply() time
+/// for O(1) lookup per pair — no per-pawn edit iteration at patch time.
+/// </summary>
+[HarmonyPatch(typeof(PawnApparelGenerator), "CanUsePair")]
+public static class CanUsePairBlacklistPatch
+{
+    static void Postfix(ThingStuffPair pair, Pawn pawn, ref bool __result)
+    {
+        if (!__result)
+            return;
+
+        if (PawnKindEdit.ApparelBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
+            __result = false;
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using RimWorld;
@@ -9,13 +9,16 @@ namespace FactionLoadout.Patches;
 [HarmonyPatch(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor")]
 public static class WeaponGenPatch
 {
-    private static List<SpecRequirementEdit> always = new List<SpecRequirementEdit>();
-    private static List<SpecRequirementEdit> chance = new List<SpecRequirementEdit>();
-    private static List<SpecRequirementEdit> pool1 = new List<SpecRequirementEdit>();
-    private static List<SpecRequirementEdit> pool2 = new List<SpecRequirementEdit>();
-    private static List<SpecRequirementEdit> pool3 = new List<SpecRequirementEdit>();
-    private static List<SpecRequirementEdit> pool4 = new List<SpecRequirementEdit>();
-    private static int edits;
+    public class AccumulatedWeaponEdits
+    {
+        public List<SpecRequirementEdit> always = [];
+        public List<SpecRequirementEdit> chance = [];
+        public List<SpecRequirementEdit> pool1 = [];
+        public List<SpecRequirementEdit> pool2 = [];
+        public List<SpecRequirementEdit> pool3 = [];
+        public List<SpecRequirementEdit> pool4 = [];
+        public int editCount;
+    }
 
     static void Postfix(Pawn pawn)
     {
@@ -23,42 +26,30 @@ public static class WeaponGenPatch
             return;
 
         if (MySettings.VanillaRestrictions && !pawn.RaceProps.ToolUser)
-        {
             return;
-        }
         if (!pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation))
-        {
             return;
-        }
         if (MySettings.VanillaRestrictions && pawn.WorkTagIsDisabled(WorkTags.Violent))
-        {
             return;
-        }
 
-        always.Clear();
-        chance.Clear();
-        pool1.Clear();
-        pool2.Clear();
-        pool3.Clear();
-        pool4.Clear();
-        edits = 0;
-
+        var edits = new AccumulatedWeaponEdits();
         foreach (var edit in PawnKindEdit.GetEditsFor(pawn.kindDef, pawn.Faction?.def))
         {
-            Accumulate(edit);
-            edits++;
+            Accumulate(edits, edit);
+            edits.editCount++;
         }
 
-        if (edits > 0 && pawn.RaceProps.ToolUser)
-            ForceGiveClothes(pawn);
+        if (edits.editCount > 0 && pawn.RaceProps.ToolUser)
+            ForceGiveWeapons(pawn, edits);
     }
 
-    static void ForceGiveClothes(Pawn pawn)
+    static void ForceGiveWeapons(Pawn pawn, AccumulatedWeaponEdits edits)
     {
         if (pawn.apparel == null)
             return;
 
-        foreach (var item in GetWhatToGive())
+        bool primarySet = false;
+        foreach (var item in GetWhatToGive(edits))
         {
             if (item.Thing == null)
                 continue;
@@ -72,17 +63,35 @@ public static class WeaponGenPatch
             }
             catch (Exception e)
             {
-                ModCore.Error($"Exception generating required apparel '{item.Thing.LabelCap}'", e);
+                ModCore.Error($"Exception generating required weapon '{item.Thing.LabelCap}'", e);
                 continue;
             }
 
-            if (created.def.equipmentType == EquipmentType.Primary && pawn.equipment.Primary != null)
-                pawn.equipment.Remove(pawn.equipment.Primary);
-            pawn.equipment.AddEquipment(created);
+            if (created.def.equipmentType == EquipmentType.Primary)
+            {
+                if (!primarySet)
+                {
+                    // First primary weapon: take the equipment slot, displacing any vanilla-generated weapon
+                    if (pawn.equipment.Primary != null)
+                        pawn.equipment.Remove(pawn.equipment.Primary);
+                    pawn.equipment.AddEquipment(created);
+                    primarySet = true;
+                }
+                else
+                {
+                    // Additional pool primaries go to inventory so sidearm mods (Simple Sidearms, CE)
+                    // can register them automatically. Gracefully ignored in vanilla.
+                    pawn.inventory.innerContainer.TryAdd(created);
+                }
+            }
+            else
+            {
+                pawn.equipment.AddEquipment(created);
+            }
         }
     }
 
-    static void Accumulate(PawnKindEdit edit)
+    static void Accumulate(AccumulatedWeaponEdits edits, PawnKindEdit edit)
     {
         if (edit?.SpecificWeapons == null)
             return;
@@ -92,49 +101,49 @@ public static class WeaponGenPatch
             switch (item.SelectionMode)
             {
                 case ApparelSelectionMode.AlwaysTake:
-                    always.Add(item);
+                    edits.always.Add(item);
                     break;
                 case ApparelSelectionMode.RandomChance:
-                    chance.Add(item);
+                    edits.chance.Add(item);
                     break;
                 case ApparelSelectionMode.FromPool1:
-                    pool1.Add(item);
+                    edits.pool1.Add(item);
                     break;
                 case ApparelSelectionMode.FromPool2:
-                    pool2.Add(item);
+                    edits.pool2.Add(item);
                     break;
                 case ApparelSelectionMode.FromPool3:
-                    pool3.Add(item);
+                    edits.pool3.Add(item);
                     break;
                 case ApparelSelectionMode.FromPool4:
-                    pool4.Add(item);
+                    edits.pool4.Add(item);
                     break;
             }
         }
     }
 
-    static IEnumerable<SpecRequirementEdit> GetWhatToGive()
+    static IEnumerable<SpecRequirementEdit> GetWhatToGive(AccumulatedWeaponEdits edits)
     {
-        foreach (var item in always)
+        foreach (var item in edits.always)
             yield return item;
 
-        foreach (var item in chance)
+        foreach (var item in edits.chance)
             if (Rand.Chance(item.SelectionChance))
                 yield return item;
 
-        var selected = pool1.RandomElementByWeightWithFallback(i => i.SelectionChance, null);
+        var selected = edits.pool1.RandomElementByWeightWithFallback(i => i.SelectionChance, null);
         if (selected != null)
             yield return selected;
 
-        selected = pool2.RandomElementByWeightWithFallback(i => i.SelectionChance, null);
+        selected = edits.pool2.RandomElementByWeightWithFallback(i => i.SelectionChance, null);
         if (selected != null)
             yield return selected;
 
-        selected = pool3.RandomElementByWeightWithFallback(i => i.SelectionChance, null);
+        selected = edits.pool3.RandomElementByWeightWithFallback(i => i.SelectionChance, null);
         if (selected != null)
             yield return selected;
 
-        selected = pool4.RandomElementByWeightWithFallback(i => i.SelectionChance, null);
+        selected = edits.pool4.RandomElementByWeightWithFallback(i => i.SelectionChance, null);
         if (selected != null)
             yield return selected;
     }
@@ -168,5 +177,24 @@ public static class WeaponGenPatch
         }
 
         return thing;
+    }
+}
+
+/// <summary>
+/// Prevents blacklisted ThingDefs from being selected during vanilla weapon generation
+/// by zeroing their commonality weight. Vanilla then naturally picks the next best
+/// alternative. Uses <see cref="PawnKindEdit.WeaponBlacklistCache"/> populated at
+/// Apply() time for O(1) lookup per pair — no per-pawn edit iteration at patch time.
+/// </summary>
+[HarmonyPatch(typeof(PawnWeaponGenerator), nameof(PawnWeaponGenerator.GetCommonality))]
+public static class WeaponGetCommonalityBlacklistPatch
+{
+    static void Postfix(Pawn pawn, ThingStuffPair pair, ref float __result)
+    {
+        if (__result <= 0f)
+            return;
+
+        if (PawnKindEdit.WeaponBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
+            __result = 0f;
     }
 }

@@ -17,7 +17,7 @@ public class PawnKindEditUI : Window
 {
     private static List<string> AllTechHediffTags;
     private static List<string> AllApparelTags;
-    private static List<string> AllWeaponsTags;
+    public static List<string> AllWeaponsTags;
     private static List<BodyTypeDef> AllBodyTypes;
     private static List<ThingDef> AllApparel;
     private static List<ThingDef> AllWeapons;
@@ -59,6 +59,39 @@ public class PawnKindEditUI : Window
             default:
                 return null;
         }
+    }
+
+    public static string BuildApparelTooltip(ThingDef def)
+    {
+        if (def?.apparel == null)
+        {
+            return def?.description;
+        }
+
+        var parts = new System.Text.StringBuilder();
+
+        if (def.apparel.layers?.Count > 0)
+        {
+            string layers = string.Join(", ", def.apparel.layers.Select(l => !string.IsNullOrEmpty(l.LabelCap) ? l.LabelCap.ToString() : l.defName));
+            parts.AppendLine("FactionLoadout_Apparel_Layers".Translate(layers).ToString());
+        }
+
+        if (def.apparel.bodyPartGroups?.Count > 0)
+        {
+            string coverage = string.Join(", ", def.apparel.bodyPartGroups.Select(b => !string.IsNullOrEmpty(b.LabelCap) ? b.LabelCap.ToString() : b.defName));
+            parts.AppendLine("FactionLoadout_Apparel_Coverage".Translate(coverage).ToString());
+        }
+
+        if (!string.IsNullOrEmpty(def.description))
+        {
+            if (parts.Length > 0)
+            {
+                parts.AppendLine();
+            }
+            parts.Append(def.description);
+        }
+
+        return parts.Length > 0 ? parts.ToString().TrimEnd() : null;
     }
 
     private static void ScanDefs()
@@ -962,6 +995,16 @@ public class PawnKindEditUI : Window
             pasteGet: e => e.ApparelRequired
         );
         DrawSpecificGear(ui, ref Current.SpecificApparel, "Required Apparel (advanced)", t => t.IsApparel, ThingDefOf.Apparel_Parka);
+        DrawOverride(
+            ui,
+            null,
+            ref Current.ApparelBlacklist,
+            "FactionLoadout_ApparelBlacklist".Translate(),
+            DrawApparelBlacklist,
+            GetHeightFor(Current.ApparelBlacklist),
+            false,
+            pasteGet: e => e.ApparelBlacklist
+        );
     }
 
     private void DrawForceOnlySelected(Listing_Standard ui)
@@ -1087,10 +1130,23 @@ public class PawnKindEditUI : Window
             defSel.width = 220;
             defSel.height = 50;
             Widgets.DrawHighlightIfMouseover(defSel);
+            TooltipHandler.TipRegion(defSel, "FactionLoadout_LeftClickToChange".Translate() + "\n" + "FactionLoadout_RightClickToInspect".Translate());
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && Mouse.IsOver(defSel))
+            {
+                if (Verse.Current.ProgramState == ProgramState.Playing)
+                {
+                    Find.WindowStack.Add(new Dialog_InfoCard(item.Thing));
+                }
+                else
+                {
+                    Find.WindowStack.Add(new Dialog_ApparelInfo(item.Thing));
+                }
+                Event.current.Use();
+            }
             if (Widgets.ButtonInvisible(defSel))
             {
                 IEnumerable<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading.Where(thingFilter);
-                List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, d.description));
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, d.LabelCap, TryGetIcon(d, out Color c), c, BuildApparelTooltip(d)));
                 CustomFloatMenu.Open(
                     items,
                     raw =>
@@ -1379,6 +1435,16 @@ public class PawnKindEditUI : Window
             pasteGet: e => e.WeaponTags
         );
         DrawSpecificGear(ui, ref Current.SpecificWeapons, "Required Weapons (advanced)", t => t.IsWeapon, ThingDef.Named("Gun_AssaultRifle"));
+        DrawOverride(
+            ui,
+            null,
+            ref Current.WeaponBlacklist,
+            "FactionLoadout_WeaponBlacklist".Translate(),
+            DrawWeaponBlacklist,
+            GetHeightFor(Current.WeaponBlacklist),
+            false,
+            pasteGet: e => e.WeaponBlacklist
+        );
     }
 
     private void DrawSpecificHediffs(Listing_Standard ui, ref List<ForcedHediff> edits, string label, Func<HediffDef, bool> hediffFilter, HediffDef defaultHediffDef)
@@ -1733,7 +1799,14 @@ public class PawnKindEditUI : Window
     private void DrawRaidPointsTab(Listing_Standard ui)
     {
         DrawOverride(ui, DefaultKind.combatPower, ref Current.CombatPower, "FactionLoadout_CombatPower".Translate().ToString(), DrawCombatPower, pasteGet: e => e.CombatPower);
-        DrawOverride(ui, DefaultKind.appearsRandomlyInCombatGroups, ref Current.AppearsRandomlyInCombatGroups, "FactionLoadout_AppearsRandomlyInCombatGroups".Translate().ToString(), DrawAppearsRandomlyInCombatGroups, pasteGet: e => e.AppearsRandomlyInCombatGroups);
+        DrawOverride(
+            ui,
+            DefaultKind.appearsRandomlyInCombatGroups,
+            ref Current.AppearsRandomlyInCombatGroups,
+            "FactionLoadout_AppearsRandomlyInCombatGroups".Translate().ToString(),
+            DrawAppearsRandomlyInCombatGroups,
+            pasteGet: e => e.AppearsRandomlyInCombatGroups
+        );
 
         if (!Current.IsGlobal)
             return;
@@ -2301,6 +2374,11 @@ public class PawnKindEditUI : Window
         DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.ApparelDisallowedTags, Current.Def.apparelDisallowTags, AllApparelTags);
     }
 
+    private void DrawApparelBlacklist(Rect rect, bool active, List<DefRef<ThingDef>> defaultList)
+    {
+        DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.ApparelBlacklist, null, AllApparel);
+    }
+
     private void DrawRequiredApparel(Rect rect, bool active, List<ThingDef> defaultReq)
     {
         DrawDefList(rect, active, ref scrolls[scrollIndex++], Current.ApparelRequired, Current.Def.apparelRequired, AllApparel, false);
@@ -2309,6 +2387,11 @@ public class PawnKindEditUI : Window
     private void DrawWeaponTags(Rect rect, bool active, List<string> defaultTags)
     {
         DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.WeaponTags, Current.Def.weaponTags, AllWeaponsTags);
+    }
+
+    private void DrawWeaponBlacklist(Rect rect, bool active, List<DefRef<ThingDef>> defaultList)
+    {
+        DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.WeaponBlacklist, null, AllWeapons);
     }
 
     private void DrawBodyTypes(Rect rect, bool active, List<BodyTypeDef> defaultBodyTypes)

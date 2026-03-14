@@ -124,6 +124,10 @@ namespace FactionLoadout.Util
             foreach (var value in list)
             {
                 var created = new PawnGroupMaker();
+                created.kindDef = value.kindDef;
+                created.commonality = value.commonality;
+                created.maxTotalPoints = value.maxTotalPoints;
+                created.disallowedStrategies = value.disallowedStrategies == null ? null : new List<RaidStrategyDef>(value.disallowedStrategies);
                 created.options = CloneOptions(value.options);
                 created.carriers = CloneOptions(value.carriers);
                 created.guards = CloneOptions(value.guards);

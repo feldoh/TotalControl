@@ -97,10 +97,7 @@ public class ModCore : Mod
         );
         harmony.Patch(
             AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"),
-            postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch), "Postfix"))
-            {
-                before = new[] { "CombatExtended.HarmonyCE" }
-            }
+            postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch), "Postfix")) { before = new[] { "CombatExtended.HarmonyCE" } }
         );
         harmony.Patch(
             AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),

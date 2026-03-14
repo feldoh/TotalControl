@@ -11,10 +11,8 @@ public class Window_ColorPicker : Dialog_ColorPickerBase
 {
     public Action<Color> selectAction;
 
-    public static Widgets.ColorComponents visibleColorTextfields =
-        Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat | Widgets.ColorComponents.Value;
-    public static Widgets.ColorComponents editableColorTextfields =
-        Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat | Widgets.ColorComponents.Value;
+    public static Widgets.ColorComponents visibleColorTextfields = Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat | Widgets.ColorComponents.Value;
+    public static Widgets.ColorComponents editableColorTextfields = Widgets.ColorComponents.Hue | Widgets.ColorComponents.Sat | Widgets.ColorComponents.Value;
 
     private Texture2D _brightnessTex;
     private float _lastTexH = -1f;
@@ -113,11 +111,7 @@ public class Window_ColorPicker : Dialog_ColorPickerBase
 
     private void EnsureBrightnessTexture(float h, float s)
     {
-        if (
-            _brightnessTex != null
-            && Mathf.Approximately(_lastTexH, h)
-            && Mathf.Approximately(_lastTexS, s)
-        )
+        if (_brightnessTex != null && Mathf.Approximately(_lastTexH, h) && Mathf.Approximately(_lastTexS, s))
         {
             return;
         }
