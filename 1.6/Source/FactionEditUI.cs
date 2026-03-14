@@ -487,6 +487,7 @@ public class FactionEditUI : Window
                             RelationWithExtraPawnChanceFactor = 0,
                             ColonistRelationChanceFactor = 0,
                             ForceNoIdeo = true,
+                            ForbidAnyTitle = true,
                         }
                     );
                     pawns.Add(pawn);
