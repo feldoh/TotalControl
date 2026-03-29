@@ -15,7 +15,7 @@ namespace FactionLoadout.UISupport.DrawSupport;
 /// </summary>
 public static class ListDrawSupport
 {
-    public static void DrawDefRefList<T>(
+    public static CustomFloatMenu DrawDefRefList<T>(
         Rect rect,
         bool active,
         ref Vector2 scroll,
@@ -47,10 +47,11 @@ public static class ListDrawSupport
 
         if (active)
         {
+            CustomFloatMenu toReturn = null;
             if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "FactionLoadout_AddNew".Translate()))
             {
                 List<MenuItemBase> items = CustomFloatMenu.MakeItems(allDefs, makeItem ?? (d => new MenuItemText(d, GetLabel(d))));
-                CustomFloatMenu.Open(
+                toReturn = CustomFloatMenu.Open(
                     items,
                     raw =>
                     {
@@ -94,11 +95,14 @@ public static class ListDrawSupport
 
             if (toRemove != null)
                 current.Remove(toRemove);
+
+            return toReturn;
         }
         else
         {
             string txt = isGlobal ? "---" : $"[Default] {MakeDefaultString(defaults)}";
             Widgets.Label(rect.GetCentered(txt), txt);
+            return null;
         }
     }
 

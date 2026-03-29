@@ -94,7 +94,7 @@ public abstract class EditTab : Tab
 
     // ==================== List drawer wrappers ====================
 
-    protected void DrawDefRefList<T>(
+    protected CustomFloatMenu DrawDefRefList<T>(
         Rect rect,
         bool active,
         ref Vector2 scroll,

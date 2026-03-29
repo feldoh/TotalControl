@@ -43,7 +43,7 @@ public class ApparelTab : EditTab
         DrawOverride(ui, DefaultKind.apparelColor, ref Current.ApparelColor, "Apparel Color (where applicable)", DrawApparelColor, pasteGet: e => e.ApparelColor);
         DrawOverride(
             ui,
-            DefaultKind.apparelRequired,
+            (List<DefRef<ThingDef>>)null,
             ref Current.ApparelRequired,
             "Required Apparel (simple)",
             DrawRequiredApparel,
@@ -155,8 +155,8 @@ public class ApparelTab : EditTab
         DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.ApparelBlacklist, null, DefCache.AllApparel);
     }
 
-    private void DrawRequiredApparel(Rect rect, bool active, System.Collections.Generic.List<ThingDef> defaultReq)
+    private void DrawRequiredApparel(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> _)
     {
-        DrawDefList(rect, active, ref scrolls[scrollIndex++], Current.ApparelRequired, Current.Def.apparelRequired, DefCache.AllApparel, false);
+        DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.ApparelRequired, DefaultKind.apparelRequired, DefCache.AllApparel);
     }
 }

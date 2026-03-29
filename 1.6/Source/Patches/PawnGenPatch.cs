@@ -13,7 +13,7 @@ public static class PawnGenPatchBodyTypeDef
     [HarmonyPostfix]
     public static void Postfix(ref BodyTypeDef __result, Pawn pawn)
     {
-        PawnKindEdit.GetEditsFor(pawn.kindDef, pawn.Faction?.def).SelectMany(e => e.BodyTypes ?? []).TryRandomElement(out BodyTypeDef bodyTypeDef);
+        PawnKindEdit.GetEditsFor(pawn.kindDef, pawn.Faction?.def).SelectMany(e => e.BodyTypes ?? []).Select(r => r.Def).Where(d => d != null).TryRandomElement(out BodyTypeDef bodyTypeDef);
         if (bodyTypeDef != null)
         {
             __result = bodyTypeDef;
@@ -35,9 +35,9 @@ public static class PawnGenPatchCore
             if (forcedHediff.HediffDef == null || !Rand.Chance(forcedHediff.chance))
                 continue;
             Stack<BodyPartRecord> validParts =
-                forcedHediff.parts == null || forcedHediff.parts.Count == 0
+                forcedHediff.parts is not { Count: > 0 }
                     ? null
-                    : new Stack<BodyPartRecord>(__result.health.hediffSet.GetNotMissingParts().Where(p => forcedHediff.parts.Contains(p.def)).InRandomOrder());
+                    : new Stack<BodyPartRecord>(__result.health.hediffSet.GetNotMissingParts().Where(p => forcedHediff.parts.Any(r => r.Def == p.def)).InRandomOrder());
 
             int maxToApply = Math.Min(forcedHediff.PartsToHit(), validParts?.Count ?? 1);
             for (int i = 0; i < maxToApply; i++)

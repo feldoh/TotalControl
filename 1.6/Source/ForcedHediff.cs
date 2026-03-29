@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Xml;
 using FactionLoadout.Util;
 using Verse;
 
@@ -9,7 +11,7 @@ public class ForcedHediff : IExposable, IDeepCopyable<ForcedHediff>
 {
     private Lazy<HediffDef> resolvedHediffDef;
     public string hediffDef;
-    public List<BodyPartDef> parts;
+    public List<DefRef<BodyPartDef>> parts;
     public int maxParts = 1;
     public IntRange maxPartsRange = IntRange.One;
     public float chance = 1f;
@@ -37,7 +39,7 @@ public class ForcedHediff : IExposable, IDeepCopyable<ForcedHediff>
         new ForcedHediff
         {
             hediffDef = hediffDef,
-            parts = parts == null ? null : new List<BodyPartDef>(parts),
+            parts = parts == null ? null : new List<DefRef<BodyPartDef>>(parts),
             maxParts = maxParts,
             maxPartsRange = maxPartsRange,
             chance = chance,
@@ -46,7 +48,19 @@ public class ForcedHediff : IExposable, IDeepCopyable<ForcedHediff>
     public void ExposeData()
     {
         Scribe_Values.Look(ref hediffDef, "hediffDef");
-        Scribe_Collections.Look(ref parts, "parts", LookMode.Def);
+        if (Scribe.mode == LoadSaveMode.LoadingVars
+            && Scribe.loader.curXmlParent?["parts"] is { } partsNode
+            && partsNode.HasChildNodes
+            && partsNode.SelectSingleNode("li/defName") == null)
+        {
+            List<BodyPartDef> old = null;
+            Scribe_Collections.Look(ref old, "parts", LookMode.Def);
+            parts = old?.Where(d => d != null).Select(d => new DefRef<BodyPartDef>(d)).ToList();
+        }
+        else
+        {
+            Scribe_Collections.Look(ref parts, "parts", LookMode.Deep);
+        }
         Scribe_Values.Look(ref maxParts, "maxParts", 1);
         Scribe_Values.Look(ref maxPartsRange, "maxPartsRange", IntRange.One);
         Scribe_Values.Look(ref chance, "chance", 1f);

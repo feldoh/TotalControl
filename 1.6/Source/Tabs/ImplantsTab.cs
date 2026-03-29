@@ -41,7 +41,7 @@ public class ImplantsTab : EditTab
         );
         DrawOverride(
             ui,
-            DefaultKind.techHediffsRequired,
+            (List<DefRef<ThingDef>>)null,
             ref Current.TechRequired,
             "Required Implants & Bionics",
             DrawRequiredTech,
@@ -155,7 +155,7 @@ public class ImplantsTab : EditTab
             Rect validPartsRect = new(area.x, area.y + 160, (area.width) * 0.5f, area.height - 170);
             IEnumerable<BodyPartDef> bodyPartDefs = (Current.Race?.race ?? Current.Def.RaceProps).body.AllParts.Select(bpr => bpr.def).Distinct().ToList();
             item.parts ??= [];
-            DrawDefList(validPartsRect, true, ref scrolls[scrollIndex++], item.parts, null, bodyPartDefs, false);
+            DrawDefRefList(validPartsRect, true, ref scrolls[scrollIndex++], item.parts, null, bodyPartDefs);
             tempUI.Gap(3);
         }
     }
@@ -175,9 +175,9 @@ public class ImplantsTab : EditTab
         DrawStringList(rect, active, ref scrolls[scrollIndex++], Current.TechHediffDisallowedTags, Current.Def.techHediffsDisallowTags, DefCache.AllTechHediffTags);
     }
 
-    private void DrawRequiredTech(Rect rect, bool active, List<ThingDef> defaultReq)
+    private void DrawRequiredTech(Rect rect, bool active, List<DefRef<ThingDef>> _)
     {
-        DrawDefList(rect, active, ref scrolls[scrollIndex++], Current.TechRequired, Current.Def.techHediffsRequired, DefCache.AllTech, true);
+        DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.TechRequired, DefaultKind.techHediffsRequired, DefCache.AllTech);
     }
 
     private void DrawTechChance(Rect rect, bool active, float def)

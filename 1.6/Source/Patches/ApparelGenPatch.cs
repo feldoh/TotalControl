@@ -111,10 +111,10 @@ public static class ApparelGenPatch
     private static void Accumulate(AccumulatedApparelEdits edits, PawnKindEdit edit)
     {
         if (edit.CustomHair != null)
-            edits.hairs.AddRange(edit.CustomHair);
+            edits.hairs.AddRange(edit.CustomHair.Select(r => r.Def).Where(d => d != null));
 
         if (edit.CustomBeards != null)
-            edits.beards.AddRange(edit.CustomBeards);
+            edits.beards.AddRange(edit.CustomBeards.Select(r => r.Def).Where(d => d != null));
 
         if (edit.CustomHairColors != null)
             edits.hairColors.AddRange(edit.CustomHairColors);
@@ -128,7 +128,7 @@ public static class ApparelGenPatch
         if (edit.ForceOnlySelected)
             edits.anyForceOnlySelected = true;
 
-        edits.apparelRequired.AddRange(edit.ApparelRequired ?? []);
+        edits.apparelRequired.AddRange((edit.ApparelRequired ?? []).Select(r => r.Def).Where(d => d != null));
         edits.apparelTagsAllowed.AddRange(edit.ApparelTags ?? []);
 
         if (edit.SpecificApparel == null)

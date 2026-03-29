@@ -60,8 +60,8 @@ public static class PawnKindApplicator
         ReplaceUtils.ReplaceMaybeList(ref def.weaponTags, edit.WeaponTags, global?.WeaponTags != null);
         ReplaceUtils.ReplaceMaybeList(ref def.apparelTags, edit.ApparelTags, global?.ApparelTags != null);
         ReplaceUtils.ReplaceMaybeList(ref def.apparelDisallowTags, edit.ApparelDisallowedTags, global?.ApparelDisallowedTags != null);
-        ReplaceUtils.ReplaceMaybeList(ref def.apparelRequired, edit.ApparelRequired, global?.ApparelRequired != null);
-        ReplaceUtils.ReplaceMaybeList(ref def.techHediffsRequired, edit.TechRequired, global?.TechRequired != null);
+        ReplaceUtils.ReplaceMaybeDefRefList(ref def.apparelRequired, edit.ApparelRequired, global?.ApparelRequired != null);
+        ReplaceUtils.ReplaceMaybeDefRefList(ref def.techHediffsRequired, edit.TechRequired, global?.TechRequired != null);
 
         // Backstory filters override — BackstoryFilter extends BackstoryCategoryFilter, so cast directly.
         if (edit.BackstoryFiltersOverride is { Count: > 0 })

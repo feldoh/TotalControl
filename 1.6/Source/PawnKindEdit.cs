@@ -120,8 +120,8 @@ public class PawnKindEdit : IExposable
     public List<string> ApparelDisallowedTags = null;
     public List<DefRef<ThingDef>> ApparelBlacklist = null;
     public List<DefRef<ThingDef>> WeaponBlacklist = null;
-    public List<ThingDef> ApparelRequired = null;
-    public List<ThingDef> TechRequired = null;
+    public List<DefRef<ThingDef>> ApparelRequired = null;
+    public List<DefRef<ThingDef>> TechRequired = null;
     public List<SpecRequirementEdit> SpecificApparel = null;
     public List<SpecRequirementEdit> SpecificWeapons = null;
     public FloatRange? ApparelMoney = null;
@@ -134,9 +134,9 @@ public class PawnKindEdit : IExposable
     public Color? ApparelColor = null;
     public string Label = null;
     public ThingDef Race = null;
-    public List<HairDef> CustomHair = null;
-    public List<BeardDef> CustomBeards = null;
-    public List<BodyTypeDef> BodyTypes = null;
+    public List<DefRef<HairDef>> CustomHair = null;
+    public List<DefRef<BeardDef>> CustomBeards = null;
+    public List<DefRef<BodyTypeDef>> BodyTypes = null;
     public List<Color> CustomHairColors = null;
     public List<ForcedHediff> ForcedHediffs = null;
     public List<ForcedGene> ForcedGenes = null;
@@ -225,8 +225,8 @@ public class PawnKindEdit : IExposable
         Scribe_Collections.Look(ref ApparelDisallowedTags, "apparelDisallowedTags");
         Scribe_Collections.Look(ref ApparelBlacklist, "apparelBlacklist", LookMode.Deep);
         Scribe_Collections.Look(ref WeaponBlacklist, "weaponBlacklist", LookMode.Deep);
-        Scribe_Collections.Look(ref ApparelRequired, "apparelRequired", LookMode.Def);
-        Scribe_Collections.Look(ref TechRequired, "techRequired", LookMode.Def);
+        ScribeMigrateDefRefList(ref ApparelRequired, "apparelRequired");
+        ScribeMigrateDefRefList(ref TechRequired, "techRequired");
         Scribe_Collections.Look(ref SpecificApparel, "specificApparel", LookMode.Deep);
         Scribe_Collections.Look(ref SpecificWeapons, "specificWeapons", LookMode.Deep);
         Scribe_Deep.Look(ref Inventory, "inventory");
@@ -237,9 +237,9 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref Label, "label");
         Scribe_Defs.Look(ref Race, "race");
         Scribe_Values.Look(ref ForcedGender, "forcedGender");
-        Scribe_Collections.Look(ref BodyTypes, "bodyTypes", LookMode.Def);
-        Scribe_Collections.Look(ref CustomBeards, "customBeards", LookMode.Def);
-        Scribe_Collections.Look(ref CustomHair, "customHair", LookMode.Def);
+        ScribeMigrateDefRefList(ref BodyTypes, "bodyTypes");
+        ScribeMigrateDefRefList(ref CustomBeards, "customBeards");
+        ScribeMigrateDefRefList(ref CustomHair, "customHair");
         Scribe_Collections.Look(ref CustomHairColors, "customHairColors");
         Scribe_Collections.Look(ref ForcedHediffs, "forcedHediffs", LookMode.Deep);
         Scribe_Collections.Look(ref ForcedGenes, "forcedGenes", LookMode.Deep);
@@ -447,6 +447,34 @@ public class PawnKindEdit : IExposable
             }
         }
     }
+
+    // ==================== Serialization helpers ====================
+
+    /// <summary>
+    /// Reads a List&lt;DefRef&lt;T&gt;&gt; from XML, transparently migrating the old LookMode.Def
+    /// format (&lt;li&gt;defName&lt;/li&gt;) to the new LookMode.Deep DefRef format on first load.
+    /// After migration the file will be re-saved in the new format automatically.
+    /// </summary>
+    private static void ScribeMigrateDefRefList<T>(ref List<DefRef<T>> field, string xmlKey)
+        where T : Def, new()
+    {
+        if (Scribe.mode == LoadSaveMode.LoadingVars
+            && IsDefListOldFormat(Scribe.loader.curXmlParent?[xmlKey]))
+        {
+            List<T> old = null;
+            Scribe_Collections.Look(ref old, xmlKey, LookMode.Def);
+            field = old?.Where(d => d != null).Select(d => new DefRef<T>(d)).ToList();
+        }
+        else
+        {
+            Scribe_Collections.Look(ref field, xmlKey, LookMode.Deep);
+        }
+    }
+
+    private static bool IsDefListOldFormat(XmlNode collectionNode)
+        => collectionNode != null
+           && collectionNode.HasChildNodes
+           && collectionNode.SelectSingleNode("li/defName") == null;
 
     // ==================== Queries ====================
 
