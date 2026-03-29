@@ -49,17 +49,20 @@ public class GiddyUpModule : ITotalControlModule
         // Scribe_Values doesn't handle Nullable<int> reliably, so use -1 as sentinel for "no override".
         int mountChanceRaw = data.MountChance ?? -1;
         Dictionary<string, int> mounts = data.PossibleMounts;
+        bool disableMounts = data.DisableMounts ?? false;
 
         Scribe_Values.Look(ref mountChanceRaw, "mountChance", -1);
         Scribe_Collections.Look(ref mounts, "possibleMounts", LookMode.Value, LookMode.Value);
+        Scribe_Values.Look(ref disableMounts, "disableMounts", false);
 
         data.MountChance = mountChanceRaw >= 0 ? mountChanceRaw : null;
         data.PossibleMounts = mounts;
+        data.DisableMounts = disableMounts ? true : (bool?)null;
 
         // Clean up empty data to avoid cluttering saved XML
         if (Scribe.mode == LoadSaveMode.PostLoadInit)
         {
-            if (data.MountChance == null && (data.PossibleMounts == null || data.PossibleMounts.Count == 0))
+            if (data.MountChance == null && data.DisableMounts == null && (data.PossibleMounts == null || data.PossibleMounts.Count == 0))
                 dataStore.Remove(edit);
         }
     }
@@ -73,10 +76,11 @@ public class GiddyUpModule : ITotalControlModule
         GiddyUpData globalData = global != null ? GetData(global) : null;
 
         // Merge: specific edit overrides global
+        bool? disableMounts = data?.DisableMounts ?? globalData?.DisableMounts;
         int? mountChance = data?.MountChance ?? globalData?.MountChance;
         Dictionary<string, int> possibleMounts = data?.PossibleMounts ?? globalData?.PossibleMounts;
 
-        if (mountChance == null && (possibleMounts == null || possibleMounts.Count == 0))
+        if (disableMounts == null && mountChance == null && (possibleMounts == null || possibleMounts.Count == 0))
             return; // Nothing to apply
 
         def.modExtensions ??= [];
@@ -95,8 +99,17 @@ public class GiddyUpModule : ITotalControlModule
             def.modExtensions.Add(extension);
         }
 
-        if (mountChance != null)
+        // DisableMounts takes priority: writes -1 so GiddyUp always skips mount generation.
+        // MountChance 0 writes 0, which GiddyUp treats as "no pawnkind override" — falls through to faction defaults.
+        // MountChance 1-100 writes that value as a direct override.
+        if (disableMounts == true)
+        {
+            GiddyUpReflection.MountChanceField.SetValue(extension, -1);
+        }
+        else if (mountChance != null)
+        {
             GiddyUpReflection.MountChanceField.SetValue(extension, mountChance.Value);
+        }
 
         if (possibleMounts is not { Count: > 0 })
             return;
@@ -107,9 +120,13 @@ public class GiddyUpModule : ITotalControlModule
         {
             PawnKindDef kindDef = DefDatabase<PawnKindDef>.GetNamedSilentFail(kvp.Key);
             if (kindDef != null)
+            {
                 resolved[kindDef] = kvp.Value;
+            }
             else
+            {
                 ModCore.Warn($"GiddyUp module: Could not resolve PawnKindDef '{kvp.Key}' for mount.");
+            }
         }
 
         if (resolved.Count > 0)
@@ -122,7 +139,12 @@ public class GiddyUpModule : ITotalControlModule
         if (data == null)
             return;
 
-        GiddyUpData copy = new() { MountChance = data.MountChance, PossibleMounts = data.PossibleMounts != null ? new Dictionary<string, int>(data.PossibleMounts) : null };
+        GiddyUpData copy = new()
+        {
+            MountChance = data.MountChance,
+            DisableMounts = data.DisableMounts,
+            PossibleMounts = data.PossibleMounts != null ? new Dictionary<string, int>(data.PossibleMounts) : null,
+        };
         dataStore[dest] = copy;
     }
 

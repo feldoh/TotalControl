@@ -131,6 +131,16 @@
     <GiddyUp_Mounts>GiddyUp Mounts</GiddyUp_Mounts>
     <FactionLoadout_AddMount>Add mount...</FactionLoadout_AddMount>
     <FactionLoadout_ClearMounts>Clear all mounts</FactionLoadout_ClearMounts>
+    <GU_DisableMounts>Disable Mounts</GU_DisableMounts>
+    <GU_DisableMounts_Tip>Forces this pawnkind to never spawn with a mount, overriding GiddyUp's faction mount chance. Use this instead of setting chance to 0%.</GU_DisableMounts_Tip>
+    <GU_MountChance>Mount Chance</GU_MountChance>
+    <GU_MountChanceValue>Mount Chance: {0}%</GU_MountChanceValue>
+    <GU_MountChanceDefault_Known>Mount Chance: (default: {0}%)</GU_MountChanceDefault_Known>
+    <GU_MountChanceDefault_Unknown>Mount Chance: (default)</GU_MountChanceDefault_Unknown>
+    <GU_ZeroMountChanceNote>⚠ 0% inherits GiddyUp's faction-level mount chance rather than disabling mounts. Use the Disable Mounts checkbox above to prevent mount spawning entirely.</GU_ZeroMountChanceNote>
+    <GU_PossibleMounts>Possible Mounts</GU_PossibleMounts>
+    <GU_DefDefaults>Def defaults:</GU_DefDefaults>
+    <GU_Weight>weight {0}</GU_Weight>
 
     <!-- Clipboard -->
     <FactionLoadout_Clipboard_Copy>Copy</FactionLoadout_Clipboard_Copy>
