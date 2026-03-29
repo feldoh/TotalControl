@@ -4,6 +4,7 @@ using CombatExtended;
 using FactionLoadout;
 using FactionLoadout.Modules;
 using FactionLoadout.UISupport;
+using RimWorld;
 using Verse;
 
 namespace TotalControlCECompat;
@@ -320,6 +321,12 @@ public class CEModule : ITotalControlModule
     {
         tabs.Add(new Tab("FactionLoadout_Tab_CE".Translate(), ui => CombatExtendedUI.DrawTab(ui, edit, defaultKind)));
     }
+
+    public void AddFactionUI(FactionEdit edit, Listing_Standard ui) { }
+
+    public void ExposeFactionData(FactionEdit edit) { }
+
+    public void ApplyFaction(FactionEdit edit, FactionDef def) { }
 
     // --- Conversion helpers ---
 

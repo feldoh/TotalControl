@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using FactionLoadout.Modules;
 using FactionLoadout.Patches;
 using FactionLoadout.UISupport;
 using FactionLoadout.Util;
@@ -210,6 +211,21 @@ public class FactionEditUI : Window
                 GUI.color = new Color(1f, 0.6f, 0.1f);
                 Widgets.Label(warnRow, warnText);
                 GUI.color = Color.white;
+            }
+        }
+
+        // Give each active module a chance to add faction-level UI (e.g. a button row).
+        foreach (ITotalControlModule module in ModuleRegistry.Modules)
+        {
+            if (!module.IsActive)
+                continue;
+            try
+            {
+                module.AddFactionUI(Current, inner);
+            }
+            catch (Exception e)
+            {
+                ModCore.Error($"Error drawing faction UI for module '{module.ModuleName}'", e);
             }
         }
 

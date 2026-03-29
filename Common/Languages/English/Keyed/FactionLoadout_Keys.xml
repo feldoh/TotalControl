@@ -141,6 +141,24 @@
     <GU_PossibleMounts>Possible Mounts</GU_PossibleMounts>
     <GU_DefDefaults>Def defaults:</GU_DefDefaults>
     <GU_Weight>weight {0}</GU_Weight>
+    <GU_FactionMounts>Faction Mount Settings</GU_FactionMounts>
+    <GU_EditFactionMounts>Edit Faction Mount Settings...</GU_EditFactionMounts>
+    <GU_FactionDialog_Title>GiddyUp Faction Mount Restrictions</GU_FactionDialog_Title>
+    <GU_FactionMountChance>Faction Mount Chance</GU_FactionMountChance>
+    <GU_FactionMountChanceDefault>Default (GiddyUp global setting)</GU_FactionMountChanceDefault>
+    <GU_AnimalWeights>Animal Type Weights</GU_AnimalWeights>
+    <GU_AnimalWeights_Note>Controls relative probability of wild vs. domestic animals being chosen as mounts. Higher weight = more likely. Leave as Default to use GiddyUp's global values.</GU_AnimalWeights_Note>
+    <GU_WildAnimalWeight>Wild Animal Weight</GU_WildAnimalWeight>
+    <GU_NonWildAnimalWeight>Domestic Animal Weight</GU_NonWildAnimalWeight>
+    <GU_WeightDefault>Default</GU_WeightDefault>
+    <GU_WeightDefault_Known>Default ({0})</GU_WeightDefault_Known>
+    <GU_WeightDefault_Tip>No override set — GiddyUp will use its own global animal weight settings.</GU_WeightDefault_Tip>
+    <GU_AllowedWildAnimals>Wild Animal Whitelist</GU_AllowedWildAnimals>
+    <GU_AllowedWildAnimals_Note>When set, only these wild animals can be chosen as mounts for this faction. Leave empty to allow all wild animals.</GU_AllowedWildAnimals_Note>
+    <GU_AllowedNonWildAnimals>Domestic Animal Whitelist</GU_AllowedNonWildAnimals>
+    <GU_AllowedNonWildAnimals_Note>When set, only these domestic animals can be chosen as mounts for this faction. Leave empty to allow all domestic animals.</GU_AllowedNonWildAnimals_Note>
+    <GU_AddWildAnimal>Add wild animal...</GU_AddWildAnimal>
+    <GU_AddNonWildAnimal>Add domestic animal...</GU_AddNonWildAnimal>
 
     <!-- Clipboard -->
     <FactionLoadout_Clipboard_Copy>Copy</FactionLoadout_Clipboard_Copy>

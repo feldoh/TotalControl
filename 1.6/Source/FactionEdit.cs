@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
+using FactionLoadout.Modules;
 using FactionLoadout.Util;
 using HarmonyLib;
 using RimWorld;
@@ -17,6 +19,9 @@ public class FactionEdit : IExposable
     public ThingFilter ApparelStuffFilter;
     public TechLevel? TechLevel = null;
     public bool DeletedOrClosed;
+
+    /// <summary>Raw XML preserved for faction-level module data belonging to inactive modules.</summary>
+    private Dictionary<string, string> preservedFactionModuleXml;
 
     public DefRef<FactionDef> Faction = new();
     public List<PawnKindEdit> KindEdits = [];
@@ -46,12 +51,120 @@ public class FactionEdit : IExposable
             MaterializeXenotypeChances();
         Scribe_Values.Look(ref OverrideFactionXenotypes, "overrideFactionXenotypes", false);
         Scribe_Collections.Look(ref PawnGroupMakerEdits, "groupEdits", LookMode.Deep);
+        ExposeModuleFactionData();
+
         if (Scribe.mode != LoadSaveMode.PostLoadInit)
             return;
 
         MaterializeXenotypeChances();
         if (!(xenotypeChances.NullOrEmpty() && xenotypeChancesByDef.NullOrEmpty()))
             OverrideFactionXenotypes = true;
+    }
+
+    /// <summary>
+    /// Serializes/deserializes faction-level module data. Mirrors PawnKindEdit.ExposeModuleData
+    /// but operates on a &lt;factionModules&gt; node and calls module.ExposeFactionData instead.
+    /// Unrecognized child nodes are preserved as raw XML to prevent data loss when modules are
+    /// temporarily disabled.
+    /// </summary>
+    private void ExposeModuleFactionData()
+    {
+        IReadOnlyList<ITotalControlModule> modules = ModuleRegistry.Modules;
+
+        if (Scribe.mode == LoadSaveMode.LoadingVars)
+        {
+            XmlNode factionModulesNode = Scribe.loader.curXmlParent?["factionModules"];
+            if (factionModulesNode == null)
+                return;
+
+            foreach (XmlNode child in factionModulesNode.ChildNodes)
+            {
+                ITotalControlModule module = ModuleRegistry.GetModule(child.Name);
+                if (module is { IsActive: true })
+                {
+                    XmlNode previousParent = Scribe.loader.curXmlParent;
+                    Scribe.loader.curXmlParent = child;
+                    try
+                    {
+                        module.ExposeFactionData(this);
+                    }
+                    catch (Exception e)
+                    {
+                        ModCore.Error($"Error loading faction module data for '{module.ModuleName}' (key: {module.ModuleKey})", e);
+                    }
+
+                    Scribe.loader.curXmlParent = previousParent;
+                }
+                else
+                {
+                    preservedFactionModuleXml ??= new Dictionary<string, string>();
+                    preservedFactionModuleXml[child.Name] = child.InnerXml;
+                    ModCore.Debug($"Preserving faction module data for absent module '{child.Name}'");
+                }
+            }
+        }
+        else if (Scribe.mode == LoadSaveMode.Saving)
+        {
+            bool hasActiveModules = modules.Any(m => m.IsActive);
+            bool hasPreserved = preservedFactionModuleXml is { Count: > 0 };
+
+            if (!hasActiveModules && !hasPreserved)
+                return;
+
+            Scribe.saver.EnterNode("factionModules");
+            try
+            {
+                foreach (ITotalControlModule module in modules)
+                {
+                    if (!module.IsActive)
+                        continue;
+                    Scribe.saver.EnterNode(module.ModuleKey);
+                    try
+                    {
+                        module.ExposeFactionData(this);
+                    }
+                    catch (Exception e)
+                    {
+                        ModCore.Error($"Error saving faction module data for '{module.ModuleName}' (key: {module.ModuleKey})", e);
+                    }
+
+                    Scribe.saver.ExitNode();
+                }
+
+                if (preservedFactionModuleXml != null)
+                {
+                    HashSet<string> activeKeys = new(modules.Where(m => m.IsActive).Select(m => m.ModuleKey));
+                    foreach (KeyValuePair<string, string> kvp in preservedFactionModuleXml)
+                    {
+                        if (activeKeys.Contains(kvp.Key))
+                            continue;
+                        Scribe.saver.writer.WriteStartElement(kvp.Key);
+                        Scribe.saver.writer.WriteRaw(kvp.Value);
+                        Scribe.saver.writer.WriteEndElement();
+                    }
+                }
+            }
+            finally
+            {
+                Scribe.saver.ExitNode();
+            }
+        }
+        else if (Scribe.mode == LoadSaveMode.PostLoadInit)
+        {
+            foreach (ITotalControlModule module in modules)
+            {
+                if (!module.IsActive)
+                    continue;
+                try
+                {
+                    module.ExposeFactionData(this);
+                }
+                catch (Exception e)
+                {
+                    ModCore.Error($"Error in post-load init for faction module '{module.ModuleName}' (key: {module.ModuleKey})", e);
+                }
+            }
+        }
     }
 
     /**
@@ -253,6 +366,21 @@ public class FactionEdit : IExposable
         if (PawnGroupMakerEdits != null)
         {
             def.pawnGroupMakers = PawnGroupMakerEdits.Select(e => e.ToPawnGroupMaker()).ToList();
+        }
+
+        // Give each active module a chance to apply faction-level data to the FactionDef.
+        foreach (ITotalControlModule module in ModuleRegistry.Modules)
+        {
+            if (!module.IsActive)
+                continue;
+            try
+            {
+                module.ApplyFaction(this, def);
+            }
+            catch (Exception e)
+            {
+                ModCore.Error($"Error applying faction module '{module.ModuleName}'", e);
+            }
         }
 
         PawnKindEdit global = GetGlobalEditor();

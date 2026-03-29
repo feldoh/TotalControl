@@ -3,6 +3,8 @@ using FactionLoadout;
 using FactionLoadout.Modules;
 using FactionLoadout.UISupport;
 using HarmonyLib;
+using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace TotalControlGiddyUpCompat;
@@ -23,6 +25,25 @@ public class GiddyUpModule : ITotalControlModule
 
     // Per-PawnKindEdit data storage
     private static readonly Dictionary<PawnKindEdit, GiddyUpData> dataStore = new();
+
+    // Per-FactionEdit data storage
+    private static readonly Dictionary<FactionEdit, GiddyUpFactionData> factionDataStore = new();
+
+    public static GiddyUpFactionData GetFactionData(FactionEdit edit)
+    {
+        return factionDataStore.TryGetValue(edit, out GiddyUpFactionData data) ? data : null;
+    }
+
+    public static GiddyUpFactionData GetOrCreateFactionData(FactionEdit edit)
+    {
+        if (!factionDataStore.TryGetValue(edit, out GiddyUpFactionData data))
+        {
+            data = new GiddyUpFactionData();
+            factionDataStore[edit] = data;
+        }
+
+        return data;
+    }
 
     public void Initialize() => GiddyUpReflection.Resolve();
 
@@ -57,7 +78,7 @@ public class GiddyUpModule : ITotalControlModule
 
         data.MountChance = mountChanceRaw >= 0 ? mountChanceRaw : null;
         data.PossibleMounts = mounts;
-        data.DisableMounts = disableMounts ? true : (bool?)null;
+        data.DisableMounts = disableMounts ? true : null;
 
         // Clean up empty data to avoid cluttering saved XML
         if (Scribe.mode == LoadSaveMode.PostLoadInit)
@@ -146,6 +167,131 @@ public class GiddyUpModule : ITotalControlModule
             PossibleMounts = data.PossibleMounts != null ? new Dictionary<string, int>(data.PossibleMounts) : null,
         };
         dataStore[dest] = copy;
+    }
+
+    public void AddFactionUI(FactionEdit edit, Listing_Standard ui)
+    {
+        ui.GapLine();
+
+        Text.Font = GameFont.Small;
+        Text.Anchor = TextAnchor.MiddleLeft;
+        Rect row = ui.GetRect(30f);
+        Widgets.Label(row.LeftPartPixels(row.width - 224f), "<b>" + "GU_FactionMounts".Translate() + "</b>");
+        Text.Anchor = TextAnchor.UpperLeft;
+
+        if (Widgets.ButtonText(row.RightPartPixels(220f), "GU_EditFactionMounts".Translate()))
+            Find.WindowStack.Add(new GiddyUpFactionDialog(edit));
+    }
+
+    public void ExposeFactionData(FactionEdit edit)
+    {
+        GiddyUpFactionData data = GetOrCreateFactionData(edit);
+
+        int mountChanceRaw = data.MountChance ?? -1;
+        int wildWeightRaw = data.WildAnimalWeight ?? -1;
+        int nonWildWeightRaw = data.NonWildAnimalWeight ?? -1;
+        List<string> wildAnimals = data.AllowedWildAnimals;
+        List<string> nonWildAnimals = data.AllowedNonWildAnimals;
+
+        Scribe_Values.Look(ref mountChanceRaw, "mountChance", -1);
+        Scribe_Values.Look(ref wildWeightRaw, "wildAnimalWeight", -1);
+        Scribe_Values.Look(ref nonWildWeightRaw, "nonWildAnimalWeight", -1);
+        Scribe_Collections.Look(ref wildAnimals, "allowedWildAnimals", LookMode.Value);
+        Scribe_Collections.Look(ref nonWildAnimals, "allowedNonWildAnimals", LookMode.Value);
+
+        data.MountChance = mountChanceRaw >= 0 ? mountChanceRaw : null;
+        data.WildAnimalWeight = wildWeightRaw >= 0 ? wildWeightRaw : null;
+        data.NonWildAnimalWeight = nonWildWeightRaw >= 0 ? nonWildWeightRaw : null;
+        data.AllowedWildAnimals = wildAnimals;
+        data.AllowedNonWildAnimals = nonWildAnimals;
+
+        if (Scribe.mode == LoadSaveMode.PostLoadInit)
+        {
+            bool isEmpty = data.MountChance == null
+                           && data.WildAnimalWeight == null
+                           && data.NonWildAnimalWeight == null
+                           && (data.AllowedWildAnimals == null || data.AllowedWildAnimals.Count == 0)
+                           && (data.AllowedNonWildAnimals == null || data.AllowedNonWildAnimals.Count == 0);
+
+            if (isEmpty)
+                factionDataStore.Remove(edit);
+        }
+    }
+
+    public void ApplyFaction(FactionEdit edit, FactionDef def)
+    {
+        if (!GiddyUpReflection.IsFactionResolved)
+            return;
+
+        GiddyUpFactionData data = GetFactionData(edit);
+        if (data == null)
+            return;
+
+        bool hasData = data.MountChance != null
+                       || data.WildAnimalWeight != null
+                       || data.NonWildAnimalWeight != null
+                       || (data.AllowedWildAnimals != null && data.AllowedWildAnimals.Count > 0)
+                       || (data.AllowedNonWildAnimals != null && data.AllowedNonWildAnimals.Count > 0);
+
+        if (!hasData)
+            return;
+
+        def.modExtensions ??= [];
+
+        DefModExtension extension = def.modExtensions.FirstOrDefault(e => e.GetType() == GiddyUpReflection.FactionRestrictionsType);
+        if (extension == null)
+        {
+            extension = AccessTools.CreateInstance(GiddyUpReflection.FactionRestrictionsType) as DefModExtension;
+            if (extension == null)
+            {
+                ModCore.Warn("GiddyUp module: Failed to create FactionRestrictions instance.");
+                return;
+            }
+
+            def.modExtensions.Add(extension);
+        }
+
+        if (data.MountChance != null)
+            GiddyUpReflection.FactionMountChanceField.SetValue(extension, data.MountChance.Value);
+
+        if (data.WildAnimalWeight != null && GiddyUpReflection.WildAnimalWeightField != null)
+            GiddyUpReflection.WildAnimalWeightField.SetValue(extension, data.WildAnimalWeight.Value);
+
+        if (data.NonWildAnimalWeight != null && GiddyUpReflection.NonWildAnimalWeightField != null)
+            GiddyUpReflection.NonWildAnimalWeightField.SetValue(extension, data.NonWildAnimalWeight.Value);
+
+        if (data.AllowedWildAnimals is { Count: > 0 } && GiddyUpReflection.AllowedWildAnimalsField != null)
+        {
+            List<PawnKindDef> resolved = ResolveAnimalList(data.AllowedWildAnimals);
+            if (resolved.Count > 0)
+                GiddyUpReflection.AllowedWildAnimalsField.SetValue(extension, resolved);
+        }
+
+        if (data.AllowedNonWildAnimals is { Count: > 0 } && GiddyUpReflection.AllowedNonWildAnimalsField != null)
+        {
+            List<PawnKindDef> resolved = ResolveAnimalList(data.AllowedNonWildAnimals);
+            if (resolved.Count > 0)
+                GiddyUpReflection.AllowedNonWildAnimalsField.SetValue(extension, resolved);
+        }
+    }
+
+    private static List<PawnKindDef> ResolveAnimalList(List<string> defNames)
+    {
+        List<PawnKindDef> result = [];
+        foreach (string defName in defNames)
+        {
+            PawnKindDef kind = DefDatabase<PawnKindDef>.GetNamedSilentFail(defName);
+            if (kind != null)
+            {
+                result.Add(kind);
+            }
+            else
+            {
+                ModCore.Warn($"GiddyUp module: Could not resolve PawnKindDef '{defName}' for faction animal whitelist.");
+            }
+        }
+
+        return result;
     }
 
     public void AddTabs(PawnKindEdit edit, PawnKindDef defaultKind, List<Tab> tabs)

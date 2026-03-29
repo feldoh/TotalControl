@@ -4,6 +4,7 @@ using Exosuit;
 using FactionLoadout;
 using FactionLoadout.Modules;
 using FactionLoadout.UISupport;
+using RimWorld;
 using Verse;
 
 namespace TotalControlMechsuitCompat;
@@ -63,6 +64,12 @@ public class MechsuitModule : ITotalControlModule
 
         tabs.Add(new Tab("Exosuit", ui => MechsuitUI.DrawExosuitTab(ui, edit, defaultKind)));
     }
+
+    public void AddFactionUI(FactionEdit edit, Listing_Standard ui) { }
+
+    public void ExposeFactionData(FactionEdit edit) { }
+
+    public void ApplyFaction(FactionEdit edit, FactionDef def) { }
 
     public void ExposeData(PawnKindEdit edit)
     {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using FactionLoadout.UISupport;
+using RimWorld;
 using Verse;
 
 namespace FactionLoadout.Modules;
@@ -79,4 +80,34 @@ public interface ITotalControlModule
     /// <param name="source">The PawnKindEdit being copied from.</param>
     /// <param name="dest">The PawnKindEdit being copied to.</param>
     void CopyData(PawnKindEdit source, PawnKindEdit dest);
+
+    // ── Faction-level hooks ──────────────────────────────────────────────────
+
+    /// <summary>
+    /// Add a button row (or other UI) to the FactionEditUI after the Spawn Groups section.
+    /// Only called when <see cref="IsActive"/> is true.
+    /// Implement as a no-op if this module has no faction-level settings.
+    /// </summary>
+    /// <param name="edit">The FactionEdit currently open in the editor.</param>
+    /// <param name="ui">The Listing_Standard to draw into (inside the scroll view).</param>
+    void AddFactionUI(FactionEdit edit, Listing_Standard ui);
+
+    /// <summary>
+    /// Serialize or deserialize faction-level module data inside a FactionEdit.
+    /// Called inside a Scribe enter/exit node block for this module's <see cref="ModuleKey"/>
+    /// under a top-level &lt;factionModules&gt; node in the FactionEdit XML.
+    /// Implement as a no-op if this module has no faction-level data.
+    /// </summary>
+    /// <param name="edit">The FactionEdit whose data is being serialized.</param>
+    void ExposeFactionData(FactionEdit edit);
+
+    /// <summary>
+    /// Apply faction-level module data to a FactionDef at runtime.
+    /// Called from <see cref="FactionEdit.Apply"/> after core faction edits are applied
+    /// but before per-pawnkind iteration begins.
+    /// Implement as a no-op if this module has no faction-level data to apply.
+    /// </summary>
+    /// <param name="edit">The FactionEdit containing the user's configuration.</param>
+    /// <param name="def">The FactionDef being modified.</param>
+    void ApplyFaction(FactionEdit edit, FactionDef def);
 }
