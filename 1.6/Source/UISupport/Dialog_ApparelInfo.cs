@@ -41,7 +41,7 @@ namespace FactionLoadout
             }
 
             Rect textRect = new Rect(body.x + 72f, body.y, body.width - 72f, body.height - 36f);
-            string info = PawnKindEditUI.BuildApparelTooltip(_def);
+            string info = DefUtils.BuildApparelTooltip(_def);
             Widgets.Label(textRect, info ?? string.Empty);
         }
     }

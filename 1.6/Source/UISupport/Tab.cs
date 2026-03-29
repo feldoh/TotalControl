@@ -21,13 +21,13 @@ public class Tab
         this.draw = draw;
     }
 
-    public void Draw(Listing_Standard ui)
+    public virtual void Draw(Listing_Standard ui)
     {
         DrawRegionTitle(ui, Name);
         draw?.Invoke(ui);
     }
 
-    private static void DrawRegionTitle(Listing_Standard ui, string title)
+    protected static void DrawRegionTitle(Listing_Standard ui, string title)
     {
         ui.GapLine(26);
         Widgets.Label(ui.GetRect(42), $"<size=26><b><color=#73fff2>{title}</color></b></size>");

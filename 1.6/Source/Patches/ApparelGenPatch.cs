@@ -256,7 +256,7 @@ public static class ApparelGenPatch
 
 /// <summary>
 /// Prevents blacklisted ThingDefs from entering vanilla's apparel candidate pool.
-/// Uses <see cref="PawnKindEdit.ApparelBlacklistCache"/> populated at Apply() time
+/// Uses <see cref="DefCache.ApparelBlacklistCache"/> populated at Apply() time
 /// for O(1) lookup per pair — no per-pawn edit iteration at patch time.
 /// </summary>
 [HarmonyPatch(typeof(PawnApparelGenerator), "CanUsePair")]
@@ -267,7 +267,7 @@ public static class CanUsePairBlacklistPatch
         if (!__result)
             return;
 
-        if (PawnKindEdit.ApparelBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
+        if (DefCache.ApparelBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
             __result = false;
     }
 }

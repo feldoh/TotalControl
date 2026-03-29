@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Reflection;
+using FactionLoadout.Util;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Verse;
 
 namespace FactionLoadout.Modules;
 
-public static class VEPsycastsReflectionHelper
+public static class VEPsycastsReflectionModule
 {
     public const string VpeExtensionClassName = "VanillaPsycastsExpanded.PawnKindAbilityExtension_Psycasts";
     public const string VEAbilityExtensionClassName = "VanillaPsycastsExpanded.AbilityExtension_Psycast";
@@ -36,5 +37,33 @@ public static class VEPsycastsReflectionHelper
         _lastDef = currentDef;
         _lastExtension = currentDef.modExtensions?.Find(me => me.GetType().FullName == VpeExtensionClassName);
         return _lastExtension;
+    }
+
+    public static void ApplyVEPsycastsEdits(PawnKindEdit edit, PawnKindDef def)
+    {
+        if (!ModLoaded.Value)
+            return;
+        if (edit.VEPsycastLevel == null && edit.VEPsycastStatPoints == null && edit.VEPsycastRandomAbilities == null)
+            return;
+
+        def.modExtensions ??= [];
+        DefModExtension vePsycastExtension = FindVEPsycastsExtension(def);
+        if (vePsycastExtension == null)
+        {
+            vePsycastExtension = AccessTools.CreateInstance(VpeExtensionType.Value) as DefModExtension;
+            ImplantDefField.Value?.SetValue(vePsycastExtension, DefDatabase<HediffDef>.GetNamed("VPE_PsycastAbilityImplant"));
+            UnlockedPathsField.Value?.SetValue(
+                vePsycastExtension,
+                AccessTools.CreateInstance(ClosedUnlockedPathsListGenericType.Value)
+            );
+            def.modExtensions.Add(vePsycastExtension);
+        }
+
+        if (edit.VEPsycastLevel != null)
+            LevelField.Value?.SetValue(vePsycastExtension, edit.VEPsycastLevel);
+        if (edit.VEPsycastStatPoints != null)
+            StatUpgradePointsField.Value?.SetValue(vePsycastExtension, edit.VEPsycastStatPoints);
+        if (edit.VEPsycastRandomAbilities != null)
+            GiveRandomAbilitiesField.Value?.SetValue(vePsycastExtension, edit.VEPsycastRandomAbilities);
     }
 }

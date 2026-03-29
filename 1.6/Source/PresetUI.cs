@@ -200,7 +200,7 @@ public class PresetUI : Window
             }
             List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                 raw,
-                f => new MenuItemText(f, $"{f.LabelCap} ({f.defName})", PawnKindEditUI.TryGetIcon(f, out Color c), c, f.description)
+                f => new MenuItemText(f, $"{f.LabelCap} ({f.defName})", DefUtils.TryGetIcon(f, out Color c), c, f.description)
             );
 
             CustomFloatMenu.Open(

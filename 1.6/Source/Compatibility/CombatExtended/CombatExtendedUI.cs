@@ -569,7 +569,7 @@ public static class CombatExtendedUI
             issues.Add("FactionLoadout_CE_Warn_NoTags".Translate());
 
         // CE guard: sidearmMoney.RandomInRange == 0 → w.Price <= 0 never true → nothing qualifies
-        if (s.SidearmMoney == null || (s.SidearmMoney.Value.min <= 0f && s.SidearmMoney.Value.max <= 0f))
+        if (s.SidearmMoney == null || s.SidearmMoney.Value is { min: <= 0f, max: <= 0f })
             issues.Add("FactionLoadout_CE_Warn_NoMoney".Translate());
 
         // Note: generate chance 0 is intentional (temporary disable) — not included here.
@@ -582,7 +582,7 @@ public static class CombatExtendedUI
     /// Returns true when the entry is intentionally disabled via a 0% generate chance.
     /// This is not an error — the user may be keeping the config for later use.
     /// </summary>
-    private static bool IsSidearmDisabled(SidearmData s) => s.GenerateChance.HasValue && s.GenerateChance.Value <= 0f;
+    private static bool IsSidearmDisabled(SidearmData s) => s.GenerateChance is <= 0f;
 
     private static void DrawForcedSidearmSection(Listing_Standard ui, CEData data)
     {
@@ -738,7 +738,7 @@ public static class CombatExtendedUI
         Widgets.Label(ui.GetRect(Text.LineHeight), prefix + "FactionLoadout_CE_WeaponTags".Translate());
         Text.Anchor = TextAnchor.UpperLeft;
         s.WeaponTags ??= [];
-        UIHelpers.DrawStringListSection(ui, s.WeaponTags, PawnKindEditUI.AllWeaponsTags ?? [], indent: true);
+        UIHelpers.DrawStringListSection(ui, s.WeaponTags, DefCache.AllWeaponsTags ?? [], indent: true);
         ui.Gap(2f);
 
         DrawAttachmentDataInline(ui, ref s.Attachments, prefix + "FactionLoadout_CE_Attachments".Translate());

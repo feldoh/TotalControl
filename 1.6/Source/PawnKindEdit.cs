@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
 using FactionLoadout.Modules;
 using FactionLoadout.Util;
-using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -15,17 +13,10 @@ namespace FactionLoadout;
 
 public class PawnKindEdit : IExposable
 {
+    // ==================== Static registry ====================
+
     public static Dictionary<PawnKindDef, List<PawnKindEdit>> activeEdits = new();
     public static Dictionary<PawnKindDef, PawnKindDef> replacementToOriginal = new();
-
-    /// <summary>
-    /// Pre-cached blacklists built at apply time: cloned PawnKindDef → blacklisted ThingDefs.
-    /// Includes both global and specific edits merged. Keyed by cloned def for O(1) lookup at generation time.
-    /// </summary>
-    public static Dictionary<PawnKindDef, HashSet<ThingDef>> ApparelBlacklistCache = new();
-    public static Dictionary<PawnKindDef, HashSet<ThingDef>> WeaponBlacklistCache = new();
-
-    public static RulePackDef FakeRulePack = new() { defName = "NONE" };
 
     public static void RecordReplacement(PawnKindDef original, PawnKindDef replacement) => replacementToOriginal.SetOrAdd(replacement, original);
 
@@ -36,10 +27,7 @@ public class PawnKindEdit : IExposable
         return currentEdits;
     }
 
-    public static void SetActiveEdits(PawnKindDef pawnKindDef, List<PawnKindEdit> edits)
-    {
-        activeEdits.SetOrAdd(pawnKindDef, edits);
-    }
+    public static void SetActiveEdits(PawnKindDef pawnKindDef, List<PawnKindEdit> edits) => activeEdits.SetOrAdd(pawnKindDef, edits);
 
     public static PawnKindDef NormaliseDef(PawnKindDef def) => replacementToOriginal.TryGetValue(def, def);
 
@@ -64,29 +52,17 @@ public class PawnKindEdit : IExposable
     public static FactionDef ForcedFactionForEditing(PawnKindDef def, FactionDef fallbackFactionDef)
     {
         if (def == null)
-        {
             return fallbackFactionDef;
-        }
-
         if (def == PawnKindDefOf.WildMan)
-        {
             return Preset.SpecialWildManFaction;
-        }
-
         if (def is CreepJoinerFormKindDef)
-        {
             return Preset.SpecialCreepjoinerFaction;
-        }
-
         if (fallbackFactionDef == null && Preset.FactionlessPawnKindsSet.Contains(def))
-        {
             return Preset.SpecialFactionlessPawnsFaction;
-        }
-
         return fallbackFactionDef;
     }
 
-    private static void AddActiveEdit(PawnKindDef def, PawnKindEdit edit)
+    public static void AddActiveEdit(PawnKindDef def, PawnKindEdit edit)
     {
         if (def == null || edit == null)
             return;
@@ -101,37 +77,7 @@ public class PawnKindEdit : IExposable
             list.Add(edit);
     }
 
-    private void BuildBlacklistCaches(PawnKindDef def, PawnKindEdit global)
-    {
-        HashSet<ThingDef> apparelBl = (global?.ApparelBlacklist ?? Enumerable.Empty<DefRef<ThingDef>>())
-            .ConcatIfNotNull(ApparelBlacklist)
-            .Where(r => r.HasValue)
-            .Select(r => r.Def)
-            .ToHashSet();
-        if (apparelBl.Count > 0)
-        {
-            ApparelBlacklistCache[def] = apparelBl;
-        }
-        else
-        {
-            ApparelBlacklistCache.Remove(def);
-        }
-
-        HashSet<ThingDef> weaponBl = (global?.WeaponBlacklist ?? Enumerable.Empty<DefRef<ThingDef>>())
-            .ConcatIfNotNull(WeaponBlacklist)
-            .Where(r => r.HasValue)
-            .Select(r => r.Def)
-            .ToHashSet();
-
-        if (weaponBl.Count > 0)
-        {
-            WeaponBlacklistCache[def] = weaponBl;
-        }
-        else
-        {
-            WeaponBlacklistCache.Remove(def);
-        }
-    }
+    // ==================== Instance fields ====================
 
     public FactionEdit ParentEdit => Preset.LoadedPresets.SelectMany(preset => preset.factionChanges).FirstOrDefault(change => change.KindEdits.Contains(this));
 
@@ -144,8 +90,9 @@ public class PawnKindEdit : IExposable
     [NoCopy]
     public bool DeletedOrClosed;
 
+    /// <summary>Link to faction level global edit for easy access</summary>
     [NoCopy]
-    public PawnKindEdit globalEdit = null; // transient runtime ref, set during Apply
+    public PawnKindEdit globalEdit = null;
 
     /// <summary>
     /// Raw InnerXml for module sub-nodes whose module is not currently registered/active.
@@ -223,12 +170,35 @@ public class PawnKindEdit : IExposable
     public IntRange? VEPsycastStatPoints = null;
     public bool? VEPsycastRandomAbilities = null;
 
+    // ==================== Constructors ====================
+
     public PawnKindEdit() { }
 
     public PawnKindEdit(PawnKindDef def)
     {
         Def = def;
     }
+
+    // ==================== Apply ====================
+
+    /// <summary>
+    /// Applies this edit to <paramref name="def"/> via <see cref="PawnKindApplicator"/>.
+    /// <paramref name="global"/> is set for the duration so modules and external code can inspect it.
+    /// </summary>
+    public PawnKindDef Apply(PawnKindDef def, PawnKindEdit global, bool addToEdits = true)
+    {
+        globalEdit = global;
+        try
+        {
+            return PawnKindApplicator.Apply(this, def, global, addToEdits);
+        }
+        finally
+        {
+            globalEdit = null;
+        }
+    }
+
+    // ==================== Serialization ====================
 
     public void ExposeData()
     {
@@ -280,6 +250,7 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref UnwaveringlyLoyalChance, "unwaveringlyLoyalChance");
         Scribe_Values.Look(ref CombatPower, "combatPower");
         Scribe_Values.Look(ref AppearsRandomlyInCombatGroups, "appearsRandomlyInCombatGroups");
+
         if (Scribe.mode == LoadSaveMode.PostLoadInit)
         {
             ForcedXenotypeChanceDefs = ForcedXenotypeChances
@@ -288,18 +259,18 @@ public class PawnKindEdit : IExposable
                 .ToDictionary(c => c.Def, c => c.Value);
         }
 
-        bool isFake = NameMaker == FakeRulePack;
+        bool isFake = NameMaker == DefCache.FakeRulePack;
         if (isFake)
             NameMaker = null;
         Scribe_Defs.Look(ref NameMaker, "nameMaker");
         if (isFake)
-            NameMaker = FakeRulePack;
-        isFake = NameMakerFemale == FakeRulePack;
+            NameMaker = DefCache.FakeRulePack;
+        isFake = NameMakerFemale == DefCache.FakeRulePack;
         if (isFake)
             NameMakerFemale = null;
         Scribe_Defs.Look(ref NameMakerFemale, "nameMakerFemale");
         if (isFake)
-            NameMakerFemale = FakeRulePack;
+            NameMakerFemale = DefCache.FakeRulePack;
 
         // Backstory
         Scribe_Collections.Look(ref BackstoryFiltersOverride, "backstoryFiltersOverride", LookMode.Deep);
@@ -321,102 +292,6 @@ public class PawnKindEdit : IExposable
 
         // Module system
         ExposeModuleData();
-    }
-
-    //Reflection-based field enumeration (cached at static init time)
-    public static readonly FieldInfo[] CopyableFields = typeof(PawnKindEdit)
-        .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-        .Where(f => f.GetCustomAttribute<NoCopyAttribute>() == null)
-        .ToArray();
-
-    /// <summary>
-    /// Copies all user-configured data fields from <paramref name="source"/> into this edit.
-    /// Identity fields (<see cref="Def"/>, <see cref="IsGlobal"/>, etc.) are left untouched.
-    /// Module data is also copied.
-    /// </summary>
-    public void CopyFrom(PawnKindEdit source)
-    {
-        foreach (FieldInfo field in CopyableFields)
-            field.SetValue(this, DeepCopyValue(field.GetValue(source), field.FieldType));
-
-        CopyModuleData(source, this);
-    }
-
-    /// <summary>
-    /// Copies module data from <paramref name="source"/> into <paramref name="dest"/>.
-    /// Handles preserved XML for inactive modules and delegates to each active module's
-    /// <see cref="ITotalControlModule.CopyData"/> for its own per-edit state.
-    /// </summary>
-    public static void CopyModuleData(PawnKindEdit source, PawnKindEdit dest)
-    {
-        dest.preservedModuleXml = source.preservedModuleXml != null ? new Dictionary<string, string>(source.preservedModuleXml) : null;
-
-        foreach (ITotalControlModule module in ModuleRegistry.Modules)
-        {
-            if (!module.IsActive)
-                continue;
-            try
-            {
-                module.CopyData(source, dest);
-            }
-            catch (Exception e)
-            {
-                ModCore.Error($"Error copying module data for '{module.ModuleName}' (key: {module.ModuleKey})", e);
-            }
-        }
-    }
-
-    public static object DeepCopyValue(object value, Type type)
-    {
-        if (value == null)
-            return null;
-
-        // Types that know how to clone themselves.
-        // IDeepCopyable<out T> is covariant, so any IDeepCopyable<T> matches IDeepCopyable<object>.
-        if (value is IDeepCopyable<object> cloneable)
-            return cloneable.DeepClone();
-
-        // SimpleCurve has a copy constructor that takes IEnumerable<CurvePoint>.
-        if (value is SimpleCurve curve)
-            return new SimpleCurve(curve);
-
-        // Primitives, enums, strings, Def references — safe to assign directly.
-        if (type.IsPrimitive || type.IsEnum || type == typeof(string))
-            return value;
-        if (typeof(Def).IsAssignableFrom(type))
-            return value;
-
-        // Nullable<T> — the boxed struct is safe for simple value types.
-        if (Nullable.GetUnderlyingType(type) != null)
-            return value;
-
-        // Other value types (FloatRange, IntRange, Color, Vector2, …).
-        if (type.IsValueType)
-            return value;
-
-        // List<T>: deep-clone elements if they implement IDeepCopyable, otherwise shallow-copy.
-        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
-        {
-            IList src = (IList)value;
-            IList dest = (IList)Activator.CreateInstance(type);
-            foreach (object item in src)
-                dest.Add(item is IDeepCopyable<object> c ? c.DeepClone() : item);
-            return dest;
-        }
-
-        // Dictionary<K,V> — shallow copy (keys/values are strings, Defs, or primitives).
-        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
-        {
-            IDictionary src = (IDictionary)value;
-            IDictionary dest = (IDictionary)Activator.CreateInstance(type);
-            foreach (DictionaryEntry kvp in src)
-                dest.Add(kvp.Key, kvp.Value);
-            return dest;
-        }
-
-        // Fallback: shared reference. Log so we can catch missed types during dev.
-        ModCore.Warn($"[CopyFrom] Unhandled field type {type.FullName} — using shared reference. Implement IDeepCopyable<T> if deep copy is needed.");
-        return value;
     }
 
     /// <summary>
@@ -465,7 +340,6 @@ public class PawnKindEdit : IExposable
         }
         else if (Scribe.mode == LoadSaveMode.Saving)
         {
-            // Determine if there's anything to write.
             bool hasActiveModules = modules.Any(m => m.IsActive);
             bool hasPreserved = preservedModuleXml is { Count: > 0 };
 
@@ -475,7 +349,6 @@ public class PawnKindEdit : IExposable
             Scribe.saver.EnterNode("modules");
             try
             {
-                // Write data for each active module.
                 foreach (ITotalControlModule module in modules)
                 {
                     if (!module.IsActive)
@@ -514,7 +387,6 @@ public class PawnKindEdit : IExposable
         }
         else if (Scribe.mode == LoadSaveMode.PostLoadInit)
         {
-            // Give modules a chance to run post-load initialization.
             foreach (ITotalControlModule module in modules)
             {
                 if (!module.IsActive)
@@ -531,465 +403,52 @@ public class PawnKindEdit : IExposable
         }
     }
 
-    private void ReplaceMaybe<T>(ref T field, T maybe)
-        where T : class
-    {
-        if (maybe == null)
-            return;
+    // ==================== Deep copy ====================
 
-        field = maybe;
+    /// <summary>Reflection-based field enumeration cached at static init time.</summary>
+    public static readonly FieldInfo[] CopyableFields = typeof(PawnKindEdit)
+        .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+        .Where(f => f.GetCustomAttribute<NoCopyAttribute>() == null)
+        .ToArray();
+
+    /// <summary>
+    /// Copies all user-configured data fields from <paramref name="source"/> into this edit.
+    /// Identity fields (<see cref="Def"/>, <see cref="IsGlobal"/>, etc.) are left untouched.
+    /// Module data is also copied.
+    /// </summary>
+    public void CopyFrom(PawnKindEdit source)
+    {
+        foreach (FieldInfo field in CopyableFields)
+            field.SetValue(this, DeepCopy.Value(field.GetValue(source), field.FieldType));
+
+        CopyModuleData(source, this);
     }
 
-    private void ReplaceMaybe<T>(ref T field, T? maybe)
-        where T : struct
+    /// <summary>
+    /// Copies module data from <paramref name="source"/> into <paramref name="dest"/>.
+    /// Handles preserved XML for inactive modules and delegates to each active module's
+    /// <see cref="ITotalControlModule.CopyData"/> for its own per-edit state.
+    /// </summary>
+    public static void CopyModuleData(PawnKindEdit source, PawnKindEdit dest)
     {
-        if (maybe == null)
-            return;
+        dest.preservedModuleXml = source.preservedModuleXml != null ? new Dictionary<string, string>(source.preservedModuleXml) : null;
 
-        field = maybe.Value;
-    }
-
-    private void ReplaceMaybe<T>(ref T? field, T? maybe)
-        where T : struct
-    {
-        if (maybe == null)
-            return;
-
-        field = maybe.Value;
-    }
-
-    private void ReplaceMaybeList<T>(ref T field, T maybe, bool tryAdd)
-        where T : IList, new()
-    {
-        if (maybe == null)
-            return;
-
-        if (tryAdd && field != null)
-        {
-            foreach (object value in maybe)
-                if (!field.Contains(value))
-                    field.Add(value);
-        }
-        else
-        {
-            field = [];
-            foreach (object value in maybe)
-                field.Add(value);
-        }
-    }
-
-    private void ReplaceMaybeDefRefList<T>(ref List<T> field, List<DefRef<T>> maybe, bool tryAdd)
-        where T : Def, new()
-    {
-        if (maybe == null)
-            return;
-
-        List<T> resolved = maybe.Where(r => r.HasValue).Select(r => r.Def).ToList();
-
-        if (tryAdd && field != null)
-        {
-            foreach (T value in resolved)
-                if (!field.Contains(value))
-                    field.Add(value);
-        }
-        else
-        {
-            field = resolved;
-        }
-    }
-
-    private void ReplaceMaybe(ref PawnInventoryOption inv, InventoryOptionEdit maybe)
-    {
-        if (maybe == null)
-            return;
-
-        if (globalEdit?.Inventory != null || (IsGlobal && !ReplaceDefaultInventory))
-        {
-            if (inv == null)
-            {
-                inv = maybe.ConvertToVanilla();
-            }
-            else
-            {
-                PawnInventoryOption vanilla = maybe.ConvertToVanilla();
-                if (vanilla.subOptionsTakeAll != null)
-                    inv.subOptionsTakeAll.AddRange(vanilla.subOptionsTakeAll);
-                if (vanilla.subOptionsChooseOne != null)
-                    inv.subOptionsChooseOne.AddRange(vanilla.subOptionsChooseOne);
-            }
-        }
-        else
-        {
-            inv = maybe.ConvertToVanilla();
-        }
-    }
-
-    public PawnKindDef Apply(PawnKindDef def, PawnKindEdit global, bool addToEdits = true)
-    {
-        if (def == null)
-            return null;
-
-        if (addToEdits)
-        {
-            AddActiveEdit(def, this);
-            BuildBlacklistCaches(def, global);
-        }
-
-        if (ReplaceWith != null)
-            return ReplaceWith;
-
-        // Only human-likes can have race replaced.
-        if (def.RaceProps.Animal)
-            Race = null;
-
-        globalEdit = global;
-
-        ReplaceMaybe(ref def.itemQuality, ItemQuality);
-        ReplaceMaybe(ref def.biocodeWeaponChance, BiocodeWeaponChance);
-        ReplaceMaybe(ref def.techHediffsChance, TechHediffChance);
-        ReplaceMaybe(ref def.techHediffsMaxAmount, TechHediffsMaxAmount);
-        ReplaceMaybe(ref def.apparelMoney, ApparelMoney);
-        ReplaceMaybe(ref def.techHediffsMoney, TechMoney);
-        ReplaceMaybe(ref def.weaponMoney, WeaponMoney);
-        ReplaceMaybe(ref def.minGenerationAge, MinGenerationAge);
-        ReplaceMaybe(ref def.maxGenerationAge, MaxGenerationAge);
-        ReplaceMaybe(ref def.inventoryOptions, Inventory);
-        ReplaceMaybe(ref def.forceWeaponQuality, ForcedWeaponQuality);
-        ReplaceMaybe(ref def.label, Label);
-        ReplaceMaybe(ref def.race, Race);
-        ReplaceMaybe(ref def.fixedGender, ForcedGender);
-        ReplaceMaybe(ref def.nameMaker, NameMaker);
-        ReplaceMaybe(ref def.nameMakerFemale, NameMakerFemale);
-        ReplaceMaybe(ref def.combatPower, CombatPower);
-        ReplaceMaybe(ref def.appearsRandomlyInCombatGroups, AppearsRandomlyInCombatGroups);
-
-        ReplaceMaybeList(ref def.techHediffsTags, TechHediffTags, global?.TechHediffTags != null);
-        ReplaceMaybeList(ref def.techHediffsDisallowTags, TechHediffDisallowedTags, global?.TechHediffDisallowedTags != null);
-        ReplaceMaybeList(ref def.weaponTags, WeaponTags, global?.WeaponTags != null);
-        ReplaceMaybeList(ref def.apparelTags, ApparelTags, global?.ApparelTags != null);
-        ReplaceMaybeList(ref def.apparelDisallowTags, ApparelDisallowedTags, global?.ApparelDisallowedTags != null);
-        ReplaceMaybeList(ref def.apparelRequired, ApparelRequired, global?.ApparelRequired != null);
-        ReplaceMaybeList(ref def.techHediffsRequired, TechRequired, global?.TechRequired != null);
-
-        // Backstory filters override — BackstoryFilter extends BackstoryCategoryFilter, so cast directly.
-        if (BackstoryFiltersOverride is { Count: > 0 })
-        {
-            def.backstoryFiltersOverride = new List<BackstoryCategoryFilter>(BackstoryFiltersOverride);
-        }
-
-        ReplaceMaybe(ref def.backstoryCryptosleepCommonality, BackstoryCryptosleepCommonality);
-
-        // Fixed backstories — resolve DefRefs to actual defs, skipping missing ones.
-        ReplaceMaybeDefRefList(ref def.fixedChildBackstories, FixedChildBackstories, global?.FixedChildBackstories != null);
-        ReplaceMaybeDefRefList(ref def.fixedAdultBackstories, FixedAdultBackstories, global?.FixedAdultBackstories != null);
-
-        // Backstory exclusions: remove matching entries from all filter lists and fixed lists
-        ApplyBackstoryExclusions(def);
-
-        bool removeFixedInventory = RemoveFixedInventory || global?.RemoveFixedInventory == true;
-        if (removeFixedInventory)
-            def.fixedInventory = [];
-
-        bool removeSpecific = ApparelRequired != null || SpecificApparel != null;
-        if (removeSpecific)
-            def.specificApparelRequirements = null;
-
-        // Can't be done like this. Disabled for now.
-        if (Race != null)
-        {
-            // Try find life stages of new race.
-            PawnKindDef realKind = DefDatabase<PawnKindDef>.AllDefsListForReading.FirstOrDefault(k => k != def && k.defName != def.defName && k.race == Race);
-            if (realKind != null)
-                def.lifeStages = realKind.lifeStages;
-        }
-
-        // Special case: color cannot be pure white, because Rimworld will then ignore it.
-        // If color is not null and is pure white, change it to a slightly off-white.
-        Color? color = ApparelColor;
-        if (color != null && color == Color.white)
-            color = new Color(0.995f, 0.995f, 0.995f, 1f);
-        ReplaceMaybe(ref def.apparelColor, color);
-
-        def.modExtensions ??= [];
-
-        ForcedExtrasModExtension extrasExtension = null;
-        if (ForcedHediffs is { Count: > 0 })
-        {
-            extrasExtension = def.GetModExtension<ForcedExtrasModExtension>() ?? def.GetModExtension<ForcedHediffModExtension>();
-            if (extrasExtension == null)
-            {
-                extrasExtension = new ForcedExtrasModExtension();
-                def.modExtensions.Add(extrasExtension);
-            }
-
-            extrasExtension.forcedHediffs.AddRange(ForcedHediffs);
-            ModCore.Debug($"Adding forced hediffs {extrasExtension.forcedHediffs?.Select(h => h.HediffDef?.defName).ToCommaList() ?? "None"} to {def.defName}");
-        }
-
-        if (ForcedGenes is { Count: > 0 })
-        {
-            extrasExtension ??= def.GetModExtension<ForcedExtrasModExtension>();
-            if (extrasExtension == null)
-            {
-                extrasExtension = new ForcedExtrasModExtension();
-                def.modExtensions.Add(extrasExtension);
-            }
-
-            extrasExtension.forcedGenes.AddRange(ForcedGenes);
-            ModCore.Debug($"Adding forced genes {extrasExtension.forcedGenes?.Select(h => h.GeneDef?.defName).ToCommaList() ?? "None"} to {def.defName}");
-        }
-
-        if (ModsConfig.BiotechActive && def.RaceProps.Humanlike && ForceSpecificXenos && (ForcedXenotypeChanceDefs?.Count ?? 0) >= 1)
-        {
-            def.useFactionXenotypes = false;
-            def.xenotypeSet ??= new XenotypeSet();
-            def.xenotypeSet.xenotypeChances ??= [];
-            def.xenotypeSet.xenotypeChances.Clear();
-            foreach (KeyValuePair<XenotypeDef, float> rate in ForcedXenotypeChanceDefs ?? [])
-                def.xenotypeSet.xenotypeChances.Add(new XenotypeChance(rate.Key, rate.Value));
-        }
-
-        if (def.RaceProps.Animal)
-            return def; // Animals can't have powers
-        ApplyVFEAncientsEdits(def);
-        ApplyVEPsycastsEdits(def);
-
-        // Delegate to registered modules.
         foreach (ITotalControlModule module in ModuleRegistry.Modules)
         {
             if (!module.IsActive)
                 continue;
             try
             {
-                module.Apply(this, def, global);
+                module.CopyData(source, dest);
             }
             catch (Exception e)
             {
-                ModCore.Error($"Error applying module '{module.ModuleName}' (key: {module.ModuleKey}) to {def.defName}", e);
+                ModCore.Error($"Error copying module data for '{module.ModuleName}' (key: {module.ModuleKey})", e);
             }
         }
-
-        globalEdit = null;
-        return def;
     }
 
-    public virtual void ApplyVEPsycastsEdits(PawnKindDef def)
-    {
-        if (!VEPsycastsReflectionHelper.ModLoaded.Value)
-            return;
-        if (VEPsycastLevel == null && VEPsycastStatPoints == null && VEPsycastRandomAbilities == null)
-            return;
-        def.modExtensions ??= [];
-        DefModExtension vePsycastExtension = VEPsycastsReflectionHelper.FindVEPsycastsExtension(def);
-        if (vePsycastExtension == null)
-        {
-            vePsycastExtension = AccessTools.CreateInstance(VEPsycastsReflectionHelper.VpeExtensionType.Value) as DefModExtension;
-            VEPsycastsReflectionHelper.ImplantDefField.Value?.SetValue(vePsycastExtension, DefDatabase<HediffDef>.GetNamed("VPE_PsycastAbilityImplant"));
-            VEPsycastsReflectionHelper.UnlockedPathsField.Value?.SetValue(
-                vePsycastExtension,
-                AccessTools.CreateInstance(VEPsycastsReflectionHelper.ClosedUnlockedPathsListGenericType.Value)
-            );
-            def.modExtensions.Add(vePsycastExtension);
-        }
-
-        // Set the field values
-        if (VEPsycastLevel != null)
-            VEPsycastsReflectionHelper.LevelField.Value?.SetValue(vePsycastExtension, VEPsycastLevel);
-        if (VEPsycastStatPoints != null)
-            VEPsycastsReflectionHelper.StatUpgradePointsField.Value?.SetValue(vePsycastExtension, VEPsycastStatPoints);
-        if (VEPsycastRandomAbilities != null)
-            VEPsycastsReflectionHelper.GiveRandomAbilitiesField.Value?.SetValue(vePsycastExtension, VEPsycastRandomAbilities);
-    }
-
-    public virtual void ApplyVFEAncientsEdits(PawnKindDef def)
-    {
-        if (!VFEAncientsReflectionHelper.ModLoaded.Value)
-            return;
-        if (NumVFEAncientsSuperPowers == null && NumVFEAncientsSuperWeaknesses == null && ForcedVFEAncientsItems == null)
-            return;
-        def.modExtensions ??= [];
-        DefModExtension ancientsExtension = VFEAncientsReflectionHelper.FindVEAncientsExtension(def);
-        if (ancientsExtension == null)
-        {
-            ancientsExtension = AccessTools.CreateInstance(VFEAncientsReflectionHelper.VfeAncientsExtensionType.Value) as DefModExtension;
-            def.modExtensions.Add(ancientsExtension);
-        }
-
-        // Set the field values
-        if (NumVFEAncientsSuperPowers != null)
-            VFEAncientsReflectionHelper.NumRandomSuperpowersField.Value?.SetValue(ancientsExtension, NumVFEAncientsSuperPowers);
-        if (NumVFEAncientsSuperWeaknesses != null)
-            VFEAncientsReflectionHelper.NumRandomWeaknessesField.Value?.SetValue(ancientsExtension, NumVFEAncientsSuperWeaknesses);
-        if (ForcedVFEAncientsItems == null)
-            return;
-        object powers = VFEAncientsReflectionHelper.ForcePowersField.Value?.GetValue(ancientsExtension);
-        if (powers == null)
-        {
-            powers = AccessTools.CreateInstance(VFEAncientsReflectionHelper.ClosedPowerListGenericType.Value);
-            VFEAncientsReflectionHelper.ForcePowersField.Value?.SetValue(ancientsExtension, powers);
-        }
-
-        if (powers is not IList powerList)
-            return;
-        powerList.Clear();
-        ForcedVFEAncientsItems
-            .Select(i => VFEAncientsReflectionHelper.GetPowerDefMethod.Value.Invoke(null, new object[] { i }))
-            .Where(p => p != null)
-            .DoIf(p => !powerList.Contains(p), p => powerList.Add(p));
-    }
-
-    /// <summary>
-    /// Applies backstory exclusions at the def level:
-    /// <list type="bullet">
-    ///   <item>Category exclusions are injected into filter exclude lists.</item>
-    ///   <item>Specific def exclusions are removed from fixed backstory lists.</item>
-    ///   <item>When specific defs are excluded for a given slot, the categories for that slot
-    ///         are resolved into concrete <see cref="BackstoryDef"/> entries (minus exclusions)
-    ///         and written into the corresponding fixed backstory list. This lets vanilla's
-    ///         <c>GiveShuffledBioTo</c> pick from the fixed list directly, avoiding any need
-    ///         for a Harmony patch at generation time. Slots without specific def exclusions
-    ///         are left untouched, so vanilla's category-based selection still applies.</item>
-    /// </list>
-    /// </summary>
-    private void ApplyBackstoryExclusions(PawnKindDef def)
-    {
-        bool hasExcludedCategories = ExcludedBackstoryCategories is { Count: > 0 };
-        bool hasExcludedDefs = ExcludedBackstories is { Count: > 0 };
-
-        // Inject excluded categories into all existing filters as exclude entries.
-        if (hasExcludedCategories)
-        {
-            void InjectExcludes(List<BackstoryCategoryFilter> filters)
-            {
-                if (filters == null)
-                {
-                    return;
-                }
-
-                foreach (BackstoryCategoryFilter filter in filters)
-                {
-                    filter.exclude ??= [];
-                    foreach (string cat in ExcludedBackstoryCategories)
-                    {
-                        if (!filter.exclude.Contains(cat))
-                        {
-                            filter.exclude.Add(cat);
-                        }
-                    }
-                }
-            }
-
-            InjectExcludes(def.backstoryFiltersOverride);
-            InjectExcludes(def.backstoryFilters);
-        }
-
-        if (!hasExcludedDefs)
-            return;
-
-        // Partition excluded defs by slot so we only resolve categories for affected slots.
-        HashSet<BackstoryDef> excludedChild = [];
-        HashSet<BackstoryDef> excludedAdult = [];
-        foreach (DefRef<BackstoryDef> defRef in ExcludedBackstories)
-        {
-            switch (defRef?.Def?.slot)
-            {
-                case BackstorySlot.Childhood:
-                    excludedChild.Add(defRef.Def);
-                    break;
-                case BackstorySlot.Adulthood:
-                    excludedAdult.Add(defRef.Def);
-                    break;
-                default:
-                    continue;
-            }
-        }
-
-        // Always remove excluded defs from existing fixed lists regardless.
-        if (excludedChild.Count > 0)
-            def.fixedChildBackstories?.RemoveAll(b => excludedChild.Contains(b));
-        if (excludedAdult.Count > 0)
-            def.fixedAdultBackstories?.RemoveAll(b => excludedAdult.Contains(b));
-
-        // Collect the active categories per slot from the def's filters.
-        // "categories" applies to both slots; "categoriesChildhood"/"categoriesAdulthood" are slot-specific.
-        HashSet<string> childCategories = [];
-        HashSet<string> adultCategories = [];
-        List<BackstoryCategoryFilter> activeFilters = def.backstoryFiltersOverride ?? def.backstoryFilters;
-        if (activeFilters != null)
-        {
-            foreach (BackstoryCategoryFilter filter in activeFilters)
-            {
-                if (!filter.categories.NullOrEmpty())
-                {
-                    foreach (string cat in filter.categories)
-                    {
-                        childCategories.Add(cat);
-                        adultCategories.Add(cat);
-                    }
-                }
-
-                if (!filter.categoriesChildhood.NullOrEmpty())
-                {
-                    foreach (string cat in filter.categoriesChildhood)
-                    {
-                        childCategories.Add(cat);
-                    }
-                }
-
-                if (!filter.categoriesAdulthood.NullOrEmpty())
-                {
-                    foreach (string cat in filter.categoriesAdulthood)
-                    {
-                        adultCategories.Add(cat);
-                    }
-                }
-            }
-        }
-
-        // For each slot that has excluded defs, resolve categories into concrete defs
-        // and populate the fixed backstory list so vanilla picks from it directly.
-        if (excludedChild.Count > 0)
-            ResolveBackstoryCategories(def, BackstorySlot.Childhood, childCategories, excludedChild);
-        if (excludedAdult.Count > 0)
-            ResolveBackstoryCategories(def, BackstorySlot.Adulthood, adultCategories, excludedAdult);
-    }
-
-    /// <summary>
-    /// Resolves backstory categories into concrete <see cref="BackstoryDef"/> entries for a given slot,
-    /// excluding any defs in <paramref name="excluded"/>, then writes them into the corresponding
-    /// fixed backstory list on the def. Existing entries in the fixed list are preserved.
-    /// </summary>
-    private static void ResolveBackstoryCategories(PawnKindDef def, BackstorySlot slot, HashSet<string> categories, HashSet<BackstoryDef> excluded)
-    {
-        // Build the set of existing fixed entries to avoid duplicates.
-        List<BackstoryDef> fixedList = slot == BackstorySlot.Childhood ? def.fixedChildBackstories : def.fixedAdultBackstories;
-        HashSet<BackstoryDef> existing = fixedList != null ? [.. fixedList] : [];
-
-        List<BackstoryDef> resolved = [];
-        resolved.AddRange(
-            from bs in DefDatabase<BackstoryDef>.AllDefsListForReading
-            where bs.slot == slot && bs.shuffleable && !excluded.Contains(bs) && !existing.Contains(bs)
-            where bs.spawnCategories != null
-            where categories.Count <= 0 || bs.spawnCategories.Any(categories.Contains)
-            select bs
-        );
-
-        switch (slot)
-        {
-            case BackstorySlot.Childhood:
-                def.fixedChildBackstories ??= [];
-                def.fixedChildBackstories.AddRange(resolved);
-                break;
-            case BackstorySlot.Adulthood:
-                def.fixedAdultBackstories ??= [];
-                def.fixedAdultBackstories.AddRange(resolved);
-                break;
-            default:
-                return;
-        }
-
-        ModCore.Debug($"Backstory exclusions for {def.defName} ({slot}): " + $"{excluded.Count} excluded, {resolved.Count} resolved from categories into fixed list.");
-    }
+    // ==================== Queries ====================
 
     public bool AppliesTo(PawnKindDef def)
     {
@@ -1005,12 +464,4 @@ public class PawnKindEdit : IExposable
             throw;
         }
     }
-}
-
-public static class ReflectionHelper
-{
-    public static Lazy<Type> DefDatabaseGenericType = new(() => typeof(DefDatabase<>));
-    public static Lazy<Type> ListGenericType = new(() => typeof(List<>));
-
-    public static Lazy<MethodInfo> GetCompGenericMethod = new(() => AccessTools.Method(typeof(Pawn), "GetComp"));
 }

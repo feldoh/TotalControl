@@ -183,7 +183,7 @@ public static class WeaponGenPatch
 /// <summary>
 /// Prevents blacklisted ThingDefs from being selected during vanilla weapon generation
 /// by zeroing their commonality weight. Vanilla then naturally picks the next best
-/// alternative. Uses <see cref="PawnKindEdit.WeaponBlacklistCache"/> populated at
+/// alternative. Uses <see cref="DefCache.WeaponBlacklistCache"/> populated at
 /// Apply() time for O(1) lookup per pair — no per-pawn edit iteration at patch time.
 /// </summary>
 [HarmonyPatch(typeof(PawnWeaponGenerator), nameof(PawnWeaponGenerator.GetCommonality))]
@@ -194,7 +194,7 @@ public static class WeaponGetCommonalityBlacklistPatch
         if (__result <= 0f)
             return;
 
-        if (PawnKindEdit.WeaponBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
+        if (DefCache.WeaponBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
             __result = 0f;
     }
 }

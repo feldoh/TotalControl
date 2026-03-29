@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using FactionLoadout.UISupport.DrawSupport;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -189,30 +189,15 @@ public class GroupEditorUI : Window
         h += 28f; // max points
         h += 28f; // block strategies
         h += 12f; // GapLine
-        h += CalcPawnListHeight(group.Options);
-        h += CalcPawnListHeight(group.Guards);
-        h += CalcPawnListHeight(group.Traders);
-        h += CalcPawnListHeight(group.Carriers);
+        h += PawnListDrawer.CalcHeight(group.Options);
+        h += PawnListDrawer.CalcHeight(group.Guards);
+        h += PawnListDrawer.CalcHeight(group.Traders);
+        h += PawnListDrawer.CalcHeight(group.Carriers);
         h += 4f; // Gap(4f)
         return h;
     }
 
-    private static float CalcPawnListHeight(List<PawnGenOptionEdit> list)
-    {
-        float h = 24f; // section header
-        h += 2f; // Gap(2f)
-        if (list.Count == 0)
-        {
-            h += 24f; // "(none)" label (~Text.LineHeight + verticalSpacing)
-        }
-        else
-        {
-            h += list.Count * 24f; // each pawn row
-        }
-
-        h += 12f; // GapLine
-        return h;
-    }
+    // --- Group list ---
 
     private void DrawGroupList(Listing_Standard ui, List<PawnGroupMakerEdit> groups, bool readOnly)
     {
@@ -337,11 +322,11 @@ public class GroupEditorUI : Window
         // --- Group Type ---
         if (readOnly)
         {
-            DrawLabeledText(body, "FactionLoadout_GroupEditor_GroupType".Translate(), group.KindDef?.label ?? group.KindDefName);
+            LabeledRowDrawer.DrawLabeledText(body, "FactionLoadout_GroupEditor_GroupType".Translate(), group.KindDef?.label ?? group.KindDefName);
         }
         else
         {
-            DrawLabeledButton(
+            LabeledRowDrawer.DrawLabeledButton(
                 body,
                 "FactionLoadout_GroupEditor_GroupType".Translate(),
                 "FactionLoadout_GroupEditor_GroupTypeTooltip".Translate(),
@@ -357,18 +342,15 @@ public class GroupEditorUI : Window
         // --- Commonality ---
         if (readOnly)
         {
-            DrawLabeledText(body, "FactionLoadout_GroupEditor_Commonality".Translate(), group.Commonality.ToString("0.##"));
+            LabeledRowDrawer.DrawLabeledText(body, "FactionLoadout_GroupEditor_Commonality".Translate(), group.Commonality.ToString("0.##"));
         }
         else
         {
             group.Commonality = DrawLabeledFloat(
-                body,
-                groupIndex,
-                "commonality",
+                body, groupIndex, "commonality",
                 "FactionLoadout_GroupEditor_Commonality".Translate(),
                 "FactionLoadout_GroupEditor_CommonalityTooltip".Translate(),
-                group.Commonality,
-                0f
+                group.Commonality, 0f
             );
         }
 
@@ -376,18 +358,15 @@ public class GroupEditorUI : Window
         if (readOnly)
         {
             string maxStr = group.MaxTotalPoints >= 9999999f ? "∞" : group.MaxTotalPoints.ToString("0");
-            DrawLabeledText(body, "FactionLoadout_GroupEditor_MaxPoints".Translate(), maxStr);
+            LabeledRowDrawer.DrawLabeledText(body, "FactionLoadout_GroupEditor_MaxPoints".Translate(), maxStr);
         }
         else
         {
             group.MaxTotalPoints = DrawLabeledFloat(
-                body,
-                groupIndex,
-                "maxPoints",
+                body, groupIndex, "maxPoints",
                 "FactionLoadout_GroupEditor_MaxPoints".Translate(),
                 "FactionLoadout_GroupEditor_MaxPointsTooltip".Translate(),
-                group.MaxTotalPoints,
-                0f
+                group.MaxTotalPoints, 0f
             );
         }
 
@@ -398,11 +377,11 @@ public class GroupEditorUI : Window
                 : string.Join(", ", group.DisallowedStrategyDefNames.Select(n => DefDatabase<RaidStrategyDef>.GetNamedSilentFail(n)?.label ?? n));
         if (readOnly)
         {
-            DrawLabeledText(body, "FactionLoadout_GroupEditor_BlockStrategies".Translate(), stratLabel);
+            LabeledRowDrawer.DrawLabeledText(body, "FactionLoadout_GroupEditor_BlockStrategies".Translate(), stratLabel);
         }
         else
         {
-            DrawLabeledButton(
+            LabeledRowDrawer.DrawLabeledButton(
                 body,
                 "FactionLoadout_GroupEditor_BlockStrategies".Translate(),
                 "FactionLoadout_GroupEditor_BlockStrategiesTooltip".Translate(),
@@ -414,46 +393,10 @@ public class GroupEditorUI : Window
         body.GapLine();
 
         // --- Pawn sub-lists ---
-        DrawPawnList(
-            body,
-            groupIndex,
-            "options",
-            "FactionLoadout_GroupEditor_CombatPawns".Translate(),
-            "FactionLoadout_GroupEditor_CombatPawnsTooltip".Translate(),
-            "FactionLoadout_GroupEditor_AddCombatPawn".Translate(),
-            group.Options,
-            readOnly
-        );
-        DrawPawnList(
-            body,
-            groupIndex,
-            "guards",
-            "FactionLoadout_GroupEditor_Guards".Translate(),
-            "FactionLoadout_GroupEditor_GuardsTooltip".Translate(),
-            "FactionLoadout_GroupEditor_AddGuard".Translate(),
-            group.Guards,
-            readOnly
-        );
-        DrawPawnList(
-            body,
-            groupIndex,
-            "traders",
-            "FactionLoadout_GroupEditor_Traders".Translate(),
-            "FactionLoadout_GroupEditor_TradersTooltip".Translate(),
-            "FactionLoadout_GroupEditor_AddTrader".Translate(),
-            group.Traders,
-            readOnly
-        );
-        DrawPawnList(
-            body,
-            groupIndex,
-            "carriers",
-            "FactionLoadout_GroupEditor_Carriers".Translate(),
-            "FactionLoadout_GroupEditor_CarriersTooltip".Translate(),
-            "FactionLoadout_GroupEditor_AddCarrier".Translate(),
-            group.Carriers,
-            readOnly
-        );
+        PawnListDrawer.Draw(body, groupIndex, "options", "FactionLoadout_GroupEditor_CombatPawns".Translate(),    "FactionLoadout_GroupEditor_CombatPawnsTooltip".Translate(),  "FactionLoadout_GroupEditor_AddCombatPawn".Translate(),  group.Options,  readOnly, _numBuffers);
+        PawnListDrawer.Draw(body, groupIndex, "guards",  "FactionLoadout_GroupEditor_Guards".Translate(),         "FactionLoadout_GroupEditor_GuardsTooltip".Translate(),       "FactionLoadout_GroupEditor_AddGuard".Translate(),       group.Guards,   readOnly, _numBuffers);
+        PawnListDrawer.Draw(body, groupIndex, "traders", "FactionLoadout_GroupEditor_Traders".Translate(),        "FactionLoadout_GroupEditor_TradersTooltip".Translate(),      "FactionLoadout_GroupEditor_AddTrader".Translate(),      group.Traders,  readOnly, _numBuffers);
+        PawnListDrawer.Draw(body, groupIndex, "carriers","FactionLoadout_GroupEditor_Carriers".Translate(),       "FactionLoadout_GroupEditor_CarriersTooltip".Translate(),     "FactionLoadout_GroupEditor_AddCarrier".Translate(),     group.Carriers, readOnly, _numBuffers);
 
         body.Gap(4f);
         float bodyHeight = body.CurHeight;
@@ -467,198 +410,15 @@ public class GroupEditorUI : Window
         ui.GapLine();
     }
 
-    // --- Field helpers ---
-
-    private static void DrawLabeledText(Listing_Standard ui, string label, string value)
-    {
-        const float labelW = 160f;
-        Rect row = ui.GetRect(28f);
-        Text.Anchor = TextAnchor.MiddleLeft;
-        GUI.color = Color.grey;
-        Widgets.Label(new Rect(row.x, row.y, labelW, row.height), label);
-        Widgets.Label(new Rect(row.x + labelW, row.y, row.width - labelW, row.height), value);
-        GUI.color = Color.white;
-        Text.Anchor = TextAnchor.UpperLeft;
-    }
-
-    private void DrawLabeledButton(Listing_Standard ui, string label, string tooltip, string value, Action onClick)
-    {
-        const float labelW = 160f;
-        Rect row = ui.GetRect(28f);
-        Rect labelRect = new(row.x, row.y, labelW, row.height);
-        Rect btnRect = new(row.x + labelW, row.y, row.width - labelW - 4f, 24f);
-
-        Text.Anchor = TextAnchor.MiddleLeft;
-        Widgets.Label(labelRect, label);
-        Text.Anchor = TextAnchor.UpperLeft;
-        TooltipHandler.TipRegion(labelRect, tooltip);
-
-        if (Widgets.ButtonText(btnRect, value))
-            onClick?.Invoke();
-    }
+    // --- Buffer-aware float field (delegates rendering to LabeledRowDrawer) ---
 
     private float DrawLabeledFloat(Listing_Standard ui, int groupIndex, string fieldId, string label, string tooltip, float value, float min)
     {
-        const float labelW = 160f;
-        const float fieldW = 90f;
-
-        Rect row = ui.GetRect(28f);
-        Rect labelRect = new(row.x, row.y, labelW, row.height);
-        Rect fieldRect = new(row.x + labelW, row.y + 2f, fieldW, 24f);
-        Rect tipRect = new(row.x + labelW + fieldW + 4f, row.y, 20f, row.height);
-
-        Text.Anchor = TextAnchor.MiddleLeft;
-        Widgets.Label(labelRect, label);
-        Text.Anchor = TextAnchor.UpperLeft;
-        TooltipHandler.TipRegion(labelRect, tooltip);
-
-        // Get or init buffer
         if (!_numBuffers.TryGetValue((groupIndex, fieldId), out string buf))
             buf = value.ToString("0.##");
-
-        string newBuf = Widgets.TextField(fieldRect, buf);
-        _numBuffers[(groupIndex, fieldId)] = newBuf;
-
-        // "(?) " tooltip hint
-        GUI.color = Color.grey;
-        Widgets.Label(tipRect, "(?)");
-        GUI.color = Color.white;
-        TooltipHandler.TipRegion(tipRect, tooltip);
-
-        return float.TryParse(newBuf, out float parsed) ? Mathf.Max(min, parsed) : value;
-    }
-
-    private void DrawPawnList(
-        Listing_Standard ui,
-        int groupIndex,
-        string listId,
-        string sectionLabel,
-        string sectionTooltip,
-        string addButtonLabel,
-        List<PawnGenOptionEdit> list,
-        bool readOnly
-    )
-    {
-        // Section header row
-        Rect headerRow = ui.GetRect(24f);
-        Text.Anchor = TextAnchor.MiddleLeft;
-        GUI.color = Color.white;
-
-        if (readOnly)
-        {
-            Widgets.Label(new Rect(headerRow.x, headerRow.y, headerRow.width, headerRow.height), $"<b>{sectionLabel}</b>");
-        }
-        else
-        {
-            float addBtnW = Mathf.Max(120f, Text.CalcSize(addButtonLabel).x + 16f);
-            Rect headerLabel = new(headerRow.x, headerRow.y, headerRow.width - addBtnW - 4f, headerRow.height);
-            Rect addBtn = new(headerRow.xMax - addBtnW, headerRow.y, addBtnW, 22f);
-
-            Widgets.Label(headerLabel, $"<b>{sectionLabel}</b>");
-
-            // "(?) " tooltip after header
-            Rect tipRect = new(headerLabel.xMax, headerRow.y, 20f, headerRow.height);
-            GUI.color = Color.grey;
-            Widgets.Label(tipRect, "(?)");
-            GUI.color = Color.white;
-            TooltipHandler.TipRegion(tipRect, sectionTooltip);
-
-            if (Widgets.ButtonText(addBtn, addButtonLabel))
-            {
-                Find.WindowStack.Add(
-                    new Dialog_PawnKindPicker(
-                        sectionLabel,
-                        list,
-                        defName =>
-                        {
-                            list.Add(new PawnGenOptionEdit { KindDefName = defName, SelectionWeight = 1f });
-                        }
-                    )
-                );
-            }
-        }
-
-        Text.Anchor = TextAnchor.UpperLeft;
-        ui.Gap(2f);
-
-        if (list.Count == 0)
-        {
-            GUI.color = Color.grey;
-            ui.Label("<i>" + "FactionLoadout_GroupEditor_NoPawns".Translate() + "</i>");
-            GUI.color = Color.white;
-        }
-        else if (readOnly)
-        {
-            foreach (PawnGenOptionEdit entry in list)
-            {
-                string kindLabel = entry.KindDef?.LabelCap ?? entry.KindDefName;
-                if (string.IsNullOrEmpty(kindLabel))
-                    kindLabel = "FactionLoadout_GroupEditor_UnknownKind".Translate();
-                Rect row = ui.GetRect(24f);
-                GUI.color = entry.KindDef == null ? Color.grey : Color.white;
-                Text.Anchor = TextAnchor.MiddleLeft;
-                Widgets.Label(new Rect(row.x + 4f, row.y, row.width - 4f, row.height), $"{kindLabel}  <color=grey>(weight: {entry.SelectionWeight:0.##})</color>");
-                Text.Anchor = TextAnchor.UpperLeft;
-                GUI.color = Color.white;
-            }
-        }
-        else
-        {
-            List<PawnGenOptionEdit> toRemove = [];
-            for (int i = 0; i < list.Count; i++)
-            {
-                PawnGenOptionEdit entry = list[i];
-                string entryBufKey = $"{groupIndex}_{listId}_{i}";
-
-                Rect row = ui.GetRect(24f);
-                Widgets.DrawHighlightIfMouseover(row);
-
-                // Name label
-                string kindLabel = entry.KindDef?.LabelCap ?? entry.KindDefName;
-                if (string.IsNullOrEmpty(kindLabel))
-                    kindLabel = "FactionLoadout_GroupEditor_UnknownKind".Translate();
-                bool missing = entry.KindDef == null;
-                if (missing)
-                    GUI.color = Color.grey;
-
-                Rect nameLbl = new(row.x, row.y, row.width - 148f, row.height);
-                Text.Anchor = TextAnchor.MiddleLeft;
-                Widgets.Label(nameLbl, missing ? $"<color=grey>{kindLabel} (missing)</color>" : kindLabel);
-                Text.Anchor = TextAnchor.UpperLeft;
-                GUI.color = Color.white;
-
-                // "weight" label
-                Rect weightLbl = new(row.xMax - 146f, row.y, 48f, row.height);
-                GUI.color = Color.grey;
-                Text.Anchor = TextAnchor.MiddleLeft;
-                Widgets.Label(weightLbl, "FactionLoadout_GroupEditor_WeightLabel".Translate());
-                Text.Anchor = TextAnchor.UpperLeft;
-                GUI.color = Color.white;
-                TooltipHandler.TipRegion(weightLbl, "FactionLoadout_GroupEditor_WeightTooltip".Translate());
-
-                // Weight field
-                Rect weightField = new(row.xMax - 86f, row.y + 1f, 56f, 22f);
-                if (!_numBuffers.TryGetValue((groupIndex, entryBufKey), out string wbuf))
-                    wbuf = entry.SelectionWeight.ToString("0.##");
-
-                string newWbuf = Widgets.TextField(weightField, wbuf);
-                _numBuffers[(groupIndex, entryBufKey)] = newWbuf;
-                if (float.TryParse(newWbuf, out float parsedW))
-                    entry.SelectionWeight = Mathf.Max(0.01f, parsedW);
-
-                // Remove button
-                Rect delBtn = new(row.xMax - 26f, row.y + 2f, 22f, 22f);
-                GUI.color = Color.red;
-                if (Widgets.ButtonText(delBtn, "×"))
-                    toRemove.Add(entry);
-                GUI.color = Color.white;
-            }
-
-            foreach (PawnGenOptionEdit e in toRemove)
-                list.Remove(e);
-        }
-
-        ui.GapLine();
+        float result = LabeledRowDrawer.DrawLabeledFloat(ui, label, tooltip, ref buf, value, min);
+        _numBuffers[(groupIndex, fieldId)] = buf;
+        return result;
     }
 
     // --- Add group menu ---
@@ -687,25 +447,18 @@ public class GroupEditorUI : Window
         EnsureRaidStrategies();
         group.DisallowedStrategyDefNames ??= [];
 
-        List<FloatMenuOption> options = new List<FloatMenuOption>();
-        foreach (RaidStrategyDef strat in _allRaidStrategies)
-        {
-            bool current = group.DisallowedStrategyDefNames.Contains(strat.defName);
-            string mark = current ? "✓ " : "   ";
-            string stratDef = strat.defName; // capture for closure
-            options.Add(
-                new FloatMenuOption(
-                    $"{mark}{strat.label ?? strat.defName}",
-                    () =>
-                    {
-                        if (group.DisallowedStrategyDefNames.Contains(stratDef))
-                            group.DisallowedStrategyDefNames.Remove(stratDef);
-                        else
-                            group.DisallowedStrategyDefNames.Add(stratDef);
-                    }
-                )
-            );
-        }
+        List<FloatMenuOption> options = [];
+        options.AddRange(from strat in _allRaidStrategies
+            let current = @group.DisallowedStrategyDefNames.Contains(strat.defName)
+            let mark = current ? "✓ " : "   "
+            let stratDef = strat.defName
+            select new FloatMenuOption($"{mark}{strat.label ?? strat.defName}", () =>
+            {
+                if (@group.DisallowedStrategyDefNames.Contains(stratDef))
+                    @group.DisallowedStrategyDefNames.Remove(stratDef);
+                else
+                    @group.DisallowedStrategyDefNames.Add(stratDef);
+            }));
 
         Find.WindowStack.Add(new FloatMenu(options));
     }
@@ -731,231 +484,5 @@ public class GroupEditorUI : Window
         if (_allRaidStrategies != null)
             return;
         _allRaidStrategies = DefDatabase<RaidStrategyDef>.AllDefsListForReading.OrderBy(rs => rs.label ?? rs.defName).ToList();
-    }
-}
-
-// --- Dialog_PawnKindPicker ---
-
-/// <summary>
-/// Searchable pawnkind picker dialog.  Any PawnKindDef in the game can be
-/// selected; already-added entries are greyed but still selectable.
-/// A manual defName entry at the bottom handles modded content that is not
-/// currently loaded.
-/// </summary>
-[HotSwappable]
-public class Dialog_PawnKindPicker : Window
-{
-    private readonly string _roleName;
-    private readonly List<PawnGenOptionEdit> _existingList;
-    private readonly Action<string> _onPick;
-
-    private string _search = "";
-    private Vector2 _scrollPos;
-    private float _contentHeight = 0f;
-    private string _manualEntry = "";
-
-    // Cached sorted pawnkind list.
-    private static List<PawnKindDef> _allKinds;
-
-    public Dialog_PawnKindPicker(string roleName, List<PawnGenOptionEdit> existingList, Action<string> onPick)
-    {
-        _roleName = roleName;
-        _existingList = existingList;
-        _onPick = onPick;
-        doCloseX = true;
-        closeOnCancel = true;
-        absorbInputAroundWindow = true;
-        draggable = true;
-    }
-
-    public override Vector2 InitialSize => new(420f, 440f);
-
-    public override void DoWindowContents(Rect inRect)
-    {
-        EnsureKinds();
-
-        Listing_Standard ui = new();
-        ui.Begin(inRect);
-
-        // Title
-        ui.Label("<b>" + "FactionLoadout_GroupEditor_PickerTitle".Translate(_roleName) + "</b>");
-        ui.Gap(4f);
-
-        // Search field — reset scroll when query changes so results are always visible at top
-        string newSearch = ui.TextEntry(_search);
-        if (newSearch != _search)
-        {
-            _search = newSearch;
-            _scrollPos = Vector2.zero;
-        }
-
-        ui.Gap(4f);
-
-        // Scroll list
-        float scrollH = Mathf.Max(60f, inRect.height - ui.CurHeight - 70f);
-        Rect scrollOut = ui.GetRect(scrollH);
-        List<PawnKindDef> filtered = string.IsNullOrWhiteSpace(_search)
-            ? _allKinds
-            : _allKinds
-                .Where(k =>
-                    k.LabelCap.ToString().IndexOf(_search, StringComparison.OrdinalIgnoreCase) >= 0
-                    || (k.defName ?? string.Empty).IndexOf(_search, StringComparison.OrdinalIgnoreCase) >= 0
-                )
-                .ToList();
-
-        float itemH = 24f;
-        Rect innerRect = new(0f, 0f, scrollOut.width - 16f, Mathf.Max(_contentHeight, filtered.Count * (itemH + 2f)));
-        Widgets.BeginScrollView(scrollOut, ref _scrollPos, innerRect);
-
-        float y = 0f;
-        bool anyShown = false;
-        foreach (PawnKindDef kind in filtered)
-        {
-            bool alreadyAdded = _existingList.Any(e => e.KindDefName == kind.defName);
-            Rect row = new(0f, y, innerRect.width, itemH);
-
-            Widgets.DrawHighlightIfMouseover(row);
-            if (alreadyAdded)
-                GUI.color = Color.grey;
-
-            Widgets.Label(
-                new Rect(4f, y + 2f, innerRect.width - 8f, itemH - 4f),
-                alreadyAdded
-                    ? $"{kind.LabelCap} <color=grey>({kind.defName}) — {"FactionLoadout_GroupEditor_PickerAlreadyAdded".Translate()}</color>"
-                    : $"{kind.LabelCap} <color=grey>({kind.defName})</color>"
-            );
-
-            GUI.color = Color.white;
-
-            if (Widgets.ButtonInvisible(row))
-            {
-                _onPick?.Invoke(kind.defName);
-                Close();
-                return;
-            }
-
-            y += itemH + 2f;
-            anyShown = true;
-        }
-
-        if (!anyShown)
-        {
-            GUI.color = Color.grey;
-            Widgets.Label(new Rect(4f, 4f, innerRect.width - 8f, 24f), "FactionLoadout_GroupEditor_PickerNoResults".Translate().ToString());
-            GUI.color = Color.white;
-        }
-
-        _contentHeight = y;
-        Widgets.EndScrollView();
-
-        ui.Gap(4f);
-        ui.GapLine();
-
-        // Manual defName entry
-        ui.Label("FactionLoadout_GroupEditor_PickerManualLabel".Translate());
-        Rect manualRow = ui.GetRect(28f);
-        float addBtnW = 60f;
-        _manualEntry = Widgets.TextField(new Rect(manualRow.x, manualRow.y, manualRow.width - addBtnW - 4f, 24f), _manualEntry);
-        if (Widgets.ButtonText(new Rect(manualRow.xMax - addBtnW, manualRow.y, addBtnW, 24f), "FactionLoadout_GroupEditor_PickerManualAdd".Translate()))
-        {
-            if (!string.IsNullOrWhiteSpace(_manualEntry))
-            {
-                _onPick?.Invoke(_manualEntry.Trim());
-                Close();
-            }
-        }
-
-        ui.End();
-    }
-
-    private static void EnsureKinds()
-    {
-        if (_allKinds != null)
-            return;
-        _allKinds = DefDatabase<PawnKindDef>.AllDefsListForReading.OrderBy(k => k.LabelCap.ToString()).ToList();
-    }
-}
-
-// --- Dialog_ResetGroupsConfirm ---
-
-/// <summary>
-/// Confirmation dialog shown before resetting all group edits.
-/// Lists any pawnkinds that were added by the user and will become orphaned.
-/// </summary>
-public class Dialog_ResetGroupsConfirm : Window
-{
-    private readonly FactionEdit _edit;
-    private List<string> _addedKindNames;
-
-    public Dialog_ResetGroupsConfirm(FactionEdit edit)
-    {
-        _edit = edit;
-        doCloseX = true;
-        closeOnCancel = true;
-        absorbInputAroundWindow = true;
-        draggable = false;
-
-        // Find pawnkinds that are in GroupEdits but NOT in the original faction def.
-        _addedKindNames = [];
-        if (edit.PawnGroupMakerEdits == null)
-            return;
-
-        HashSet<string> original = new(
-            FactionEdit.GetAllPawnKinds(FactionEdit.TryGetOriginal(edit.Faction.DefName) ?? edit.Faction.Def ?? new FactionDef()).Select(k => k.defName)
-        );
-
-        foreach (PawnGroupMakerEdit g in edit.PawnGroupMakerEdits)
-        {
-            foreach (PawnKindDef k in g.GetAllKinds())
-            {
-                if (!original.Contains(k.defName) && !_addedKindNames.Contains(k.LabelCap.ToString()))
-                    _addedKindNames.Add(k.LabelCap);
-            }
-        }
-    }
-
-    public override Vector2 InitialSize => new(480f, _addedKindNames.Count > 0 ? 300f : 180f);
-
-    public override void DoWindowContents(Rect inRect)
-    {
-        Listing_Standard ui = new();
-        ui.Begin(inRect);
-
-        Text.Font = GameFont.Medium;
-        ui.Label("FactionLoadout_GroupEditor_ResetConfirmTitle".Translate());
-        Text.Font = GameFont.Small;
-
-        ui.GapLine();
-        ui.Label("FactionLoadout_GroupEditor_ResetConfirmBody".Translate());
-
-        if (_addedKindNames.Count > 0)
-        {
-            ui.Gap(6f);
-            GUI.color = new Color(1f, 0.7f, 0.2f);
-            ui.Label("FactionLoadout_GroupEditor_ResetConfirmOrphans".Translate(_addedKindNames.Count));
-            GUI.color = Color.white;
-            foreach (string name in _addedKindNames)
-                ui.Label($"  · {name}");
-            ui.Gap(4f);
-            GUI.color = Color.grey;
-            ui.Label("<i>" + "FactionLoadout_GroupEditor_ResetConfirmOrphanNote".Translate() + "</i>");
-            GUI.color = Color.white;
-        }
-
-        ui.GapLine();
-
-        Rect btnRow = ui.GetRect(28f);
-        if (Widgets.ButtonText(new Rect(btnRow.x, btnRow.y, 100f, 24f), "Cancel".Translate()))
-            Close();
-
-        GUI.color = Color.red;
-        if (Widgets.ButtonText(new Rect(btnRow.xMax - 120f, btnRow.y, 120f, 24f), "FactionLoadout_GroupEditor_ResetConfirmButton".Translate()))
-        {
-            _edit.ResetGroupEdits();
-            Close();
-        }
-
-        GUI.color = Color.white;
-        ui.End();
     }
 }
