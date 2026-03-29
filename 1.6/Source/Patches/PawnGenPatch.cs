@@ -69,6 +69,15 @@ public static class PawnGenPatchCore
                 }
             }
         }
+
+        foreach (ForcedTrait forcedTrait in ext.forcedTraits)
+        {
+            if (forcedTrait.TraitDef == null || !Rand.Chance(forcedTrait.chance))
+                continue;
+            if (__result.story?.traits.HasTrait(forcedTrait.TraitDef, forcedTrait.degree) ?? false)
+                continue;
+            __result.story.traits.GainTrait(new Trait(forcedTrait.TraitDef, forcedTrait.degree));
+        }
     }
 }
 

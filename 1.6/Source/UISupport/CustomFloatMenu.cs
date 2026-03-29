@@ -7,15 +7,14 @@ namespace FactionLoadout.UISupport;
 
 public class CustomFloatMenu : Window
 {
-    public static CustomFloatMenu Open(List<MenuItemBase> items, Action<MenuItemBase> onSelected)
+    public static CustomFloatMenu Open(List<MenuItemBase> items, Action<MenuItemBase> onSelected, int columns = 2)
     {
-        var created = new CustomFloatMenu();
-        created.Items = items;
-        created.OnSelected = onSelected;
-        created.closeOnAccept = false;
-        created.closeOnCancel = true;
-        created.closeOnClickedOutside = true;
-        created.layer = WindowLayer.SubSuper;
+        CustomFloatMenu created = new()
+        { Items = items, OnSelected = onSelected, Columns = columns, closeOnAccept = false,
+            closeOnCancel = true,
+            closeOnClickedOutside = true,
+            layer = WindowLayer.SubSuper
+        };
         Find.WindowStack.Add(created);
         return created;
     }
@@ -26,18 +25,15 @@ public class CustomFloatMenu : Window
         if (index < 0)
             return null;
 
-        if (!highlight)
-            return label;
-
-        return label.Insert(index + search.Length, "</color>").Insert(index, "<color=#57ff57>");
+        return !highlight ? label : label.Insert(index + search.Length, "</color>").Insert(index, "<color=#57ff57>");
     }
 
     public static List<MenuItemBase> MakeItems<T>(IEnumerable<T> rawItems, Func<T, MenuItemBase> makeItem)
     {
-        var list = new List<MenuItemBase>();
-        foreach (var item in rawItems)
+        List<MenuItemBase> list = [];
+        foreach (T item in rawItems)
         {
-            var result = makeItem(item);
+            MenuItemBase result = makeItem(item);
             if (result != null)
                 list.Add(result);
         }
@@ -54,7 +50,7 @@ public class CustomFloatMenu : Window
     public Color Tint = Color.white;
     public bool AllowChangeTint;
 
-    private readonly List<MenuItemBase> preRenderItems = new List<MenuItemBase>();
+    private readonly List<MenuItemBase> preRenderItems = [];
 
     private float lastHeight,
         lastWidth;
@@ -70,7 +66,7 @@ public class CustomFloatMenu : Window
             return;
         }
 
-        var searchBar = inRect;
+        Rect searchBar = inRect;
         searchBar.height = 28;
         if (AllowChangeTint)
             searchBar.width -= 100;
@@ -115,20 +111,20 @@ public class CustomFloatMenu : Window
                 if (index >= preRenderItems.Count)
                     break;
 
-                var item = preRenderItems[index];
-                var itemSize = item.GetSize();
+                MenuItemBase item = preRenderItems[index];
+                Vector2 itemSize = item.GetSize();
 
                 // Only call Draw (and register hit-boxes/tooltips) for items within the
                 // visible scroll viewport. Off-screen items still advance y so the scroll
                 // bar correctly reflects total content height.
                 if (!closedThisFrame && y + itemSize.y > visibleTop && y < visibleBottom)
                 {
-                    var pos = new Vector2(x, y);
+                    Vector2 pos = new(x, y);
                     if (Tint != Color.white)
                         GUI.color = Tint;
-                    var size = item.Draw(pos);
+                    Vector2 size = item.Draw(pos);
                     GUI.color = Color.white;
-                    var area = new Rect(pos, size);
+                    Rect area = new(pos, size);
                     Widgets.DrawBox(area);
                     if (Widgets.ButtonInvisible(area))
                     {
@@ -164,7 +160,7 @@ public class CustomFloatMenu : Window
         bool all = string.IsNullOrWhiteSpace(search);
         string newSearch = search?.Trim();
 
-        foreach (var item in Items)
+        foreach (MenuItemBase item in Items)
         {
             if (all || item.Matches(newSearch))
                 yield return item;
@@ -192,7 +188,7 @@ public class MenuItemText : MenuItemBase
     public string Tooltip;
     public Texture2D Icon;
     public Color IconColor;
-    public Vector2 Size = new Vector2(212, 28);
+    public Vector2 Size = new(212, 28);
 
     private string drawLabel;
     private bool consumedSearch = false;
@@ -201,11 +197,11 @@ public class MenuItemText : MenuItemBase
 
     public MenuItemText(object payload, string text, Texture2D icon = null, Color iconColor = default, string tooltip = null)
     {
-        this.Payload = payload;
-        this.Label = text;
-        this.Icon = icon;
-        this.Tooltip = tooltip;
-        this.IconColor = iconColor == default ? Color.white : iconColor;
+        Payload = payload;
+        Label = text;
+        Icon = icon;
+        Tooltip = tooltip;
+        IconColor = iconColor == default ? Color.white : iconColor;
     }
 
     public override bool Matches(string search)
@@ -226,7 +222,7 @@ public class MenuItemText : MenuItemBase
 
     public override Vector2 Draw(Vector2 pos)
     {
-        Rect area = new Rect(pos, Size);
+        Rect area = new(pos, Size);
 
         string label = Label;
 
@@ -265,7 +261,7 @@ public class MenuItemText : MenuItemBase
 
 public class MenuItemIcon : MenuItemBase
 {
-    public Vector2 Size = new Vector2(64, 64);
+    public Vector2 Size = new(64, 64);
     public string Label;
     public Texture2D Icon;
     public Color Color = Color.white;
@@ -275,10 +271,10 @@ public class MenuItemIcon : MenuItemBase
 
     public MenuItemIcon(object payload, string label, Texture2D icon, Color iconColor = default)
     {
-        this.Payload = payload;
-        this.Label = label;
-        this.Icon = icon;
-        this.Color = iconColor == default ? Color.white : iconColor;
+        Payload = payload;
+        Label = label;
+        Icon = icon;
+        Color = iconColor == default ? Color.white : iconColor;
     }
 
     public override bool Matches(string search)
@@ -298,14 +294,14 @@ public class MenuItemIcon : MenuItemBase
         if (Icon == null)
             return Size;
 
-        Rect area = new Rect(pos, Size);
+        Rect area = new(pos, Size);
 
         if (BGColor != default)
         {
             Widgets.DrawBoxSolid(area, BGColor);
         }
 
-        var old = GUI.color;
+        Color old = GUI.color;
         if (Color != Color.white)
             GUI.color = Color;
         Widgets.DrawTextureFitted(area, Icon, 1f);

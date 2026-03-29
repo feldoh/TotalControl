@@ -140,6 +140,8 @@ public class PawnKindEdit : IExposable
     public List<Color> CustomHairColors = null;
     public List<ForcedHediff> ForcedHediffs = null;
     public List<ForcedGene> ForcedGenes = null;
+    public List<ForcedTrait> ForcedTraitsDef = null;
+    public List<ForcedTrait> ForcedTraits = null;
     public Dictionary<string, float> ForcedXenotypeChances = new();
     public Dictionary<XenotypeDef, float> ForcedXenotypeChanceDefs = new();
     public Gender? ForcedGender = null;
@@ -243,6 +245,8 @@ public class PawnKindEdit : IExposable
         Scribe_Collections.Look(ref CustomHairColors, "customHairColors");
         Scribe_Collections.Look(ref ForcedHediffs, "forcedHediffs", LookMode.Deep);
         Scribe_Collections.Look(ref ForcedGenes, "forcedGenes", LookMode.Deep);
+        Scribe_Collections.Look(ref ForcedTraitsDef, "forcedTraitsDef", LookMode.Deep);
+        Scribe_Collections.Look(ref ForcedTraits, "forcedTraits", LookMode.Deep);
         Scribe_Collections.Look(ref ForcedXenotypeChances, "forcedXenotypeChances", LookMode.Value, LookMode.Value);
         Scribe_Deep.Look(ref RaidLootValueFromPointsCurve, "raidLootValueFromPointsCurve");
         Scribe_Deep.Look(ref RaidCommonalityFromPointsCurve, "raidCommonalityFromPointsCurve");

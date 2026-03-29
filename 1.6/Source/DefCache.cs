@@ -33,6 +33,8 @@ public static class DefCache
     public static List<BackstoryDef> AllAdulthoodBackstories;
     public static List<BackstoryDef> AllBackstoryDefs;
 
+    public static List<(TraitDef def, int degree)> AllTraitDegrees;
+
     public static List<string> AllPowerDefs;
 
     public static void ScanDefs()
@@ -185,6 +187,13 @@ public static class DefCache
         AllAdulthoodBackstories = adultBackstories;
         AllBackstoryDefs = [.. childBackstories];
         AllBackstoryDefs.AddRange(adultBackstories);
+
+        AllTraitDegrees = DefDatabase<TraitDef>
+            .AllDefsListForReading
+            .SelectMany(t => t.degreeDatas.Select(d => (t, d.degree)))
+            .OrderBy(x => x.t.LabelCap.ToString())
+            .ThenBy(x => x.degree)
+            .ToList();
 
         PopulateVFEAncientsObjects();
     }

@@ -64,6 +64,8 @@ public class BackstoryTab : EditTab
             false,
             pasteGet: e => e.ExcludedBackstories
         );
+        DrawForcedTraitsDef(ui);
+        DrawForcedTraitsChance(ui);
     }
 
     // ==================== Draw methods ====================
@@ -261,6 +263,314 @@ public class BackstoryTab : EditTab
     private void DrawExcludedBackstories(Rect rect, bool active, List<DefRef<BackstoryDef>> defaultList)
     {
         DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.ExcludedBackstories, null, DefCache.AllBackstoryDefs, MakeBackstoryMenuItem, BackstoryLabel);
+    }
+
+    // ==================== Forced traits ====================
+
+    private void DrawForcedTraitsDef(Listing_Standard ui)
+    {
+        List<ForcedTrait> traits = Current.ForcedTraitsDef;
+        float height = traits == null ? 32 : 40 * traits.Count + 66;
+
+        ui.Label($"<b>{"FactionLoadout_Traits_ForcedTraitsDef".Translate()}</b>");
+        TooltipHandler.TipRegion(ui.GetRect(0), "FactionLoadout_Traits_ForcedTraitsDefTooltip".Translate());
+        Rect rect = ui.GetRect(height);
+        bool active = traits != null;
+
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        {
+            if (active)
+            {
+                Current.ForcedTraitsDef = null;
+            }
+            else
+            {
+                Current.ForcedTraitsDef = DefaultKind.forcedTraits?
+                    .Where(t => t.def != null)
+                    .Select(t => new ForcedTrait { TraitDef = t.def, degree = t.degree.GetValueOrDefault() })
+                    .ToList() ?? [];
+            }
+
+            active = !active;
+            traits = Current.ForcedTraitsDef;
+        }
+
+        float contentH = active ? Mathf.Max(4f, rect.height - 33f) : rect.height;
+        Rect content = new(rect.x + 122, rect.y, ui.ColumnWidth - 124, contentH);
+        Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
+        content = content.ExpandedBy(-2);
+
+        ref Vector2 scroll = ref scrolls[scrollIndex++];
+        if (active)
+        {
+            DrawTraitList(content, ref scroll, traits, showChance: false);
+            content.y += content.height + 5;
+            content.height = 28;
+            content.width = 250;
+            if (Widgets.ButtonText(content, $"<b>{"FactionLoadout_Traits_AddTraitAlways".Translate()}</b>"))
+            {
+                (TraitDef def, int deg) = DefCache.AllTraitDegrees.FirstOrDefault();
+                if (def != null)
+                    traits.Add(new ForcedTrait { TraitDef = def, degree = deg, chance = 1f });
+            }
+        }
+        else
+        {
+            List<TraitRequirement> defTraits = DefaultKind.forcedTraits;
+            string txt;
+            if (Current.IsGlobal)
+            {
+                txt = "---";
+            }
+            else if (defTraits.NullOrEmpty())
+            {
+                txt = $"[Default] <i>{"FactionLoadout_None".Translate()}</i>";
+            }
+            else
+            {
+                txt = $"[Default] {defTraits.Count} {"FactionLoadout_Traits_TraitCount".Translate(defTraits.Count)}";
+            }
+
+            GUI.enabled = false;
+            Widgets.Label(content.GetCentered(txt), txt);
+            GUI.enabled = true;
+        }
+
+        ui.Gap();
+    }
+
+    private void DrawForcedTraitsChance(Listing_Standard ui)
+    {
+        List<ForcedTrait> traits = Current.ForcedTraits;
+        float height = traits == null ? 32 : 40 * traits.Count + 66;
+
+        ui.Label($"<b>{"FactionLoadout_Traits_ForcedTraits".Translate()}</b>");
+        TooltipHandler.TipRegion(ui.GetRect(0), "FactionLoadout_Traits_ForcedTraitsTooltip".Translate());
+        Rect rect = ui.GetRect(height);
+        bool active = traits != null;
+
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        {
+            Current.ForcedTraits = active ? null : [];
+            active = !active;
+            traits = Current.ForcedTraits;
+        }
+
+        float contentH = active ? Mathf.Max(4f, rect.height - 33f) : rect.height;
+        Rect content = new(rect.x + 122, rect.y, ui.ColumnWidth - 124, contentH);
+        Widgets.DrawBoxSolidWithOutline(content, Color.black * 0.2f, Color.white * 0.3f);
+        content = content.ExpandedBy(-2);
+
+        ref Vector2 scroll = ref scrolls[scrollIndex++];
+        if (active)
+        {
+            DrawTraitList(content, ref scroll, traits, showChance: true);
+            content.y += content.height + 5;
+            content.height = 28;
+            content.width = 250;
+            if (Widgets.ButtonText(content, $"<b>{"FactionLoadout_Traits_AddTraitChance".Translate()}</b>"))
+            {
+                (TraitDef def, int deg) = DefCache.AllTraitDegrees.FirstOrDefault();
+                if (def != null)
+                    traits.Add(new ForcedTrait { TraitDef = def, degree = deg, chance = 1f });
+            }
+        }
+        else
+        {
+            string txt = Current.IsGlobal ? "---" : $"[Default] <i>{"FactionLoadout_None".Translate()}</i>";
+            GUI.enabled = false;
+            Widgets.Label(content.GetCentered(txt), txt);
+            GUI.enabled = true;
+        }
+
+        ui.Gap();
+    }
+
+    private void DrawTraitList(Rect rect, ref Vector2 scroll, List<ForcedTrait> traits, bool showChance)
+    {
+        float innerHeight = 40f * traits.Count;
+        Widgets.BeginScrollView(rect, ref scroll, new Rect(0, 0, rect.width - 20, Mathf.Max(innerHeight, rect.height)));
+
+        ForcedTrait toRemove = null;
+        float y = 0;
+        float itemW = rect.width - 20;
+
+        for (int i = 0; i < traits.Count; i++)
+        {
+            ForcedTrait item = traits[i];
+            Rect itemRect = new(0, y, itemW, 36);
+            bool conflict = TraitHasConflictInList(traits, item);
+            Color outlineColor = conflict ? Color.yellow * 0.8f : Color.white * 0.2f;
+            Widgets.DrawBoxSolidWithOutline(itemRect, Color.black * 0.3f, outlineColor);
+
+            if (conflict)
+            {
+                TooltipHandler.TipRegion(itemRect, "FactionLoadout_Traits_ConflictWarning".Translate());
+            }
+
+            // Trait selector button — left side, same row as delete button
+            float selectorW = showChance ? (itemW - 38) * 0.55f : itemW - 38;
+            Rect selectorBtn = new(itemRect.x + 4, itemRect.y + 4, selectorW, 28);
+            string traitLabel = TraitLabel(item.TraitDef, item.degree);
+            if (item.TraitDef == null)
+            {
+                GUI.color = Color.grey;
+            }
+            if (Widgets.ButtonText(selectorBtn, traitLabel))
+            {
+                ForcedTrait captured = item;
+                List<MenuItemBase> menuItems = CustomFloatMenu.MakeItems(
+                    DefCache.AllTraitDegrees,
+                    td => new MenuItemText(td, TraitMenuLabel(td.def, td.degree), tooltip: TraitMenuTooltip(td.def, td.degree))
+                    {
+                        Size = new Vector2(500, 28),
+                    }
+                );
+                CustomFloatMenu.Open(
+                    menuItems,
+                    raw =>
+                    {
+                        (TraitDef def, int deg) = raw.GetPayload<(TraitDef, int)>();
+                        captured.TraitDef = def;
+                        captured.degree = deg;
+                    },
+                    columns: 1
+                );
+            }
+            GUI.color = Color.white;
+
+            // Chance slider (only for probabilistic section) — between selector and delete button
+            if (showChance)
+            {
+                float afterSelector = selectorBtn.xMax + 4;
+                float remainingW = itemRect.xMax - 30 - afterSelector - 4;
+                Rect chanceLabel = new(afterSelector, itemRect.y + 4, 60, 28);
+                Widgets.Label(chanceLabel, "FactionLoadout_Traits_Chance".Translate());
+                Rect chanceSlider = new(afterSelector + 64, itemRect.y + 8, remainingW - 64, 20);
+                item.chance = Widgets.HorizontalSlider(chanceSlider, item.chance, 0f, 1f, middleAlignment: true, $"{item.chance:P0}");
+            }
+
+            // Delete button — right side, same row as selector
+            Rect deleteBtn = new(itemRect.xMax - 28, itemRect.y + 4, 24, 28);
+            GUI.color = Color.red;
+            if (Widgets.ButtonText(deleteBtn, "X"))
+            {
+                toRemove = item;
+            }
+            GUI.color = Color.white;
+
+            y += 40;
+        }
+
+        Widgets.EndScrollView();
+
+        if (toRemove != null)
+        {
+            traits.Remove(toRemove);
+        }
+    }
+
+    private static bool TraitHasConflictInList(List<ForcedTrait> traits, ForcedTrait item)
+    {
+        if (item.TraitDef == null)
+        {
+            return false;
+        }
+
+        foreach (ForcedTrait other in traits)
+        {
+            if (other == item || other.TraitDef == null)
+            {
+                continue;
+            }
+
+            if (TraitsConflict(item.TraitDef, other.TraitDef))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TraitsConflict(TraitDef a, TraitDef b)
+    {
+        if (a == b)
+        {
+            return false;
+        }
+
+        if (a.conflictingTraits != null && a.conflictingTraits.Contains(b))
+        {
+            return true;
+        }
+
+        if (b.conflictingTraits != null && b.conflictingTraits.Contains(a))
+        {
+            return true;
+        }
+
+        if (a.exclusionTags != null && b.exclusionTags != null)
+        {
+            foreach (string tag in a.exclusionTags)
+            {
+                if (b.exclusionTags.Contains(tag))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static string TraitLabel(TraitDef def, int degree)
+    {
+        if (def == null)
+        {
+            return "<i>None</i>";
+        }
+
+        // Degree data label is the primary display name for all traits.
+        // TraitDef.label / LabelCap is often null — labels live in degreeDatas.
+        TraitDegreeData data = def.DataAtDegree(degree);
+        string degLabel = data?.label;
+        string displayName;
+        if (!degLabel.NullOrEmpty())
+        {
+            displayName = degLabel.CapitalizeFirst();
+        }
+        else
+        {
+            string defLabel = def.label;
+            displayName = defLabel.NullOrEmpty() ? def.defName : defLabel.CapitalizeFirst();
+        }
+
+        return $"{displayName} [{def.defName}, {degree}]";
+    }
+
+    private static string TraitMenuLabel(TraitDef def, int degree)
+    {
+        TraitDegreeData data = def.DataAtDegree(degree);
+        string degLabel = data?.label;
+        string displayName;
+        if (!degLabel.NullOrEmpty())
+        {
+            displayName = degLabel.CapitalizeFirst();
+        }
+        else
+        {
+            string defLabel = def.label;
+            displayName = defLabel.NullOrEmpty() ? def.defName : defLabel.CapitalizeFirst();
+        }
+
+        return $"{displayName} [{def.defName}, {degree}]";
+    }
+
+    private static string TraitMenuTooltip(TraitDef def, int degree)
+    {
+        TraitDegreeData data = def.DataAtDegree(degree);
+        return data?.description ?? def.description ?? string.Empty;
     }
 
     // ==================== Static helpers (used by DefCache for sorting) ====================

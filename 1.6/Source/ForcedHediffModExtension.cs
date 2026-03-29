@@ -9,4 +9,5 @@ public class ForcedExtrasModExtension : DefModExtension
 {
     public List<ForcedHediff> forcedHediffs = [];
     public List<ForcedGene> forcedGenes = [];
+    public List<ForcedTrait> forcedTraits = [];
 }

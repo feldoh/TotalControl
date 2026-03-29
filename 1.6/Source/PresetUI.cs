@@ -36,7 +36,7 @@ public class PresetUI : Window
     {
         base.PostOpen();
 
-        windowRect = new Rect(20, 110, Mathf.Max(UI.screenWidth * 0.5f - 550, 450), 500);
+        windowRect = new Rect(20, 110, Mathf.Max(UI.screenWidth * 0.5f - 550, 450), 1000);
     }
 
     public override void PostClose()

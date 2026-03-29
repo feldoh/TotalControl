@@ -1,10 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using FactionLoadout.Modules;
-using FactionLoadout.Util;
-using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -98,6 +95,18 @@ public static class PawnKindApplicator
             color = new Color(0.995f, 0.995f, 0.995f, 1f);
         ReplaceUtils.ReplaceMaybe(ref def.apparelColor, color);
 
+        if (edit.ForcedTraitsDef is { Count: > 0 })
+        {
+            def.forcedTraits ??= [];
+            foreach (ForcedTrait t in edit.ForcedTraitsDef)
+            {
+                if (t.TraitDef == null)
+                    continue;
+                if (!def.forcedTraits.Any(e => e.def == t.TraitDef && e.degree.GetValueOrDefault() == t.degree))
+                    def.forcedTraits.Add(new TraitRequirement { def = t.TraitDef, degree = t.degree });
+            }
+        }
+
         def.modExtensions ??= [];
 
         ForcedExtrasModExtension extrasExtension = null;
@@ -125,6 +134,18 @@ public static class PawnKindApplicator
 
             extrasExtension.forcedGenes.AddRange(edit.ForcedGenes);
             ModCore.Debug($"Adding forced genes {extrasExtension.forcedGenes?.Select(h => h.GeneDef?.defName).ToCommaList() ?? "None"} to {def.defName}");
+        }
+
+        if (edit.ForcedTraits is { Count: > 0 })
+        {
+            extrasExtension ??= def.GetModExtension<ForcedExtrasModExtension>();
+            if (extrasExtension == null)
+            {
+                extrasExtension = new ForcedExtrasModExtension();
+                def.modExtensions.Add(extrasExtension);
+            }
+
+            extrasExtension.forcedTraits.AddRange(edit.ForcedTraits);
         }
 
         if (ModsConfig.BiotechActive && def.RaceProps.Humanlike && edit.ForceSpecificXenos && (edit.ForcedXenotypeChanceDefs?.Count ?? 0) >= 1)

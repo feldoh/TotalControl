@@ -74,6 +74,16 @@
     <FactionLoadout_Backstory_EmptyFilter>Empty filter</FactionLoadout_Backstory_EmptyFilter>
     <FactionLoadout_Backstory_ChildPrefix>Child: </FactionLoadout_Backstory_ChildPrefix>
     <FactionLoadout_Backstory_AdultPrefix>Adult: </FactionLoadout_Backstory_AdultPrefix>
+
+    <FactionLoadout_Traits_ForcedTraitsDef>Always Forced Traits</FactionLoadout_Traits_ForcedTraitsDef>
+    <FactionLoadout_Traits_ForcedTraitsDefTooltip>These traits are added directly to the pawn kind's native forced trait list and are always applied (100% chance). When first enabled, it pre-populates from the def's existing forced traits so you can see and modify them. Forced traits bypass RimWorld's normal 1-3 trait limit.</FactionLoadout_Traits_ForcedTraitsDefTooltip>
+    <FactionLoadout_Traits_ForcedTraits>Probabilistic Forced Traits</FactionLoadout_Traits_ForcedTraits>
+    <FactionLoadout_Traits_ForcedTraitsTooltip>These traits are applied after pawn generation with an independent per-trait chance. They bypass RimWorld's normal limit of 1-3 traits. Conflicting traits are silently skipped at generation time.</FactionLoadout_Traits_ForcedTraitsTooltip>
+    <FactionLoadout_Traits_AddTraitAlways>+ Add Trait (Always)</FactionLoadout_Traits_AddTraitAlways>
+    <FactionLoadout_Traits_AddTraitChance>+ Add Trait (Chance)</FactionLoadout_Traits_AddTraitChance>
+    <FactionLoadout_Traits_Chance>Chance:</FactionLoadout_Traits_Chance>
+    <FactionLoadout_Traits_ConflictWarning>This trait may conflict with another forced trait on this pawn and may be silently skipped during generation.</FactionLoadout_Traits_ConflictWarning>
+    <FactionLoadout_Traits_TraitCount>{0} trait(s)</FactionLoadout_Traits_TraitCount>
     <FactionLoadout_DefRef_Missing>{0} (missing — from {1})</FactionLoadout_DefRef_Missing>
     <FactionLoadout_DefRef_UnknownMod>unknown mod</FactionLoadout_DefRef_UnknownMod>
     <FactionLoadout_None>None</FactionLoadout_None>
