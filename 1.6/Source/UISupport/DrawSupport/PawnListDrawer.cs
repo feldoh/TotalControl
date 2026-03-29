@@ -18,9 +18,9 @@ public static class PawnListDrawer
     public static float CalcHeight(List<PawnGenOptionEdit> list)
     {
         float h = 24f; // section header row
-        h += 2f;       // Gap(2f) after header
+        h += 2f; // Gap(2f) after header
         h += (list.Count == 0 ? 1 : list.Count) * 24f; // "(none)" label or item rows
-        h += 12f;      // GapLine at end
+        h += 12f; // GapLine at end
         return h;
     }
 
@@ -68,13 +68,7 @@ public static class PawnListDrawer
 
             if (Widgets.ButtonText(addBtn, addButtonLabel))
             {
-                Find.WindowStack.Add(
-                    new Dialog_PawnKindPicker(
-                        sectionLabel,
-                        list,
-                        defName => list.Add(new PawnGenOptionEdit { KindDefName = defName, SelectionWeight = 1f })
-                    )
-                );
+                Find.WindowStack.Add(new Dialog_PawnKindPicker(sectionLabel, list, defName => list.Add(new PawnGenOptionEdit { KindDefName = defName, SelectionWeight = 1f })));
             }
         }
 

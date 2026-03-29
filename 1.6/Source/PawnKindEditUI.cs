@@ -116,9 +116,7 @@ public class PawnKindEditUI : Window
 
             Rect contentArea = inRect;
             contentArea.yMin += 100 + 50 * (tabRows - 1) + 32;
-            float tabContentH = tabHeights.TryGetValue(tab, out float storedH)
-                ? Mathf.Max(storedH, contentArea.height)
-                : contentArea.height;
+            float tabContentH = tabHeights.TryGetValue(tab, out float storedH) ? Mathf.Max(storedH, contentArea.height) : contentArea.height;
             Widgets.BeginScrollView(contentArea, ref globalScroll, new Rect(0, 0, inRect.width - 24, tabContentH));
 
             Listing_Standard ui = new() { ColumnWidth = inRect.width - 24 };

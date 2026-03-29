@@ -64,8 +64,7 @@ public abstract class EditTab : Tab
         float height = 32,
         Func<PawnKindEdit, T?> pasteGet = null
     )
-        where T : struct
-        => OverrideDrawSupport.DrawOverride(ui, defaultValue, ref field, label, drawContent, height, pasteGet, ResetBuffers);
+        where T : struct => OverrideDrawSupport.DrawOverride(ui, defaultValue, ref field, label, drawContent, height, pasteGet, ResetBuffers);
 
     public void DrawOverride<T>(
         Listing_Standard ui,
@@ -76,8 +75,7 @@ public abstract class EditTab : Tab
         float height = 32,
         Func<PawnKindEdit, T> pasteGet = null
     )
-        where T : class
-        => OverrideDrawSupport.DrawOverride(ui, defaultValue, ref field, label, drawContent, height, pasteGet, ResetBuffers);
+        where T : class => OverrideDrawSupport.DrawOverride(ui, defaultValue, ref field, label, drawContent, height, pasteGet, ResetBuffers);
 
     public void DrawOverride<T>(
         Listing_Standard ui,
@@ -89,8 +87,7 @@ public abstract class EditTab : Tab
         bool cloneDefault = true,
         Func<PawnKindEdit, T> pasteGet = null
     )
-        where T : IList
-        => OverrideDrawSupport.DrawOverride(ui, defaultValue, ref field, label, drawContent, height, cloneDefault, pasteGet, ResetBuffers);
+        where T : IList => OverrideDrawSupport.DrawOverride(ui, defaultValue, ref field, label, drawContent, height, cloneDefault, pasteGet, ResetBuffers);
 
     // ==================== List drawer wrappers ====================
 
@@ -104,8 +101,7 @@ public abstract class EditTab : Tab
         Func<T, MenuItemBase> makeItem = null,
         Func<T, string> labelFunc = null
     )
-        where T : Def, new()
-        => ListDrawSupport.DrawDefRefList(rect, active, ref scroll, current, defaults, allDefs, Current.IsGlobal, makeItem, labelFunc);
+        where T : Def, new() => ListDrawSupport.DrawDefRefList(rect, active, ref scroll, current, defaults, allDefs, Current.IsGlobal, makeItem, labelFunc);
 
     protected CustomFloatMenu DrawDefList<T>(
         Rect rect,
@@ -117,42 +113,37 @@ public abstract class EditTab : Tab
         bool allowDupes,
         Func<T, MenuItemBase> makeItems = null
     )
-        where T : Def
-        => ListDrawSupport.DrawDefList(rect, active, ref scroll, current, defaultThings, allThings, allowDupes, Current.IsGlobal, makeItems);
+        where T : Def => ListDrawSupport.DrawDefList(rect, active, ref scroll, current, defaultThings, allThings, allowDupes, Current.IsGlobal, makeItems);
 
-    protected void DrawColorList(Rect rect, bool active, ref Vector2 scroll, IList<Color> current, IList<Color> defaultColors)
-        => ListDrawSupport.DrawColorList(rect, active, ref scroll, current, defaultColors, Current.IsGlobal);
+    protected void DrawColorList(Rect rect, bool active, ref Vector2 scroll, IList<Color> current, IList<Color> defaultColors) =>
+        ListDrawSupport.DrawColorList(rect, active, ref scroll, current, defaultColors, Current.IsGlobal);
 
-    protected void DrawStringList(Rect rect, bool active, ref Vector2 scroll, IList<string> current, IList<string> defaultTags, IEnumerable<string> allTags)
-        => ListDrawSupport.DrawStringList(rect, active, ref scroll, current, defaultTags, allTags, Current.IsGlobal);
+    protected void DrawStringList(Rect rect, bool active, ref Vector2 scroll, IList<string> current, IList<string> defaultTags, IEnumerable<string> allTags) =>
+        ListDrawSupport.DrawStringList(rect, active, ref scroll, current, defaultTags, allTags, Current.IsGlobal);
 
     // ==================== Value drawer wrappers ====================
 
     protected void DrawEnumSelector<T>(Rect rect, bool active, T? field, T defaultValue, Action<T> apply, Func<T, string> makeName = null)
-        where T : struct
-        => ValueDrawSupport.DrawEnumSelector(rect, active, Current.IsGlobal, field, defaultValue, apply, makeName);
+        where T : struct => ValueDrawSupport.DrawEnumSelector(rect, active, Current.IsGlobal, field, defaultValue, apply, makeName);
 
     protected void DrawDefSelector<T>(Rect rect, bool active, IEnumerable<T> defs, T field, T defaultValue, Action<T> apply, Func<T, string> makeName = null)
-        where T : Def
-        => ValueDrawSupport.DrawDefSelector(rect, active, Current.IsGlobal, defs, field, defaultValue, apply, makeName);
+        where T : Def => ValueDrawSupport.DrawDefSelector(rect, active, Current.IsGlobal, defs, field, defaultValue, apply, makeName);
 
-    protected void DrawChance(ref float? field, float defaultValue, Rect rect, bool active)
-        => ValueDrawSupport.DrawChance(rect, active, Current.IsGlobal, ref field, defaultValue);
+    protected void DrawChance(ref float? field, float defaultValue, Rect rect, bool active) => ValueDrawSupport.DrawChance(rect, active, Current.IsGlobal, ref field, defaultValue);
 
-    protected void DrawIntRange(Rect rect, bool active, ref IntRange? current, IntRange defaultRange, ref string buffer, ref string buffer2)
-        => ValueDrawSupport.DrawIntRange(rect, active, Current.IsGlobal, ref current, defaultRange, ref buffer, ref buffer2);
+    protected void DrawIntRange(Rect rect, bool active, ref IntRange? current, IntRange defaultRange, ref string buffer, ref string buffer2) =>
+        ValueDrawSupport.DrawIntRange(rect, active, Current.IsGlobal, ref current, defaultRange, ref buffer, ref buffer2);
 
-    protected void DrawFloatRange(Rect rect, bool active, ref FloatRange? current, FloatRange defaultRange, ref string buffer, ref string buffer2)
-        => ValueDrawSupport.DrawFloatRange(rect, active, Current.IsGlobal, ref current, defaultRange, ref buffer, ref buffer2);
+    protected void DrawFloatRange(Rect rect, bool active, ref FloatRange? current, FloatRange defaultRange, ref string buffer, ref string buffer2) =>
+        ValueDrawSupport.DrawFloatRange(rect, active, Current.IsGlobal, ref current, defaultRange, ref buffer, ref buffer2);
 
-    protected float GetHeightFor(IList list, float itemHeight = 26)
-        => ValueDrawSupport.GetHeightFor(list, itemHeight);
+    protected float GetHeightFor(IList list, float itemHeight = 26) => ValueDrawSupport.GetHeightFor(list, itemHeight);
 
     // ==================== Complex drawer wrappers ====================
 
-    protected void DrawSpecificGear(Listing_Standard ui, ref List<SpecRequirementEdit> edits, string label, Func<ThingDef, bool> thingFilter, ThingDef defaultThing)
-        => SpecificGearDrawer.Draw(ui, ref edits, label, thingFilter, defaultThing, ref scrolls[scrollIndex++]);
+    protected void DrawSpecificGear(Listing_Standard ui, ref List<SpecRequirementEdit> edits, string label, Func<ThingDef, bool> thingFilter, ThingDef defaultThing) =>
+        SpecificGearDrawer.Draw(ui, ref edits, label, thingFilter, defaultThing, ref scrolls[scrollIndex++]);
 
-    public void DrawCurve(Listing_Standard listing, ref SimpleCurve curve, ref List<(string x, string y)> curvePointBuffer)
-        => CurveDrawer.DrawCurve(listing, ref curve, ref curvePointBuffer);
+    public void DrawCurve(Listing_Standard listing, ref SimpleCurve curve, ref List<(string x, string y)> curvePointBuffer) =>
+        CurveDrawer.DrawCurve(listing, ref curve, ref curvePointBuffer);
 }

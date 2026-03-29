@@ -73,9 +73,6 @@ public static class VFEAncientsReflectionModule
             return;
 
         powerList.Clear();
-        edit.ForcedVFEAncientsItems
-            .Select(i => GetPowerDefMethod.Value.Invoke(null, [i]))
-            .Where(p => p != null)
-            .DoIf(p => !powerList.Contains(p), p => powerList.Add(p));
+        edit.ForcedVFEAncientsItems.Select(i => GetPowerDefMethod.Value.Invoke(null, [i])).Where(p => p != null).DoIf(p => !powerList.Contains(p), p => powerList.Add(p));
     }
 }

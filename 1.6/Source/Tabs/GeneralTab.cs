@@ -19,10 +19,22 @@ public class GeneralTab : EditTab
         if (!Current.IsGlobal && isAnimal)
             DrawOverride(ui, DefaultKind, ref Current.ReplaceWith, "Replace with...", DrawReplaceWith, pasteGet: e => e.ReplaceWith);
 
-        DrawOverride(ui, DefaultKind.nameMaker ?? DefCache.FakeRulePack, ref Current.NameMaker, "Name Maker...",
-            (r, a, d) => DrawNameMakerImpl(r, a, d, female: false), pasteGet: e => e.NameMaker);
-        DrawOverride(ui, DefaultKind.nameMakerFemale ?? DefCache.FakeRulePack, ref Current.NameMakerFemale, "Name Maker Female...",
-            (r, a, d) => DrawNameMakerImpl(r, a, d, female: true), pasteGet: e => e.NameMakerFemale);
+        DrawOverride(
+            ui,
+            DefaultKind.nameMaker ?? DefCache.FakeRulePack,
+            ref Current.NameMaker,
+            "Name Maker...",
+            (r, a, d) => DrawNameMakerImpl(r, a, d, female: false),
+            pasteGet: e => e.NameMaker
+        );
+        DrawOverride(
+            ui,
+            DefaultKind.nameMakerFemale ?? DefCache.FakeRulePack,
+            ref Current.NameMakerFemale,
+            "Name Maker Female...",
+            (r, a, d) => DrawNameMakerImpl(r, a, d, female: true),
+            pasteGet: e => e.NameMakerFemale
+        );
 
         DrawOverride(ui, Gender.None, ref Current.ForcedGender, "Forced Gender", DrawGender, pasteGet: e => e.ForcedGender);
         DrawOverride(ui, DefaultKind.label, ref Current.Label, "Custom name", DrawCustomName, pasteGet: e => e.Label);
@@ -75,7 +87,17 @@ public class GeneralTab : EditTab
             DefCache.AllRulePackDefs,
             female ? Current.NameMakerFemale : Current.NameMaker,
             defaultRulePack,
-            r => { if (female) { Current.NameMakerFemale = r; } else { Current.NameMaker = r; } },
+            r =>
+            {
+                if (female)
+                {
+                    Current.NameMakerFemale = r;
+                }
+                else
+                {
+                    Current.NameMaker = r;
+                }
+            },
             d => d?.defName ?? "None"
         );
     }
@@ -104,7 +126,10 @@ public class GeneralTab : EditTab
             DefCache.AllHumanlikeRaces,
             Current.Race,
             DefaultKind.race,
-            r => { Current.Race = r; }
+            r =>
+            {
+                Current.Race = r;
+            }
         );
     }
 
@@ -116,7 +141,10 @@ public class GeneralTab : EditTab
             DefCache.AllAnimalKindDefs,
             Current.ReplaceWith,
             DefaultKind,
-            r => { Current.ReplaceWith = r; }
+            r =>
+            {
+                Current.ReplaceWith = r;
+            }
         );
     }
 

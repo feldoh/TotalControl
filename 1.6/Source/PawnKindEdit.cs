@@ -462,8 +462,7 @@ public class PawnKindEdit : IExposable
     private static void ScribeMigrateDefRefList<T>(ref List<DefRef<T>> field, string xmlKey)
         where T : Def, new()
     {
-        if (Scribe.mode == LoadSaveMode.LoadingVars
-            && IsDefListOldFormat(Scribe.loader.curXmlParent?[xmlKey]))
+        if (Scribe.mode == LoadSaveMode.LoadingVars && IsDefListOldFormat(Scribe.loader.curXmlParent?[xmlKey]))
         {
             List<T> old = null;
             Scribe_Collections.Look(ref old, xmlKey, LookMode.Def);
@@ -475,10 +474,8 @@ public class PawnKindEdit : IExposable
         }
     }
 
-    private static bool IsDefListOldFormat(XmlNode collectionNode)
-        => collectionNode != null
-           && collectionNode.HasChildNodes
-           && collectionNode.SelectSingleNode("li/defName") == null;
+    private static bool IsDefListOldFormat(XmlNode collectionNode) =>
+        collectionNode != null && collectionNode.HasChildNodes && collectionNode.SelectSingleNode("li/defName") == null;
 
     // ==================== Queries ====================
 

@@ -48,10 +48,12 @@ public class ForcedHediff : IExposable, IDeepCopyable<ForcedHediff>
     public void ExposeData()
     {
         Scribe_Values.Look(ref hediffDef, "hediffDef");
-        if (Scribe.mode == LoadSaveMode.LoadingVars
+        if (
+            Scribe.mode == LoadSaveMode.LoadingVars
             && Scribe.loader.curXmlParent?["parts"] is { } partsNode
             && partsNode.HasChildNodes
-            && partsNode.SelectSingleNode("li/defName") == null)
+            && partsNode.SelectSingleNode("li/defName") == null
+        )
         {
             List<BodyPartDef> old = null;
             Scribe_Collections.Look(ref old, "parts", LookMode.Def);

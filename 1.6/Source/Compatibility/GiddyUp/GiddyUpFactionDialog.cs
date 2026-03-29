@@ -64,21 +64,9 @@ public class GiddyUpFactionDialog : Window
         ui.GapLine();
         DrawWeights(ui, data);
         ui.GapLine();
-        DrawAnimalList(
-            ui,
-            "GU_AllowedWildAnimals".Translate(),
-            "GU_AllowedWildAnimals_Note".Translate(),
-            data.AllowedWildAnimals ??= [],
-            "GU_AddWildAnimal"
-        );
+        DrawAnimalList(ui, "GU_AllowedWildAnimals".Translate(), "GU_AllowedWildAnimals_Note".Translate(), data.AllowedWildAnimals ??= [], "GU_AddWildAnimal");
         ui.GapLine();
-        DrawAnimalList(
-            ui,
-            "GU_AllowedNonWildAnimals".Translate(),
-            "GU_AllowedNonWildAnimals_Note".Translate(),
-            data.AllowedNonWildAnimals ??= [],
-            "GU_AddNonWildAnimal"
-        );
+        DrawAnimalList(ui, "GU_AllowedNonWildAnimals".Translate(), "GU_AllowedNonWildAnimals_Note".Translate(), data.AllowedNonWildAnimals ??= [], "GU_AddNonWildAnimal");
 
         ui.End();
         Widgets.EndScrollView();
@@ -141,9 +129,8 @@ public class GiddyUpFactionDialog : Window
         }
         else
         {
-            string defaultLabel = _defMountChance != null
-                ? "GU_MountChanceDefault_Known".Translate(_defMountChance.Value).ToString()
-                : "GU_FactionMountChanceDefault".Translate().ToString();
+            string defaultLabel =
+                _defMountChance != null ? "GU_MountChanceDefault_Known".Translate(_defMountChance.Value).ToString() : "GU_FactionMountChanceDefault".Translate().ToString();
             Color prev = GUI.color;
             GUI.color = Color.gray;
             Widgets.Label(labelRect, defaultLabel);
@@ -199,9 +186,7 @@ public class GiddyUpFactionDialog : Window
         {
             Rect defaultLabelRect = new(fieldRect.x, fieldRect.y, fieldRect.width - BtnW - 4f, fieldRect.height);
             Rect overrideBtnRect = new(fieldRect.xMax - BtnW, fieldRect.y, BtnW, fieldRect.height);
-            string defaultLabel = defValue != null
-                ? "GU_WeightDefault_Known".Translate(defValue.Value).ToString()
-                : "GU_WeightDefault".Translate().ToString();
+            string defaultLabel = defValue != null ? "GU_WeightDefault_Known".Translate(defValue.Value).ToString() : "GU_WeightDefault".Translate().ToString();
             Color prev = GUI.color;
             GUI.color = Color.gray;
             Widgets.Label(defaultLabelRect, defaultLabel);
@@ -248,8 +233,8 @@ public class GiddyUpFactionDialog : Window
 
         if (ui.ButtonText(addKey.Translate()))
         {
-            List<PawnKindDef> candidateList = DefDatabase<PawnKindDef>.AllDefsListForReading
-                .Where(k => k.RaceProps.Animal && !list.Contains(k.defName))
+            List<PawnKindDef> candidateList = DefDatabase<PawnKindDef>
+                .AllDefsListForReading.Where(k => k.RaceProps.Animal && !list.Contains(k.defName))
                 .OrderBy(k => (string)k.LabelCap)
                 .ToList();
 
@@ -259,10 +244,7 @@ public class GiddyUpFactionDialog : Window
                     candidateList,
                     k => new MenuItemText(k, $"{k.LabelCap} ({k.defName})", tooltip: k.description) { Size = new Vector2(424, 28) }
                 );
-                CustomFloatMenu menu = CustomFloatMenu.Open(
-                    items,
-                    item => list.Add(item.GetPayload<PawnKindDef>().defName)
-                );
+                CustomFloatMenu menu = CustomFloatMenu.Open(items, item => list.Add(item.GetPayload<PawnKindDef>().defName));
                 menu.Columns = 1;
             }
         }

@@ -62,7 +62,7 @@ public static class PawnKindApplicator
 
         // Backstory filters override — BackstoryFilter extends BackstoryCategoryFilter, so cast directly.
         if (edit.BackstoryFiltersOverride is { Count: > 0 })
-            def.backstoryFiltersOverride = [..edit.BackstoryFiltersOverride];
+            def.backstoryFiltersOverride = [.. edit.BackstoryFiltersOverride];
 
         ReplaceUtils.ReplaceMaybe(ref def.backstoryCryptosleepCommonality, edit.BackstoryCryptosleepCommonality);
 
@@ -313,5 +313,4 @@ public static class PawnKindApplicator
 
         ModCore.Debug($"Backstory exclusions for {def.defName} ({slot}): {excluded.Count} excluded, {resolved.Count} resolved from categories into fixed list.");
     }
-
 }

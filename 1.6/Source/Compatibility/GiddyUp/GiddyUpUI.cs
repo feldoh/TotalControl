@@ -97,9 +97,8 @@ public static class GiddyUpUI
         }
         else
         {
-            string defaultLabel = defMountChance != null
-                ? "GU_MountChanceDefault_Known".Translate(defMountChance.Value).ToString()
-                : "GU_MountChanceDefault_Unknown".Translate().ToString();
+            string defaultLabel =
+                defMountChance != null ? "GU_MountChanceDefault_Known".Translate(defMountChance.Value).ToString() : "GU_MountChanceDefault_Unknown".Translate().ToString();
             Widgets.Label(labelRect, defaultLabel);
 
             GUI.enabled = !disableMounts;

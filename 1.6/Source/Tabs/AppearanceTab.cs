@@ -13,8 +13,26 @@ public class AppearanceTab : EditTab
 
     protected override void DrawContents(Listing_Standard ui)
     {
-        DrawOverride(ui, (List<DefRef<BeardDef>>)null, ref Current.CustomBeards, "Forced Beard Styles", DrawBeardStyles, GetHeightFor(Current.CustomBeards), false, pasteGet: e => e.CustomBeards);
-        DrawOverride(ui, (List<DefRef<HairDef>>)null, ref Current.CustomHair, "Forced Hair Styles", DrawHairStyles, GetHeightFor(Current.CustomHair), false, pasteGet: e => e.CustomHair);
+        DrawOverride(
+            ui,
+            (List<DefRef<BeardDef>>)null,
+            ref Current.CustomBeards,
+            "Forced Beard Styles",
+            DrawBeardStyles,
+            GetHeightFor(Current.CustomBeards),
+            false,
+            pasteGet: e => e.CustomBeards
+        );
+        DrawOverride(
+            ui,
+            (List<DefRef<HairDef>>)null,
+            ref Current.CustomHair,
+            "Forced Hair Styles",
+            DrawHairStyles,
+            GetHeightFor(Current.CustomHair),
+            false,
+            pasteGet: e => e.CustomHair
+        );
         DrawOverride(
             ui,
             null,
@@ -25,7 +43,16 @@ public class AppearanceTab : EditTab
             false,
             pasteGet: e => e.CustomHairColors
         );
-        DrawOverride(ui, (List<DefRef<BodyTypeDef>>)null, ref Current.BodyTypes, "Allowed Body Types", DrawBodyTypes, GetHeightFor(Current.BodyTypes), false, pasteGet: e => e.BodyTypes);
+        DrawOverride(
+            ui,
+            (List<DefRef<BodyTypeDef>>)null,
+            ref Current.BodyTypes,
+            "Allowed Body Types",
+            DrawBodyTypes,
+            GetHeightFor(Current.BodyTypes),
+            false,
+            pasteGet: e => e.BodyTypes
+        );
     }
 
     private void DrawHairStyles(Rect rect, bool active, List<DefRef<HairDef>> _)

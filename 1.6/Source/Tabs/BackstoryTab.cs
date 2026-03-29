@@ -270,7 +270,7 @@ public class BackstoryTab : EditTab
     private void DrawForcedTraitsDef(Listing_Standard ui)
     {
         List<ForcedTrait> traits = Current.ForcedTraitsDef;
-        float height = traits == null ? 32 : 40 * traits.Count + 66;
+        float height = traits == null ? 32 : 38 * traits.Count + 66;
 
         ui.Label($"<b>{"FactionLoadout_Traits_ForcedTraitsDef".Translate()}</b>");
         TooltipHandler.TipRegion(ui.GetRect(0), "FactionLoadout_Traits_ForcedTraitsDefTooltip".Translate());
@@ -285,10 +285,8 @@ public class BackstoryTab : EditTab
             }
             else
             {
-                Current.ForcedTraitsDef = DefaultKind.forcedTraits?
-                    .Where(t => t.def != null)
-                    .Select(t => new ForcedTrait { TraitDef = t.def, degree = t.degree.GetValueOrDefault() })
-                    .ToList() ?? [];
+                Current.ForcedTraitsDef =
+                    DefaultKind.forcedTraits?.Where(t => t.def != null).Select(t => new ForcedTrait { TraitDef = t.def, degree = t.degree.GetValueOrDefault() }).ToList() ?? [];
             }
 
             active = !active;
@@ -311,7 +309,14 @@ public class BackstoryTab : EditTab
             {
                 (TraitDef def, int deg) = DefCache.AllTraitDegrees.FirstOrDefault();
                 if (def != null)
-                    traits.Add(new ForcedTrait { TraitDef = def, degree = deg, chance = 1f });
+                    traits.Add(
+                        new ForcedTrait
+                        {
+                            TraitDef = def,
+                            degree = deg,
+                            chance = 1f,
+                        }
+                    );
             }
         }
         else
@@ -342,7 +347,7 @@ public class BackstoryTab : EditTab
     private void DrawForcedTraitsChance(Listing_Standard ui)
     {
         List<ForcedTrait> traits = Current.ForcedTraits;
-        float height = traits == null ? 32 : 40 * traits.Count + 66;
+        float height = traits == null ? 32 : 38 * traits.Count + 66;
 
         ui.Label($"<b>{"FactionLoadout_Traits_ForcedTraits".Translate()}</b>");
         TooltipHandler.TipRegion(ui.GetRect(0), "FactionLoadout_Traits_ForcedTraitsTooltip".Translate());
@@ -372,7 +377,14 @@ public class BackstoryTab : EditTab
             {
                 (TraitDef def, int deg) = DefCache.AllTraitDegrees.FirstOrDefault();
                 if (def != null)
-                    traits.Add(new ForcedTrait { TraitDef = def, degree = deg, chance = 1f });
+                    traits.Add(
+                        new ForcedTrait
+                        {
+                            TraitDef = def,
+                            degree = deg,
+                            chance = 1f,
+                        }
+                    );
             }
         }
         else
@@ -388,7 +400,7 @@ public class BackstoryTab : EditTab
 
     private void DrawTraitList(Rect rect, ref Vector2 scroll, List<ForcedTrait> traits, bool showChance)
     {
-        float innerHeight = 40f * traits.Count;
+        float innerHeight = 38f * traits.Count;
         Widgets.BeginScrollView(rect, ref scroll, new Rect(0, 0, rect.width - 20, Mathf.Max(innerHeight, rect.height)));
 
         ForcedTrait toRemove = null;
@@ -421,10 +433,7 @@ public class BackstoryTab : EditTab
                 ForcedTrait captured = item;
                 List<MenuItemBase> menuItems = CustomFloatMenu.MakeItems(
                     DefCache.AllTraitDegrees,
-                    td => new MenuItemText(td, TraitMenuLabel(td.def, td.degree), tooltip: TraitMenuTooltip(td.def, td.degree))
-                    {
-                        Size = new Vector2(500, 28),
-                    }
+                    td => new MenuItemText(td, TraitMenuLabel(td.def, td.degree), tooltip: TraitMenuTooltip(td.def, td.degree)) { Size = new Vector2(440, 28) }
                 );
                 CustomFloatMenu.Open(
                     menuItems,
@@ -459,7 +468,7 @@ public class BackstoryTab : EditTab
             }
             GUI.color = Color.white;
 
-            y += 40;
+            y += 38;
         }
 
         Widgets.EndScrollView();
@@ -497,7 +506,7 @@ public class BackstoryTab : EditTab
     {
         if (a == b)
         {
-            return false;
+            return true; // same TraitDef at any degree conflicts — pawn can only have one degree of a trait
         }
 
         if (a.conflictingTraits != null && a.conflictingTraits.Contains(b))

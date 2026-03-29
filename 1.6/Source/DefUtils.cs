@@ -14,7 +14,8 @@ public static class DefUtils
         {
             color = Color.white;
 
-            if (def == null) return null;
+            if (def == null)
+                return null;
 
             switch (def)
             {
@@ -31,7 +32,8 @@ public static class DefUtils
                     color = stuff == null ? td.uiIconColor : td.GetColorForStuff(stuff);
                     return Widgets.GetIconFor(td, stuff);
                 case FactionDef fd:
-                    if (!fd.colorSpectrum.NullOrEmpty()) color = fd.colorSpectrum.FirstOrDefault();
+                    if (!fd.colorSpectrum.NullOrEmpty())
+                        color = fd.colorSpectrum.FirstOrDefault();
                     return fd.FactionIcon;
                 default:
                     return null;

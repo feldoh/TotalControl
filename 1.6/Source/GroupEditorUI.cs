@@ -347,10 +347,13 @@ public class GroupEditorUI : Window
         else
         {
             group.Commonality = DrawLabeledFloat(
-                body, groupIndex, "commonality",
+                body,
+                groupIndex,
+                "commonality",
                 "FactionLoadout_GroupEditor_Commonality".Translate(),
                 "FactionLoadout_GroupEditor_CommonalityTooltip".Translate(),
-                group.Commonality, 0f
+                group.Commonality,
+                0f
             );
         }
 
@@ -363,10 +366,13 @@ public class GroupEditorUI : Window
         else
         {
             group.MaxTotalPoints = DrawLabeledFloat(
-                body, groupIndex, "maxPoints",
+                body,
+                groupIndex,
+                "maxPoints",
                 "FactionLoadout_GroupEditor_MaxPoints".Translate(),
                 "FactionLoadout_GroupEditor_MaxPointsTooltip".Translate(),
-                group.MaxTotalPoints, 0f
+                group.MaxTotalPoints,
+                0f
             );
         }
 
@@ -393,10 +399,50 @@ public class GroupEditorUI : Window
         body.GapLine();
 
         // --- Pawn sub-lists ---
-        PawnListDrawer.Draw(body, groupIndex, "options", "FactionLoadout_GroupEditor_CombatPawns".Translate(),    "FactionLoadout_GroupEditor_CombatPawnsTooltip".Translate(),  "FactionLoadout_GroupEditor_AddCombatPawn".Translate(),  group.Options,  readOnly, _numBuffers);
-        PawnListDrawer.Draw(body, groupIndex, "guards",  "FactionLoadout_GroupEditor_Guards".Translate(),         "FactionLoadout_GroupEditor_GuardsTooltip".Translate(),       "FactionLoadout_GroupEditor_AddGuard".Translate(),       group.Guards,   readOnly, _numBuffers);
-        PawnListDrawer.Draw(body, groupIndex, "traders", "FactionLoadout_GroupEditor_Traders".Translate(),        "FactionLoadout_GroupEditor_TradersTooltip".Translate(),      "FactionLoadout_GroupEditor_AddTrader".Translate(),      group.Traders,  readOnly, _numBuffers);
-        PawnListDrawer.Draw(body, groupIndex, "carriers","FactionLoadout_GroupEditor_Carriers".Translate(),       "FactionLoadout_GroupEditor_CarriersTooltip".Translate(),     "FactionLoadout_GroupEditor_AddCarrier".Translate(),     group.Carriers, readOnly, _numBuffers);
+        PawnListDrawer.Draw(
+            body,
+            groupIndex,
+            "options",
+            "FactionLoadout_GroupEditor_CombatPawns".Translate(),
+            "FactionLoadout_GroupEditor_CombatPawnsTooltip".Translate(),
+            "FactionLoadout_GroupEditor_AddCombatPawn".Translate(),
+            group.Options,
+            readOnly,
+            _numBuffers
+        );
+        PawnListDrawer.Draw(
+            body,
+            groupIndex,
+            "guards",
+            "FactionLoadout_GroupEditor_Guards".Translate(),
+            "FactionLoadout_GroupEditor_GuardsTooltip".Translate(),
+            "FactionLoadout_GroupEditor_AddGuard".Translate(),
+            group.Guards,
+            readOnly,
+            _numBuffers
+        );
+        PawnListDrawer.Draw(
+            body,
+            groupIndex,
+            "traders",
+            "FactionLoadout_GroupEditor_Traders".Translate(),
+            "FactionLoadout_GroupEditor_TradersTooltip".Translate(),
+            "FactionLoadout_GroupEditor_AddTrader".Translate(),
+            group.Traders,
+            readOnly,
+            _numBuffers
+        );
+        PawnListDrawer.Draw(
+            body,
+            groupIndex,
+            "carriers",
+            "FactionLoadout_GroupEditor_Carriers".Translate(),
+            "FactionLoadout_GroupEditor_CarriersTooltip".Translate(),
+            "FactionLoadout_GroupEditor_AddCarrier".Translate(),
+            group.Carriers,
+            readOnly,
+            _numBuffers
+        );
 
         body.Gap(4f);
         float bodyHeight = body.CurHeight;
@@ -448,17 +494,22 @@ public class GroupEditorUI : Window
         group.DisallowedStrategyDefNames ??= [];
 
         List<FloatMenuOption> options = [];
-        options.AddRange(from strat in _allRaidStrategies
+        options.AddRange(
+            from strat in _allRaidStrategies
             let current = @group.DisallowedStrategyDefNames.Contains(strat.defName)
             let mark = current ? "✓ " : "   "
             let stratDef = strat.defName
-            select new FloatMenuOption($"{mark}{strat.label ?? strat.defName}", () =>
-            {
-                if (@group.DisallowedStrategyDefNames.Contains(stratDef))
-                    @group.DisallowedStrategyDefNames.Remove(stratDef);
-                else
-                    @group.DisallowedStrategyDefNames.Add(stratDef);
-            }));
+            select new FloatMenuOption(
+                $"{mark}{strat.label ?? strat.defName}",
+                () =>
+                {
+                    if (@group.DisallowedStrategyDefNames.Contains(stratDef))
+                        @group.DisallowedStrategyDefNames.Remove(stratDef);
+                    else
+                        @group.DisallowedStrategyDefNames.Add(stratDef);
+                }
+            )
+        );
 
         Find.WindowStack.Add(new FloatMenu(options));
     }

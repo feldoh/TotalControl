@@ -31,7 +31,14 @@ public static class ValueDrawSupport
                 yield return item;
         }
 
-        if (!Widgets.ButtonText(rect, active ? Name(field) : isGlobal ? "---" : $"[Default] {Name(defaultValue)}"))
+        if (
+            !Widgets.ButtonText(
+                rect,
+                active ? Name(field)
+                    : isGlobal ? "---"
+                    : $"[Default] {Name(defaultValue)}"
+            )
+        )
             return;
 
         IEnumerable<object> values = MakeEnumerable(Enum.GetValues(typeof(T)));
@@ -43,7 +50,14 @@ public static class ValueDrawSupport
     {
         string Name(T t) => makeName == null ? t.LabelCap : makeName(t);
 
-        if (!Widgets.ButtonText(rect, active ? Name(field) : isGlobal ? "---" : $"[Default] {Name(defaultValue)}"))
+        if (
+            !Widgets.ButtonText(
+                rect,
+                active ? Name(field)
+                    : isGlobal ? "---"
+                    : $"[Default] {Name(defaultValue)}"
+            )
+        )
             return;
 
         List<MenuItemBase> items = CustomFloatMenu.MakeItems(defs, d => new MenuItemText(d, Name(d), DefUtils.TryGetIcon(d, out Color c), c, d.description));

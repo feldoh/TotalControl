@@ -52,10 +52,7 @@ public static class VEPsycastsReflectionModule
         {
             vePsycastExtension = AccessTools.CreateInstance(VpeExtensionType.Value) as DefModExtension;
             ImplantDefField.Value?.SetValue(vePsycastExtension, DefDatabase<HediffDef>.GetNamed("VPE_PsycastAbilityImplant"));
-            UnlockedPathsField.Value?.SetValue(
-                vePsycastExtension,
-                AccessTools.CreateInstance(ClosedUnlockedPathsListGenericType.Value)
-            );
+            UnlockedPathsField.Value?.SetValue(vePsycastExtension, AccessTools.CreateInstance(ClosedUnlockedPathsListGenericType.Value));
             def.modExtensions.Add(vePsycastExtension);
         }
 

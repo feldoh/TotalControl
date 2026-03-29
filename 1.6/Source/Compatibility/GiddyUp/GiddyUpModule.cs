@@ -207,11 +207,12 @@ public class GiddyUpModule : ITotalControlModule
 
         if (Scribe.mode == LoadSaveMode.PostLoadInit)
         {
-            bool isEmpty = data.MountChance == null
-                           && data.WildAnimalWeight == null
-                           && data.NonWildAnimalWeight == null
-                           && (data.AllowedWildAnimals == null || data.AllowedWildAnimals.Count == 0)
-                           && (data.AllowedNonWildAnimals == null || data.AllowedNonWildAnimals.Count == 0);
+            bool isEmpty =
+                data.MountChance == null
+                && data.WildAnimalWeight == null
+                && data.NonWildAnimalWeight == null
+                && (data.AllowedWildAnimals == null || data.AllowedWildAnimals.Count == 0)
+                && (data.AllowedNonWildAnimals == null || data.AllowedNonWildAnimals.Count == 0);
 
             if (isEmpty)
                 factionDataStore.Remove(edit);
@@ -227,11 +228,12 @@ public class GiddyUpModule : ITotalControlModule
         if (data == null)
             return;
 
-        bool hasData = data.MountChance != null
-                       || data.WildAnimalWeight != null
-                       || data.NonWildAnimalWeight != null
-                       || (data.AllowedWildAnimals != null && data.AllowedWildAnimals.Count > 0)
-                       || (data.AllowedNonWildAnimals != null && data.AllowedNonWildAnimals.Count > 0);
+        bool hasData =
+            data.MountChance != null
+            || data.WildAnimalWeight != null
+            || data.NonWildAnimalWeight != null
+            || (data.AllowedWildAnimals != null && data.AllowedWildAnimals.Count > 0)
+            || (data.AllowedNonWildAnimals != null && data.AllowedNonWildAnimals.Count > 0);
 
         if (!hasData)
             return;

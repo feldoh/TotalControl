@@ -10,10 +10,14 @@ public class CustomFloatMenu : Window
     public static CustomFloatMenu Open(List<MenuItemBase> items, Action<MenuItemBase> onSelected, int columns = 2)
     {
         CustomFloatMenu created = new()
-        { Items = items, OnSelected = onSelected, Columns = columns, closeOnAccept = false,
+        {
+            Items = items,
+            OnSelected = onSelected,
+            Columns = columns,
+            closeOnAccept = false,
             closeOnCancel = true,
             closeOnClickedOutside = true,
-            layer = WindowLayer.SubSuper
+            layer = WindowLayer.SubSuper,
         };
         Find.WindowStack.Add(created);
         return created;

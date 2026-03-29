@@ -189,8 +189,7 @@ public static class DefCache
         AllBackstoryDefs.AddRange(adultBackstories);
 
         AllTraitDegrees = DefDatabase<TraitDef>
-            .AllDefsListForReading
-            .SelectMany(t => t.degreeDatas.Select(d => (t, d.degree)))
+            .AllDefsListForReading.SelectMany(t => t.degreeDatas.Select(d => (t, d.degree)))
             .OrderBy(x => x.t.LabelCap.ToString())
             .ThenBy(x => x.degree)
             .ToList();
@@ -232,8 +231,14 @@ public static class DefCache
             .Select(r => r.Def)
             .ToHashSet();
 
-        if (apparelBl.Count > 0) { DefCache.ApparelBlacklistCache[def] = apparelBl; }
-        else { DefCache.ApparelBlacklistCache.Remove(def); }
+        if (apparelBl.Count > 0)
+        {
+            DefCache.ApparelBlacklistCache[def] = apparelBl;
+        }
+        else
+        {
+            DefCache.ApparelBlacklistCache.Remove(def);
+        }
 
         HashSet<ThingDef> weaponBl = (global?.WeaponBlacklist ?? Enumerable.Empty<DefRef<ThingDef>>())
             .ConcatIfNotNull(edit.WeaponBlacklist)
@@ -241,7 +246,13 @@ public static class DefCache
             .Select(r => r.Def)
             .ToHashSet();
 
-        if (weaponBl.Count > 0) { DefCache.WeaponBlacklistCache[def] = weaponBl; }
-        else { DefCache.WeaponBlacklistCache.Remove(def); }
+        if (weaponBl.Count > 0)
+        {
+            DefCache.WeaponBlacklistCache[def] = weaponBl;
+        }
+        else
+        {
+            DefCache.WeaponBlacklistCache.Remove(def);
+        }
     }
 }

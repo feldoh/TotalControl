@@ -15,14 +15,7 @@ namespace FactionLoadout.UISupport.DrawSupport;
 /// </summary>
 public static class SpecificGearDrawer
 {
-    public static void Draw(
-        Listing_Standard ui,
-        ref List<SpecRequirementEdit> edits,
-        string label,
-        Func<ThingDef, bool> thingFilter,
-        ThingDef defaultThing,
-        ref Vector2 scroll
-    )
+    public static void Draw(Listing_Standard ui, ref List<SpecRequirementEdit> edits, string label, Func<ThingDef, bool> thingFilter, ThingDef defaultThing, ref Vector2 scroll)
     {
         float height = edits == null ? 32 : 300;
 
@@ -291,10 +284,19 @@ public static class SpecificGearDrawer
         qualityCheck.width = 150;
         qualityCheck.height = 28;
 
-        if (canDoQuality && Widgets.ButtonText(qualityCheck, $"<b>Specific quality: </b><color={(item.Quality != null ? "#81f542" : "#ff4d4d")}>{(item.Quality != null ? "Yes" : "No")}</color>"))
+        if (
+            canDoQuality
+            && Widgets.ButtonText(qualityCheck, $"<b>Specific quality: </b><color={(item.Quality != null ? "#81f542" : "#ff4d4d")}>{(item.Quality != null ? "Yes" : "No")}</color>")
+        )
         {
-            if (item.Quality == null) { item.Quality = QualityCategory.Normal; }
-            else { item.Quality = null; }
+            if (item.Quality == null)
+            {
+                item.Quality = QualityCategory.Normal;
+            }
+            else
+            {
+                item.Quality = null;
+            }
         }
         else if (!canDoQuality)
         {
@@ -371,16 +373,17 @@ public static class SpecificGearDrawer
 
     private static void DrawItemSelectionMode(Rect area, SpecRequirementEdit item)
     {
-        static string ModeToName(ApparelSelectionMode mode) => mode switch
-        {
-            ApparelSelectionMode.AlwaysTake => "Always picked",
-            ApparelSelectionMode.RandomChance => "Random chance to be picked",
-            ApparelSelectionMode.FromPool1 => "Part of pool 1",
-            ApparelSelectionMode.FromPool2 => "Part of pool 2",
-            ApparelSelectionMode.FromPool3 => "Part of pool 3",
-            ApparelSelectionMode.FromPool4 => "Part of pool 4",
-            _ => mode.ToString(),
-        };
+        static string ModeToName(ApparelSelectionMode mode) =>
+            mode switch
+            {
+                ApparelSelectionMode.AlwaysTake => "Always picked",
+                ApparelSelectionMode.RandomChance => "Random chance to be picked",
+                ApparelSelectionMode.FromPool1 => "Part of pool 1",
+                ApparelSelectionMode.FromPool2 => "Part of pool 2",
+                ApparelSelectionMode.FromPool3 => "Part of pool 3",
+                ApparelSelectionMode.FromPool4 => "Part of pool 4",
+                _ => mode.ToString(),
+            };
 
         Rect modeBox = area;
         modeBox.xMin += 500;
