@@ -55,32 +55,36 @@ public static class PawnGenPatchCore
             }
         }
 
-        foreach (ForcedGene forcedGene in ext.forcedGenes)
+        if (__result.genes is { } geneTracker)
         {
-            if (forcedGene.GeneDef == null || !Rand.Chance(forcedGene.chance))
-                continue;
-
-            Gene newGene = __result.genes?.AddGene(forcedGene.GeneDef, xenogene: false);
-            if (forcedGene.forceActive && newGene != null)
+            foreach (ForcedGene forcedGene in ext.forcedGenes)
             {
-                newGene.OverrideBy(null);
-                foreach (Gene gene in __result.genes.GenesListForReading)
+                if (forcedGene.GeneDef == null || !Rand.Chance(forcedGene.chance))
+                    continue;
+
+                Gene newGene = geneTracker.AddGene(forcedGene.GeneDef, xenogene: false);
+                if (forcedGene.forceActive && newGene != null)
                 {
-                    if (gene != newGene && gene.def.ConflictsWith(newGene.def))
+                    newGene.OverrideBy(null);
+                    foreach (Gene gene in geneTracker.GenesListForReading)
                     {
-                        __result.genes.RemoveGene(gene);
+                        if (gene != newGene && gene.def.ConflictsWith(newGene.def))
+                        {
+                            geneTracker.RemoveGene(gene);
+                        }
                     }
                 }
             }
         }
 
-        foreach (ForcedTrait forcedTrait in ext.forcedTraits)
+        if (__result.story?.traits is { } traitSet)
         {
-            if (forcedTrait.TraitDef == null || !Rand.Chance(forcedTrait.chance))
-                continue;
-            if (__result.story?.traits.HasTrait(forcedTrait.TraitDef, forcedTrait.degree) ?? false)
-                continue;
-            __result.story.traits.GainTrait(new Trait(forcedTrait.TraitDef, forcedTrait.degree));
+            foreach (ForcedTrait forcedTrait in ext.forcedTraits)
+            {
+                if (forcedTrait.TraitDef == null || !Rand.Chance(forcedTrait.chance) || traitSet.HasTrait(forcedTrait.TraitDef, forcedTrait.degree))
+                    continue;
+                __result.story.traits.GainTrait(new Trait(forcedTrait.TraitDef, forcedTrait.degree));
+            }
         }
     }
 }

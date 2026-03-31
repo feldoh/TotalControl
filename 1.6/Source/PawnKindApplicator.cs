@@ -95,7 +95,7 @@ public static class PawnKindApplicator
             color = new Color(0.995f, 0.995f, 0.995f, 1f);
         ReplaceUtils.ReplaceMaybe(ref def.apparelColor, color);
 
-        if (edit.ForcedTraitsDef is { Count: > 0 })
+        if (!def.RaceProps.Animal && edit.ForcedTraitsDef is { Count: > 0 })
         {
             def.forcedTraits ??= [];
             foreach (ForcedTrait t in edit.ForcedTraitsDef)
@@ -136,7 +136,7 @@ public static class PawnKindApplicator
             ModCore.Debug($"Adding forced genes {extrasExtension.forcedGenes?.Select(h => h.GeneDef?.defName).ToCommaList() ?? "None"} to {def.defName}");
         }
 
-        if (edit.ForcedTraits is { Count: > 0 })
+        if (!def.RaceProps.Animal && edit.ForcedTraits is { Count: > 0 })
         {
             extrasExtension ??= def.GetModExtension<ForcedExtrasModExtension>();
             if (extrasExtension == null)
