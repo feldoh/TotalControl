@@ -83,7 +83,7 @@ public static class PawnGenPatchCore
             {
                 if (forcedTrait.TraitDef == null || !Rand.Chance(forcedTrait.chance) || traitSet.HasTrait(forcedTrait.TraitDef, forcedTrait.degree))
                     continue;
-                __result.story.traits.GainTrait(new Trait(forcedTrait.TraitDef, forcedTrait.degree));
+                traitSet.GainTrait(new Trait(forcedTrait.TraitDef, forcedTrait.degree));
             }
         }
     }

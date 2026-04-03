@@ -95,9 +95,10 @@ public static class PawnKindApplicator
             color = new Color(0.995f, 0.995f, 0.995f, 1f);
         ReplaceUtils.ReplaceMaybe(ref def.apparelColor, color);
 
-        if (!def.RaceProps.Animal && edit.ForcedTraitsDef is { Count: > 0 })
+        if (!def.RaceProps.Animal && edit.ForcedTraitsDef != null)
         {
-            def.forcedTraits ??= [];
+            // Replace (not append) — the user activated the override, so they control the full list.
+            def.forcedTraits = [];
             foreach (ForcedTrait t in edit.ForcedTraitsDef)
             {
                 if (t.TraitDef == null)
@@ -138,6 +139,16 @@ public static class PawnKindApplicator
 
         if (!def.RaceProps.Animal && edit.ForcedTraits is { Count: > 0 })
         {
+            // Remove probabilistic traits from def.forcedTraits so the chance roll actually controls them
+            if (def.forcedTraits != null)
+            {
+                foreach (ForcedTrait t in edit.ForcedTraits)
+                {
+                    if (t.TraitDef != null)
+                        def.forcedTraits.RemoveAll(e => e.def == t.TraitDef && e.degree.GetValueOrDefault() == t.degree);
+                }
+            }
+
             extrasExtension ??= def.GetModExtension<ForcedExtrasModExtension>();
             if (extrasExtension == null)
             {
