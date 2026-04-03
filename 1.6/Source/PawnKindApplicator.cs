@@ -145,7 +145,11 @@ public static class PawnKindApplicator
                 def.modExtensions.Add(extrasExtension);
             }
 
-            extrasExtension.forcedTraits.AddRange(edit.ForcedTraits);
+            foreach (ForcedTrait t in edit.ForcedTraits)
+            {
+                extrasExtension.forcedTraits.RemoveAll(e => e.traitDef == t.traitDef && e.degree == t.degree);
+                extrasExtension.forcedTraits.Add(t);
+            }
         }
 
         if (ModsConfig.BiotechActive && def.RaceProps.Humanlike && edit.ForceSpecificXenos && (edit.ForcedXenotypeChanceDefs?.Count ?? 0) >= 1)
