@@ -7,6 +7,7 @@ using FactionLoadout.Patches;
 using FactionLoadout.UISupport;
 using FactionLoadout.Util;
 using RimWorld;
+using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
@@ -75,15 +76,13 @@ public class FactionEditUI : Window
             if (pawn == null)
                 continue;
 
-            // Remove from WorldPawns first — GeneratePawn may have passed them there.
             if (Find.WorldPawns?.Contains(pawn) == true)
-                Find.WorldPawns.RemoveAndDiscardPawnViaGC(pawn);
-            else
             {
-                if (!pawn.Destroyed)
-                    pawn.Destroy();
-                if (!pawn.Discarded)
-                    pawn.Discard(true);
+                Find.WorldPawns.RemoveAndDiscardPawnViaGC(pawn);
+            }
+            else if (!pawn.Discarded)
+            {
+                Find.WorldPawns?.PassToWorld(pawn, PawnDiscardDecideMode.Discard);
             }
         }
 
