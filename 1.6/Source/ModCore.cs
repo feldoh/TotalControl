@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using FactionLoadout.Modules;
 using FactionLoadout.Patches;
 using FactionLoadout.UISupport;
@@ -130,9 +131,49 @@ public class ModCore : Mod
             );
         }
 
+        harmony.Patch(
+            AccessTools.Method(typeof(PlayDataLoader), nameof(PlayDataLoader.HotReloadDefs)),
+            postfix: new HarmonyMethod(typeof(HotReloadDefsHook), nameof(HotReloadDefsHook.Postfix))
+        );
+
         Preset.AddMissingSpecialFactionsIfNeeded();
         RewarmVEFactionCache();
         Log($"Game comp finalized init, applied {count} presets that affected {edits} factions.");
+    }
+
+    private static void RemoveTCClonesFromDefDatabase()
+    {
+        var clones = DefDatabase<PawnKindDef>.AllDefsListForReading.Where(d => d.defName.Contains("_TCCln_")).ToList();
+        foreach (PawnKindDef clone in clones)
+        {
+            DefDatabase<PawnKindDef>.defsList.Remove(clone);
+            DefDatabase<PawnKindDef>.defsByName.Remove(clone.defName);
+            DefDatabase<PawnKindDef>.defsByShortHash.Remove(clone.shortHash);
+        }
+        Debug($"Removed {clones.Count} TC clone defs from DefDatabase before reapply.");
+    }
+
+    public static void ReapplyAfterHotReload()
+    {
+        Log("Hot reload detected — reapplying Total Control preset...");
+        RemoveTCClonesFromDefDatabase();
+        FactionEdit.ClearState();
+        PawnKindEdit.ClearState();
+
+        int count = 0;
+        int edits = 0;
+        foreach (Preset preset in Preset.LoadedPresets)
+        {
+            if (MySettings.ActivePreset != preset.GUID)
+                continue;
+            int changed = preset.TryApplyAll();
+            edits += changed;
+            count++;
+        }
+
+        Preset.AddMissingSpecialFactionsIfNeeded();
+        RewarmVEFactionCache();
+        Log($"Reapply after hot reload complete: applied {count} presets affecting {edits} factions.");
     }
 
     /**

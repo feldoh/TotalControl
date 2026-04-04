@@ -259,6 +259,12 @@ public class FactionEdit : IExposable
         return kinds.ToArray();
     }
 
+    public static void ClearState()
+    {
+        originalFactionDefs.Clear();
+        factionSpecificPawnKindReplacements.Clear();
+    }
+
     public static FactionDef TryGetOriginal(string factionDefName)
     {
         if (factionDefName == null)

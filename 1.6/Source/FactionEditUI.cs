@@ -72,7 +72,19 @@ public class FactionEditUI : Window
     {
         foreach (Pawn pawn in pawns)
         {
-            pawn?.Discard(true);
+            if (pawn == null)
+                continue;
+
+            // Remove from WorldPawns first — GeneratePawn may have passed them there.
+            if (Find.WorldPawns?.Contains(pawn) == true)
+                Find.WorldPawns.RemoveAndDiscardPawnViaGC(pawn);
+            else
+            {
+                if (!pawn.Destroyed)
+                    pawn.Destroy();
+                if (!pawn.Discarded)
+                    pawn.Discard(true);
+            }
         }
 
         pawns.Clear();

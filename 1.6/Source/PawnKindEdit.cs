@@ -62,6 +62,12 @@ public class PawnKindEdit : IExposable
         return fallbackFactionDef;
     }
 
+    public static void ClearState()
+    {
+        activeEdits.Clear();
+        replacementToOriginal.Clear();
+    }
+
     public static void AddActiveEdit(PawnKindDef def, PawnKindEdit edit)
     {
         if (def == null || edit == null)
