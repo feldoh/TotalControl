@@ -50,7 +50,10 @@ public static class ListDrawSupport
             CustomFloatMenu toReturn = null;
             if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "FactionLoadout_AddNew".Translate()))
             {
-                List<MenuItemBase> items = CustomFloatMenu.MakeItems(allDefs, makeItem ?? (d => new MenuItemText(d, GetLabel(d))));
+                List<MenuItemBase> items = CustomFloatMenu.MakeItems(
+                    allDefs,
+                    makeItem ?? (d => new MenuItemText(d, GetLabel(d), DefUtils.TryGetIcon(d, out Color c), c, d.description))
+                );
                 toReturn = CustomFloatMenu.Open(
                     items,
                     raw =>
@@ -84,7 +87,24 @@ public static class ListDrawSupport
                 }
                 else if (defRef.HasValue)
                 {
-                    Widgets.Label(curr, GetLabel(defRef.Def));
+                    T def = defRef.Def;
+                    if (def is BodyTypeDef)
+                    {
+                        Widgets.Label(curr, GetLabel(def));
+                    }
+                    else if (def is StyleItemDef si)
+                    {
+                        Rect label = curr;
+                        label.xMin += 34;
+                        Rect icon = curr;
+                        icon.width = icon.height;
+                        Widgets.DrawTextureFitted(icon, si.Icon, 1f);
+                        Widgets.Label(label, si.LabelCap);
+                    }
+                    else
+                    {
+                        Widgets.DefLabelWithIcon(curr, def);
+                    }
                 }
 
                 curr.y += 26;
