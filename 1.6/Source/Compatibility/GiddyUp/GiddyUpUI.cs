@@ -151,24 +151,26 @@ public static class GiddyUpUI
 
         // List existing user-configured mounts
         string toRemove = null;
-        foreach (KeyValuePair<string, int> kvp in data.PossibleMounts)
+        List<string> mountKeys = data.PossibleMounts.Keys.ToList();
+        foreach (string key in mountKeys)
         {
+            int value = data.PossibleMounts[key];
             Rect row = ui.GetRect(Text.LineHeight + 4);
-            PawnKindDef kindDef = DefDatabase<PawnKindDef>.GetNamedSilentFail(kvp.Key);
-            string label = kindDef?.LabelCap ?? kvp.Key;
+            PawnKindDef kindDef = DefDatabase<PawnKindDef>.GetNamedSilentFail(key);
+            string label = kindDef?.LabelCap ?? key;
 
             Widgets.Label(row.LeftPart(0.4f), label);
 
             Rect weightRect = row.RightPart(0.55f).LeftPart(0.5f);
-            string buffer = kvp.Value.ToString();
-            int weight = kvp.Value;
+            string buffer = value.ToString();
+            int weight = value;
             Widgets.TextFieldNumeric(weightRect, ref weight, ref buffer, 1, 9999);
-            if (weight != kvp.Value)
-                data.PossibleMounts[kvp.Key] = weight;
+            if (weight != value)
+                data.PossibleMounts[key] = weight;
 
             Rect removeRect = row.RightPart(0.25f);
             if (Widgets.ButtonText(removeRect, "Remove".Translate()))
-                toRemove = kvp.Key;
+                toRemove = key;
         }
 
         if (toRemove != null)
