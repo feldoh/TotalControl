@@ -19,12 +19,19 @@ public class ApparelTab : EditTab
             return;
         DrawForceOnlySelected(ui);
 
-        DrawOverride(ui, DefaultKind.apparelMoney, ref Current.ApparelMoney, "Apparel Value", DrawApparelMoney, pasteGet: e => e.ApparelMoney);
+        DrawOverride(
+            ui,
+            DefaultKind.apparelMoney,
+            ref Current.ApparelMoney,
+            "FactionLoadout_ValueLabel".Translate("FactionLoadout_Tab_Apparel".Translate()).ToString(),
+            DrawApparelMoney,
+            pasteGet: e => e.ApparelMoney
+        );
         DrawOverride(
             ui,
             DefaultKind.apparelTags,
             ref Current.ApparelTags,
-            "Allowed Apparel Types",
+            "FactionLoadout_AllowedTypes".Translate("FactionLoadout_Tab_Apparel".Translate()).ToString(),
             DrawApparelTags,
             GetHeightFor(Current.ApparelTags),
             true,
@@ -34,24 +41,31 @@ public class ApparelTab : EditTab
             ui,
             DefaultKind.apparelDisallowTags,
             ref Current.ApparelDisallowedTags,
-            "Disallowed Apparel Types",
+            "FactionLoadout_DisallowedTypes".Translate("FactionLoadout_Tab_Apparel".Translate()).ToString(),
             (Rect rect, bool active, List<string> _) => DrawDisallowedApparelTags(rect, active),
             GetHeightFor(Current.ApparelDisallowedTags),
             true,
             pasteGet: e => e.ApparelDisallowedTags
         );
-        DrawOverride(ui, DefaultKind.apparelColor, ref Current.ApparelColor, "Apparel Color (where applicable)", DrawApparelColor, pasteGet: e => e.ApparelColor);
+        DrawOverride(
+            ui,
+            DefaultKind.apparelColor,
+            ref Current.ApparelColor,
+            "FactionLoadout_Apparel_Color".Translate().ToString(),
+            DrawApparelColor,
+            pasteGet: e => e.ApparelColor
+        );
         DrawOverride(
             ui,
             (List<DefRef<ThingDef>>)null,
             ref Current.ApparelRequired,
-            "Required Apparel (simple)",
+            "FactionLoadout_Apparel_RequiredSimple".Translate().ToString(),
             DrawRequiredApparel,
             GetHeightFor(Current.ApparelRequired),
             true,
             pasteGet: e => e.ApparelRequired
         );
-        DrawSpecificGear(ui, ref Current.SpecificApparel, "Required Apparel (advanced)", t => t.IsApparel, ThingDefOf.Apparel_Parka);
+        DrawSpecificGear(ui, ref Current.SpecificApparel, "FactionLoadout_Apparel_RequiredAdvanced".Translate().ToString(), t => t.IsApparel, ThingDefOf.Apparel_Parka);
         DrawOverride(
             ui,
             null,
@@ -67,14 +81,14 @@ public class ApparelTab : EditTab
     private void DrawForceOnlySelected(Listing_Standard ui)
     {
         Rect onlySelectedBox = ui.GetRect(32);
-        Widgets.CheckboxLabeled(onlySelectedBox, "Force only selected: ", ref Current.ForceOnlySelected, placeCheckboxNearText: true);
+        Widgets.CheckboxLabeled(onlySelectedBox, "FactionLoadout_Apparel_ForceOnlySelected".Translate().ToString(), ref Current.ForceOnlySelected, placeCheckboxNearText: true);
         ui.Gap();
     }
 
     private void DrawForceNaked(Listing_Standard ui)
     {
         Rect nakedBox = ui.GetRect(32);
-        Widgets.CheckboxLabeled(nakedBox, "Force naked: ", ref Current.ForceNaked, placeCheckboxNearText: true);
+        Widgets.CheckboxLabeled(nakedBox, "FactionLoadout_Apparel_ForceNaked".Translate().ToString(), ref Current.ForceNaked, placeCheckboxNearText: true);
         ui.Gap();
     }
 
@@ -91,7 +105,7 @@ public class ApparelTab : EditTab
             picker.xMin += 100;
             picker = picker.ExpandedBy(-3);
 
-            Widgets.Label(label, "Pick color: ");
+            Widgets.Label(label, "FactionLoadout_PickColor".Translate());
             if (Mouse.IsOver(picker))
             {
                 Color border = Color.white - currentApparelColor;
@@ -122,7 +136,7 @@ public class ApparelTab : EditTab
         else
         {
             bool forced = Current.Def.apparelColor != Color.white;
-            string txt = $"Color: {(forced ? "" : "None specified")}";
+            string txt = "FactionLoadout_ColorLabel".Translate(forced ? "" : "FactionLoadout_NoneSpecified".Translate().ToString()).ToString();
             Rect label = rect;
             label = label.ExpandedBy(-3);
             label.width = 200;

@@ -22,6 +22,7 @@
     <FactionLoadout_AddTag>Add tag...</FactionLoadout_AddTag>
     <FactionLoadout_AddTagDesc>Enter tag name:</FactionLoadout_AddTagDesc>
 
+    <FactionLoadout_Tab_General>General</FactionLoadout_Tab_General>
     <FactionLoadout_Tab_Appearance>Appearance</FactionLoadout_Tab_Appearance>
     <FactionLoadout_Tab_Apparel>Apparel</FactionLoadout_Tab_Apparel>
     <FactionLoadout_Tab_Weapon>Weapon</FactionLoadout_Tab_Weapon>
@@ -277,4 +278,129 @@
     <FactionLoadout_Apparel_Coverage>Coverage: {0}</FactionLoadout_Apparel_Coverage>
     <FactionLoadout_ApparelBlacklist>Apparel Blacklist</FactionLoadout_ApparelBlacklist>
     <FactionLoadout_WeaponBlacklist>Weapon Blacklist</FactionLoadout_WeaponBlacklist>
+
+    <!-- Shared UI patterns -->
+    <FactionLoadout_OverrideYesNo>Override: &lt;color={0}&gt;{1}&lt;/color&gt;</FactionLoadout_OverrideYesNo>
+    <FactionLoadout_PasteFromClipboard>Paste from clipboard ({0})</FactionLoadout_PasteFromClipboard>
+    <FactionLoadout_GlobalLabel>Global (affects all faction pawns)</FactionLoadout_GlobalLabel>
+    <FactionLoadout_DefaultPrefix>[Default] {0}</FactionLoadout_DefaultPrefix>
+    <FactionLoadout_NoEditableProperties>No editable properties for this pawn kind.</FactionLoadout_NoEditableProperties>
+    <FactionLoadout_Missing>(missing)</FactionLoadout_Missing>
+    <FactionLoadout_ValueLabel>{0} Value</FactionLoadout_ValueLabel>
+    <FactionLoadout_AllowedTypes>Allowed {0} Types</FactionLoadout_AllowedTypes>
+    <FactionLoadout_DisallowedTypes>Disallowed {0} Types</FactionLoadout_DisallowedTypes>
+    <FactionLoadout_ColorLabel>Color: {0}</FactionLoadout_ColorLabel>
+    <FactionLoadout_NoneSpecified>None specified</FactionLoadout_NoneSpecified>
+    <FactionLoadout_PickColor>Pick color: </FactionLoadout_PickColor>
+    <FactionLoadout_ForceActive>Force Active</FactionLoadout_ForceActive>
+    <FactionLoadout_ChanceToApply>Chance to Apply: ({0})</FactionLoadout_ChanceToApply>
+
+    <!-- General Tab -->
+    <FactionLoadout_General_ReplaceWith>Replace with...</FactionLoadout_General_ReplaceWith>
+    <FactionLoadout_General_NameMaker>Name Maker...</FactionLoadout_General_NameMaker>
+    <FactionLoadout_General_NameMakerFemale>Name Maker Female...</FactionLoadout_General_NameMakerFemale>
+    <FactionLoadout_General_ForcedGender>Forced Gender</FactionLoadout_General_ForcedGender>
+    <FactionLoadout_General_CustomName>Custom name</FactionLoadout_General_CustomName>
+    <FactionLoadout_General_MinGenAge>Min Generation Age</FactionLoadout_General_MinGenAge>
+    <FactionLoadout_General_MaxGenAge>Max Generation Age</FactionLoadout_General_MaxGenAge>
+    <FactionLoadout_General_AvgGearQuality>Average Gear Quality</FactionLoadout_General_AvgGearQuality>
+    <FactionLoadout_General_UnwaveringlyLoyal>Unwaveringly Loyal Chance</FactionLoadout_General_UnwaveringlyLoyal>
+    <FactionLoadout_General_Species>Species</FactionLoadout_General_Species>
+    <FactionLoadout_General_RenameAll>Rename All Pawnkind Defs in this Faction</FactionLoadout_General_RenameAll>
+    <FactionLoadout_General_RenameDef>Rename Def [{0} =&gt; {1}]{2}</FactionLoadout_General_RenameDef>
+    <FactionLoadout_General_ForcedByGlobal> - Forced By Global</FactionLoadout_General_ForcedByGlobal>
+    <FactionLoadout_General_RenameTooltip>This will give the cloned pawn kind a new name\nThis may have unintended consequences and may break existing pawns spawned for this faction.</FactionLoadout_General_RenameTooltip>
+
+    <!-- Appearance Tab -->
+    <FactionLoadout_Appearance_Beards>Forced Beard Styles</FactionLoadout_Appearance_Beards>
+    <FactionLoadout_Appearance_Hair>Forced Hair Styles</FactionLoadout_Appearance_Hair>
+    <FactionLoadout_Appearance_HairColors>Forced Hair Colors</FactionLoadout_Appearance_HairColors>
+    <FactionLoadout_Appearance_BodyTypes>Allowed Body Types</FactionLoadout_Appearance_BodyTypes>
+
+    <!-- Apparel Tab -->
+    <FactionLoadout_Apparel_Color>Apparel Color (where applicable)</FactionLoadout_Apparel_Color>
+    <FactionLoadout_Apparel_RequiredSimple>Required Apparel (simple)</FactionLoadout_Apparel_RequiredSimple>
+    <FactionLoadout_Apparel_RequiredAdvanced>Required Apparel (advanced)</FactionLoadout_Apparel_RequiredAdvanced>
+    <FactionLoadout_Apparel_ForceOnlySelected>Force only selected: </FactionLoadout_Apparel_ForceOnlySelected>
+    <FactionLoadout_Apparel_ForceNaked>Force naked: </FactionLoadout_Apparel_ForceNaked>
+
+    <!-- Implants Tab -->
+    <FactionLoadout_Implants_Required>Required Implants &amp; Bionics</FactionLoadout_Implants_Required>
+    <FactionLoadout_Implants_RequiredAdvanced>Required Hediffs (advanced)</FactionLoadout_Implants_RequiredAdvanced>
+    <FactionLoadout_Implants_Chance>Implants &amp; Bionics Chance</FactionLoadout_Implants_Chance>
+    <FactionLoadout_Implants_MaxCount>Max # of Implants &amp; Bionics</FactionLoadout_Implants_MaxCount>
+    <FactionLoadout_Implants_MaxPartsToHit>Max parts to hit</FactionLoadout_Implants_MaxPartsToHit>
+    <FactionLoadout_Implants_PartsToHit>Parts to Hit</FactionLoadout_Implants_PartsToHit>
+    <FactionLoadout_Implants_BodyPartsToHit>Body Parts to Hit (None if should not target specific parts)</FactionLoadout_Implants_BodyPartsToHit>
+
+    <!-- Inventory Tab -->
+    <FactionLoadout_Inventory_ReplaceDefault>Replace default inventory? </FactionLoadout_Inventory_ReplaceDefault>
+    <FactionLoadout_Inventory_ReplaceDefaultTooltip>If true, the override inventory entirely replaces the default one.\nIf false, the override inventory is added to the default inventory.</FactionLoadout_Inventory_ReplaceDefaultTooltip>
+    <FactionLoadout_Inventory_RemoveFixed>Remove fixed inventory [Fixed Inventory Size: {0}]:</FactionLoadout_Inventory_RemoveFixed>
+    <FactionLoadout_Inventory_TakeAll>+ Take all</FactionLoadout_Inventory_TakeAll>
+    <FactionLoadout_Inventory_TakeOne>+ Take one</FactionLoadout_Inventory_TakeOne>
+    <FactionLoadout_Inventory_SkipChance>Skip chance: {0}%</FactionLoadout_Inventory_SkipChance>
+    <FactionLoadout_Inventory_Weight>Weight: {0}%</FactionLoadout_Inventory_Weight>
+    <FactionLoadout_Inventory_TakeAllHeader>&lt;b&gt;TAKE ALL:&lt;/b&gt;</FactionLoadout_Inventory_TakeAllHeader>
+    <FactionLoadout_Inventory_TakeOneHeader>&lt;b&gt;TAKE ONE:&lt;/b&gt;</FactionLoadout_Inventory_TakeOneHeader>
+    <FactionLoadout_Inventory_MaxItems>[Default] Max. {0} items</FactionLoadout_Inventory_MaxItems>
+
+    <!-- Xenotype Tab -->
+    <FactionLoadout_Tab_Xenotypes>Xenotypes</FactionLoadout_Tab_Xenotypes>
+    <FactionLoadout_Xenotype_ForceSpecific>Force Specific Xenotypes: </FactionLoadout_Xenotype_ForceSpecific>
+    <FactionLoadout_Xenotype_Xenogene>Xenogene</FactionLoadout_Xenotype_Xenogene>
+    <FactionLoadout_Xenotype_RequiredAdvanced>Required Genes (advanced)</FactionLoadout_Xenotype_RequiredAdvanced>
+
+    <!-- Psycasts Tab -->
+    <FactionLoadout_Tab_VEPsycasts>VE Psycasts</FactionLoadout_Tab_VEPsycasts>
+    <FactionLoadout_Psycasts_GiveRandomAbilities>Give Random Abilities</FactionLoadout_Psycasts_GiveRandomAbilities>
+    <FactionLoadout_Psycasts_Level>Psycaster Level</FactionLoadout_Psycasts_Level>
+    <FactionLoadout_Psycasts_StatPoints>Psycaster Stat Points</FactionLoadout_Psycasts_StatPoints>
+
+    <!-- Ancients Tab -->
+    <FactionLoadout_Tab_VFEAncients>VFE Ancients</FactionLoadout_Tab_VFEAncients>
+    <FactionLoadout_Ancients_SuperPowers># of VFE Ancients Super Powers</FactionLoadout_Ancients_SuperPowers>
+    <FactionLoadout_Ancients_SuperWeaknesses># of VFE Ancients Super Weaknesses</FactionLoadout_Ancients_SuperWeaknesses>
+    <FactionLoadout_Ancients_ForcedPowers>Forced Powers and Weaknesses</FactionLoadout_Ancients_ForcedPowers>
+
+    <!-- Specific Gear Drawer -->
+    <FactionLoadout_Gear_Material>&lt;b&gt;Material: &lt;/b&gt;</FactionLoadout_Gear_Material>
+    <FactionLoadout_Gear_Style>&lt;b&gt;Style: &lt;/b&gt;</FactionLoadout_Gear_Style>
+    <FactionLoadout_Gear_StyleMissingCat>&lt;VALID_STYLE_BUT_MISSING_CAT&gt;</FactionLoadout_Gear_StyleMissingCat>
+    <FactionLoadout_Gear_CannotBeStyled>(cannot be styled)</FactionLoadout_Gear_CannotBeStyled>
+    <FactionLoadout_Gear_Biocode>&lt;b&gt;Biocode: &lt;/b&gt;</FactionLoadout_Gear_Biocode>
+    <FactionLoadout_Gear_SpecificQuality>&lt;b&gt;Specific quality: &lt;/b&gt;</FactionLoadout_Gear_SpecificQuality>
+    <FactionLoadout_Gear_ColorLabel>&lt;b&gt;Color: &lt;/b&gt;</FactionLoadout_Gear_ColorLabel>
+    <FactionLoadout_Gear_NoColor>No color</FactionLoadout_Gear_NoColor>
+    <FactionLoadout_Gear_SelectionMode>Selection mode:</FactionLoadout_Gear_SelectionMode>
+    <FactionLoadout_Gear_AlwaysPicked>Always picked</FactionLoadout_Gear_AlwaysPicked>
+    <FactionLoadout_Gear_RandomChance>Random chance to be picked</FactionLoadout_Gear_RandomChance>
+    <FactionLoadout_Gear_FromPool>Part of pool {0}</FactionLoadout_Gear_FromPool>
+    <FactionLoadout_Gear_NoStyle>_ No Style _</FactionLoadout_Gear_NoStyle>
+    <FactionLoadout_Gear_NoStyleTooltip>This item will have no style at all.</FactionLoadout_Gear_NoStyleTooltip>
+    <FactionLoadout_Gear_ChanceWeight>{0}: {1}%</FactionLoadout_Gear_ChanceWeight>
+
+    <!-- Weapon Tab -->
+    <FactionLoadout_Weapon_ForcedQuality>Forced Weapon Quality</FactionLoadout_Weapon_ForcedQuality>
+    <FactionLoadout_Weapon_BiocodeChance>Biocode Chance</FactionLoadout_Weapon_BiocodeChance>
+    <FactionLoadout_Weapon_RequiredAdvanced>Required Weapons (advanced)</FactionLoadout_Weapon_RequiredAdvanced>
+
+    <!-- FactionEditUI -->
+    <FactionLoadout_FactionEdit_LoadoutOverrides>Loadout Overrides:</FactionLoadout_FactionEdit_LoadoutOverrides>
+    <FactionLoadout_FactionEdit_DebugClonedKinds>DevMode: Debug cloned kinds</FactionLoadout_FactionEdit_DebugClonedKinds>
+    <FactionLoadout_FactionEdit_PreviewError>[ERROR] You must load a save game to preview pawns. Sorry!</FactionLoadout_FactionEdit_PreviewError>
+    <FactionLoadout_FactionEdit_ThingIDPatch>Thing ID Patch</FactionLoadout_FactionEdit_ThingIDPatch>
+    <FactionLoadout_FactionEdit_ThingIDPatchTooltip>Turn on to save thing IDs</FactionLoadout_FactionEdit_ThingIDPatchTooltip>
+    <FactionLoadout_FactionEdit_RegeneratePreviews>Regenerate previews [Hotkey: F]</FactionLoadout_FactionEdit_RegeneratePreviews>
+    <FactionLoadout_FactionEdit_CustomMaterials>Use custom apparel materials: </FactionLoadout_FactionEdit_CustomMaterials>
+    <FactionLoadout_FactionEdit_ExperimentalCreepjoiner>EXPERIMENTAL! - This is a fake faction used for Creepjoiner editing, use at your own risk.</FactionLoadout_FactionEdit_ExperimentalCreepjoiner>
+    <FactionLoadout_FactionEdit_ExperimentalWildMan>EXPERIMENTAL! - This is a fake faction used for WildMan editing, use at your own risk.</FactionLoadout_FactionEdit_ExperimentalWildMan>
+
+    <!-- PresetUI -->
+    <FactionLoadout_Preset_SaveAndExit>SAVE &amp; EXIT</FactionLoadout_Preset_SaveAndExit>
+    <FactionLoadout_Preset_EditName>Edit name: </FactionLoadout_Preset_EditName>
+    <FactionLoadout_Preset_EditCount>This preset edits {0} factions:</FactionLoadout_Preset_EditCount>
+    <FactionLoadout_Preset_AddFactionEdit>Add new faction edit...</FactionLoadout_Preset_AddFactionEdit>
+    <FactionLoadout_Preset_MissingWarning>WARNING: This preset has missing factions, probably because they are added by a mod that is not loaded:</FactionLoadout_Preset_MissingWarning>
+    <FactionLoadout_Preset_MissingHeader>Missing factions</FactionLoadout_Preset_MissingHeader>
 </LanguageData>

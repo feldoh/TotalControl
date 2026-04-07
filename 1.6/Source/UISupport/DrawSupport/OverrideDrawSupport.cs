@@ -36,7 +36,8 @@ public static class OverrideDrawSupport
         bool hasPaste = PawnKindClipboard.HasData && pasteGet != null;
         float pasteW = hasPaste ? 28f : 0f;
 
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, toggleW, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        string overrideLabel = "FactionLoadout_OverrideYesNo".Translate(active ? "#81f542" : "#ff4d4d", active ? "Yes".Translate() : "No".Translate());
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, toggleW, 32), overrideLabel))
         {
             field = active ? null : defaultValue;
             active = !active;
@@ -50,7 +51,7 @@ public static class OverrideDrawSupport
                 field = pasteGet(PawnKindClipboard.Clipboard.Clone);
                 resetBuffers();
             }
-            TooltipHandler.TipRegion(pasteRect, $"Paste from clipboard ({PawnKindClipboard.Clipboard?.SourceLabel})");
+            TooltipHandler.TipRegion(pasteRect, "FactionLoadout_PasteFromClipboard".Translate(PawnKindClipboard.Clipboard?.SourceLabel));
         }
 
         Rect content = new(rect.x + toggleW + pasteW + 2, rect.y, ui.ColumnWidth - (toggleW + pasteW + 4), rect.height);
@@ -84,7 +85,8 @@ public static class OverrideDrawSupport
         bool hasPaste = PawnKindClipboard.HasData && pasteGet != null;
         float pasteW = hasPaste ? 28f : 0f;
 
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, toggleW, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        string overrideLabel = "FactionLoadout_OverrideYesNo".Translate(active ? "#81f542" : "#ff4d4d", active ? "Yes".Translate() : "No".Translate());
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, toggleW, 32), overrideLabel))
         {
             field = active ? null : defaultValue;
             active = !active;
@@ -98,7 +100,7 @@ public static class OverrideDrawSupport
                 field = pasteGet(PawnKindClipboard.Clipboard.Clone);
                 resetBuffers();
             }
-            TooltipHandler.TipRegion(pasteRect, $"Paste from clipboard ({PawnKindClipboard.Clipboard?.SourceLabel})");
+            TooltipHandler.TipRegion(pasteRect, "FactionLoadout_PasteFromClipboard".Translate(PawnKindClipboard.Clipboard?.SourceLabel));
         }
 
         Rect content = new(rect.x + toggleW + pasteW + 2, rect.y, ui.ColumnWidth - (toggleW + pasteW + 4), rect.height);
@@ -133,7 +135,8 @@ public static class OverrideDrawSupport
         bool hasPaste = PawnKindClipboard.HasData && pasteGet != null;
         float pasteW = hasPaste ? 28f : 0f;
 
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, toggleW, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        string overrideLabel = "FactionLoadout_OverrideYesNo".Translate(active ? "#81f542" : "#ff4d4d", active ? "Yes".Translate() : "No".Translate());
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, toggleW, 32), overrideLabel))
         {
             if (active)
             {
@@ -160,7 +163,7 @@ public static class OverrideDrawSupport
                 field = pasteGet(PawnKindClipboard.Clipboard.Clone);
                 resetBuffers();
             }
-            TooltipHandler.TipRegion(pasteRect, $"Paste from clipboard ({PawnKindClipboard.Clipboard?.SourceLabel})");
+            TooltipHandler.TipRegion(pasteRect, "FactionLoadout_PasteFromClipboard".Translate(PawnKindClipboard.Clipboard?.SourceLabel));
         }
 
         Rect content = new(rect.x + toggleW + pasteW + 2, rect.y, ui.ColumnWidth - (toggleW + pasteW + 4), rect.height);

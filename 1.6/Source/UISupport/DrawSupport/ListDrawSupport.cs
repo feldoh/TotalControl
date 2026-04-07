@@ -48,7 +48,7 @@ public static class ListDrawSupport
         if (active)
         {
             CustomFloatMenu toReturn = null;
-            if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "FactionLoadout_AddNew".Translate()))
+            if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "Add".Translate().CapitalizeFirst() + "..."))
             {
                 List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                     allDefs,
@@ -142,7 +142,7 @@ public static class ListDrawSupport
         string MakeString(IList<T> list)
         {
             if (list == null || list.Count == 0)
-                return "<i>None</i>";
+                return $"<i>{"FactionLoadout_None".Translate()}</i>";
             string raw = string.Join(", ", list);
             if (raw.Length > 43)
                 raw = raw.Substring(0, 40) + "...";
@@ -152,7 +152,7 @@ public static class ListDrawSupport
         if (active)
         {
             CustomFloatMenu toReturn = null;
-            if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "Add new..."))
+            if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "Add".Translate().CapitalizeFirst() + "..."))
             {
                 List<MenuItemBase> items = CustomFloatMenu.MakeItems(
                     allThings,
@@ -224,7 +224,7 @@ public static class ListDrawSupport
         string MakeString(IList<Color> list)
         {
             if (list == null || list.Count == 0)
-                return "<i>None</i>";
+                return $"<i>{"FactionLoadout_None".Translate()}</i>";
             string raw = string.Join(", ", list);
             if (raw.Length > 73)
                 raw = raw.Substring(0, 70) + "...";
@@ -233,7 +233,7 @@ public static class ListDrawSupport
 
         if (active)
         {
-            if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "Add new..."))
+            if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "Add".Translate().CapitalizeFirst() + "..."))
             {
                 Find.WindowStack.Add(
                     new Window_ColorPicker(
@@ -303,7 +303,7 @@ public static class ListDrawSupport
         string MakeString(IList<string> list)
         {
             if (list == null || list.Count == 0)
-                return "<i>None</i>";
+                return $"<i>{"FactionLoadout_None".Translate()}</i>";
             string raw = string.Join(", ", list);
             if (raw.Length > 73)
                 raw = raw.Substring(0, 70) + "...";
@@ -312,7 +312,7 @@ public static class ListDrawSupport
 
         if (active)
         {
-            if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "Add new..."))
+            if (Widgets.ButtonText(new Rect(rect.x + 3, rect.y + 3, 130, 26), "Add".Translate().CapitalizeFirst() + "..."))
             {
                 List<MenuItemBase> items = CustomFloatMenu.MakeItems(allTags, t => new MenuItemText(t, t));
                 CustomFloatMenu.Open(

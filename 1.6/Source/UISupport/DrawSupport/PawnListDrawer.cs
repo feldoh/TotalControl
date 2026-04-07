@@ -117,7 +117,7 @@ public static class PawnListDrawer
 
                 Rect nameLbl = new(row.x, row.y, row.width - 148f, row.height);
                 Text.Anchor = TextAnchor.MiddleLeft;
-                Widgets.Label(nameLbl, missing ? $"<color=grey>{kindLabel} (missing)</color>" : kindLabel);
+                Widgets.Label(nameLbl, missing ? $"<color=grey>{kindLabel} {"FactionLoadout_Missing".Translate()}</color>" : kindLabel);
                 Text.Anchor = TextAnchor.UpperLeft;
                 GUI.color = Color.white;
 

@@ -9,7 +9,7 @@ namespace FactionLoadout;
 public class GeneralTab : EditTab
 {
     public GeneralTab(PawnKindEdit current, PawnKindDef defaultKind)
-        : base("General", current, defaultKind) { }
+        : base("FactionLoadout_Tab_General".Translate(), current, defaultKind) { }
 
     protected override void DrawContents(Listing_Standard ui)
     {
@@ -17,13 +17,13 @@ public class GeneralTab : EditTab
         bool isAnimal = DefaultKind.RaceProps.Animal;
 
         if (!Current.IsGlobal && isAnimal)
-            DrawOverride(ui, DefaultKind, ref Current.ReplaceWith, "Replace with...", DrawReplaceWith, pasteGet: e => e.ReplaceWith);
+            DrawOverride(ui, DefaultKind, ref Current.ReplaceWith, "FactionLoadout_General_ReplaceWith".Translate().ToString(), DrawReplaceWith, pasteGet: e => e.ReplaceWith);
 
         DrawOverride(
             ui,
             DefaultKind.nameMaker ?? DefCache.FakeRulePack,
             ref Current.NameMaker,
-            "Name Maker...",
+            "FactionLoadout_General_NameMaker".Translate().ToString(),
             (r, a, d) => DrawNameMakerImpl(r, a, d, female: false),
             pasteGet: e => e.NameMaker
         );
@@ -31,25 +31,53 @@ public class GeneralTab : EditTab
             ui,
             DefaultKind.nameMakerFemale ?? DefCache.FakeRulePack,
             ref Current.NameMakerFemale,
-            "Name Maker Female...",
+            "FactionLoadout_General_NameMakerFemale".Translate().ToString(),
             (r, a, d) => DrawNameMakerImpl(r, a, d, female: true),
             pasteGet: e => e.NameMakerFemale
         );
 
-        DrawOverride(ui, Gender.None, ref Current.ForcedGender, "Forced Gender", DrawGender, pasteGet: e => e.ForcedGender);
-        DrawOverride(ui, DefaultKind.label, ref Current.Label, "Custom name", DrawCustomName, pasteGet: e => e.Label);
-        DrawOverride(ui, DefaultKind.minGenerationAge, ref Current.MinGenerationAge, "Min Generation Age", DrawMinAge, pasteGet: e => e.MinGenerationAge);
-        DrawOverride(ui, DefaultKind.maxGenerationAge, ref Current.MaxGenerationAge, "Max Generation Age", DrawMaxAge, pasteGet: e => e.MaxGenerationAge);
-        DrawOverride(ui, DefaultKind.itemQuality, ref Current.ItemQuality, "Average Gear Quality", DrawItemQuality, pasteGet: e => e.ItemQuality);
+        DrawOverride(ui, Gender.None, ref Current.ForcedGender, "FactionLoadout_General_ForcedGender".Translate().ToString(), DrawGender, pasteGet: e => e.ForcedGender);
+        DrawOverride(ui, DefaultKind.label, ref Current.Label, "FactionLoadout_General_CustomName".Translate().ToString(), DrawCustomName, pasteGet: e => e.Label);
+        DrawOverride(
+            ui,
+            DefaultKind.minGenerationAge,
+            ref Current.MinGenerationAge,
+            "FactionLoadout_General_MinGenAge".Translate().ToString(),
+            DrawMinAge,
+            pasteGet: e => e.MinGenerationAge
+        );
+        DrawOverride(
+            ui,
+            DefaultKind.maxGenerationAge,
+            ref Current.MaxGenerationAge,
+            "FactionLoadout_General_MaxGenAge".Translate().ToString(),
+            DrawMaxAge,
+            pasteGet: e => e.MaxGenerationAge
+        );
+        DrawOverride(
+            ui,
+            DefaultKind.itemQuality,
+            ref Current.ItemQuality,
+            "FactionLoadout_General_AvgGearQuality".Translate().ToString(),
+            DrawItemQuality,
+            pasteGet: e => e.ItemQuality
+        );
 
         if (isAnimal)
             return;
 
-        DrawOverride(ui, 0f, ref Current.UnwaveringlyLoyalChance, "Unwaveringly Loyal Chance", DrawUnwaveringlyLoyalChance, pasteGet: e => e.UnwaveringlyLoyalChance);
+        DrawOverride(
+            ui,
+            0f,
+            ref Current.UnwaveringlyLoyalChance,
+            "FactionLoadout_General_UnwaveringlyLoyal".Translate().ToString(),
+            DrawUnwaveringlyLoyalChance,
+            pasteGet: e => e.UnwaveringlyLoyalChance
+        );
 
         if (!Current.IsGlobal)
         {
-            DrawOverride(ui, DefaultKind.race, ref Current.Race, "Species", DrawRace, pasteGet: e => e.Race);
+            DrawOverride(ui, DefaultKind.race, ref Current.Race, "FactionLoadout_General_Species".Translate().ToString(), DrawRace, pasteGet: e => e.Race);
         }
     }
 
@@ -60,9 +88,14 @@ public class GeneralTab : EditTab
         Rect renameBox = ui.GetRect(32);
         bool forcedByGlobal = !Current.IsGlobal && (Current.ParentEdit.GetGlobalEditor()?.RenameDef ?? false);
         string label = Current.IsGlobal
-            ? "Rename All Pawnkind Defs in this Faction"
-            : $"Rename Def [{Current.Def.defName} => {FactionEdit.GetNewNameForPawnKind(Current.Def, Current.ParentEdit.Faction.Def)}]{(
-                forcedByGlobal ? " - Forced By Global" : "")}";
+            ? "FactionLoadout_General_RenameAll".Translate().ToString()
+            : "FactionLoadout_General_RenameDef"
+                .Translate(
+                    Current.Def.defName,
+                    FactionEdit.GetNewNameForPawnKind(Current.Def, Current.ParentEdit.Faction.Def),
+                    forcedByGlobal ? "FactionLoadout_General_ForcedByGlobal".Translate().ToString() : ""
+                )
+                .ToString();
         if (forcedByGlobal)
         {
             Widgets.Label(renameBox, label);
@@ -72,10 +105,7 @@ public class GeneralTab : EditTab
             Widgets.CheckboxLabeled(renameBox, label, ref Current.RenameDef, placeCheckboxNearText: true);
         }
 
-        TooltipHandler.TipRegion(
-            renameBox,
-            "This will give the cloned pawn kind a new name\nThis may have unintended consequences and may break existing pawns spawned for this faction."
-        );
+        TooltipHandler.TipRegion(renameBox, "FactionLoadout_General_RenameTooltip".Translate());
         ui.Gap();
     }
 
@@ -98,7 +128,7 @@ public class GeneralTab : EditTab
                     Current.NameMaker = r;
                 }
             },
-            d => d?.defName ?? "None"
+            d => d?.defName ?? "None".Translate().ToString()
         );
     }
 
@@ -109,7 +139,7 @@ public class GeneralTab : EditTab
             float w = Mathf.Max(400, rect.height * 0.5f);
             Rect input = rect;
             input.width = w;
-            Current.Label = Widgets.TextEntryLabeled(input, "Custom name:  ", Current.Label);
+            Current.Label = Widgets.TextEntryLabeled(input, "FactionLoadout_General_CustomName".Translate().ToString() + ":  ", Current.Label);
         }
         else
         {

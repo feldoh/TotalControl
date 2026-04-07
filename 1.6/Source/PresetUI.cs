@@ -67,7 +67,7 @@ public class PresetUI : Window
         button.width *= 0.3f;
         button = button.ExpandedBy(-2f, -5f);
         GUI.color = Color.green;
-        string saveLabel = Current.IsPackaged ? "FactionLoadout_SaveToSourceFile".Translate().ToString() : "SAVE";
+        string saveLabel = Current.IsPackaged ? "FactionLoadout_SaveToSourceFile".Translate().ToString() : "Save".Translate().ToString().ToUpper();
         if (Widgets.ButtonText(button, $"<color=white>{saveLabel}</color>"))
             Current.Save();
 
@@ -76,7 +76,7 @@ public class PresetUI : Window
         button.x = Mathf.Lerp(button.x, button.xMax, 1f / 3f);
         button.width *= 0.3f;
         button = button.ExpandedBy(-2f, -5f);
-        if (Widgets.ButtonText(button, "<color=white>SAVE & EXIT</color>"))
+        if (Widgets.ButtonText(button, $"<color=white>{"FactionLoadout_Preset_SaveAndExit".Translate()}</color>"))
         {
             Current.Save();
             Close();
@@ -88,7 +88,7 @@ public class PresetUI : Window
         button.x = Mathf.Lerp(button.x, button.xMax, 2f / 3f);
         button.width *= 0.3f;
         button = button.ExpandedBy(-2f, -5f);
-        if (Widgets.ButtonText(button, "<color=yellow>EXIT</color>"))
+        if (Widgets.ButtonText(button, $"<color=yellow>{"Close".Translate().ToString().ToUpper()}</color>"))
             Close();
 
         GUI.color = Color.white;
@@ -105,8 +105,8 @@ public class PresetUI : Window
         // Missing faction handling.
         if (Current.HasMissingFactions())
         {
-            ui.Label("<color=red><b>WARNING:</b> This preset has missing factions, probably because they are added by a mod that is not loaded:</color>");
-            ui.Label("<b>Missing factions</b>");
+            ui.Label($"<color=red>{"FactionLoadout_Preset_MissingWarning".Translate()}</color>");
+            ui.Label($"<b>{"FactionLoadout_Preset_MissingHeader".Translate()}</b>");
             ui.GapLine();
             foreach (string str in Current.GetMissingFactionAndModNames())
                 ui.Label($" - {str}");
@@ -114,12 +114,12 @@ public class PresetUI : Window
 
         Rect nameArea = ui.GetRect(28);
         nameArea.width = 200;
-        Widgets.Label(nameArea, "Edit name: ");
+        Widgets.Label(nameArea, "FactionLoadout_Preset_EditName".Translate());
         nameArea.x += 80;
         nameArea.height -= 5;
         Current.Name = Widgets.TextField(nameArea, Current.Name);
 
-        ui.Label($"<b>This preset edits {Current.factionChanges.Count} factions:</b>");
+        ui.Label($"<b>{"FactionLoadout_Preset_EditCount".Translate(Current.factionChanges.Count)}</b>");
         ui.Gap();
 
         float factionListHeight = Mathf.Max(100f, inRect.height - ui.CurHeight - 60f);
@@ -139,7 +139,9 @@ public class PresetUI : Window
             area.width = 80;
             area.y -= 5;
             GUI.color = Color.red;
-            if (Widgets.ButtonText(area, "[DELETE]"))
+            string deleteLabel = $"[{"Delete".Translate()}]";
+            area.width = Mathf.Max(80, Text.CalcSize(deleteLabel).x + 10);
+            if (Widgets.ButtonText(area, deleteLabel))
             {
                 item.DeletedOrClosed = true;
                 Current.factionChanges.RemoveAt(i);
@@ -149,7 +151,7 @@ public class PresetUI : Window
 
             GUI.color = Color.white;
 
-            area.x += 90;
+            area.x += area.width + 10;
             if (item.Faction.IsMissing)
             {
                 area.width = 120;
@@ -165,10 +167,12 @@ public class PresetUI : Window
             }
             else
             {
-                if (Widgets.ButtonText(area, "EDIT"))
+                string editLabel = "FactionLoadout_Edit".Translate().CapitalizeFirst();
+                area.width = Mathf.Max(80, Text.CalcSize(editLabel).x + 10);
+                if (Widgets.ButtonText(area, editLabel))
                     FactionEditUI.OpenEditor(item);
-                area.x += 90;
-                Widgets.CheckboxLabeled(area, "Enabled", ref item.Active, placeCheckboxNearText: true);
+                area.x += area.width + 10;
+                Widgets.CheckboxLabeled(area, "Enabled".Translate(), ref item.Active, placeCheckboxNearText: true);
             }
 
             ui.GapLine(10);
@@ -179,7 +183,7 @@ public class PresetUI : Window
         ui = oldUI;
 
         ui.Gap();
-        if (ui.ButtonText("Add new faction edit..."))
+        if (ui.ButtonText("FactionLoadout_Preset_AddFactionEdit".Translate()))
         {
             List<FactionDef> raw = DefDatabase<FactionDef>.AllDefsListForReading.Where(f => !Current.HasEditFor(f)).ToList();
             if (!Current.HasEditFor(Preset.SpecialCreepjoinerFaction) && !raw.Any(f => f.defName == Preset.SpecialCreepjoinerFaction.defName))

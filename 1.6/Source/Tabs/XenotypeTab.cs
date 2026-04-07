@@ -12,11 +12,11 @@ namespace FactionLoadout;
 public class XenotypeTab : EditTab
 {
     public XenotypeTab(PawnKindEdit current, PawnKindDef defaultKind)
-        : base("Xenotypes", current, defaultKind) { }
+        : base("FactionLoadout_Tab_Xenotypes".Translate(), current, defaultKind) { }
 
     protected override void DrawContents(Listing_Standard ui)
     {
-        DrawSpecificGenes(ui, ref Current.ForcedGenes, "Required Genes (advanced)", _ => true, DefCache.AllGeneDefs.First());
+        DrawSpecificGenes(ui, ref Current.ForcedGenes, "FactionLoadout_Xenotype_RequiredAdvanced".Translate().ToString(), _ => true, DefCache.AllGeneDefs.First());
 
         DrawForceSpecificXenos(ui);
         if (!Current.ForceSpecificXenos)
@@ -47,7 +47,7 @@ public class XenotypeTab : EditTab
         foreach (string delete in toDelete)
             Current.ForcedXenotypeChances.Remove(delete);
 
-        if (!ui.ButtonText("Add new..."))
+        if (!ui.ButtonText("Add".Translate().CapitalizeFirst() + "..."))
             return;
         var xenoItems = CustomFloatMenu.MakeItems(
             DefDatabase<XenotypeDef>.AllDefs.Where(def => !Current.ForcedXenotypeChances.ContainsKey(def.defName)),
@@ -68,7 +68,7 @@ public class XenotypeTab : EditTab
     private void DrawForceSpecificXenos(Listing_Standard ui)
     {
         Rect xenoBox = ui.GetRect(32);
-        Widgets.CheckboxLabeled(xenoBox, "Force Specific Xenotypes: ", ref Current.ForceSpecificXenos, placeCheckboxNearText: true);
+        Widgets.CheckboxLabeled(xenoBox, "FactionLoadout_Xenotype_ForceSpecific".Translate(), ref Current.ForceSpecificXenos, placeCheckboxNearText: true);
         ui.Gap();
     }
 
@@ -79,7 +79,8 @@ public class XenotypeTab : EditTab
         ui.Label($"<b>{label}</b>");
         Rect rect = ui.GetRect(height);
         bool active = edits != null;
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        string overrideLabel = "FactionLoadout_OverrideYesNo".Translate(active ? "#81f542" : "#ff4d4d", active ? "Yes".Translate() : "No".Translate());
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), overrideLabel))
         {
             edits = active ? null : [];
             active = !active;
@@ -101,7 +102,7 @@ public class XenotypeTab : EditTab
             content.y += content.height + 5;
             content.height = 28;
             content.width = 250;
-            if (Widgets.ButtonText(content, "<b>Add New</b>"))
+            if (Widgets.ButtonText(content, "<b>" + "Add".Translate().CapitalizeFirst() + "</b>"))
                 edits.Add(new ForcedGene { GeneDef = defaultGeneDef });
         }
         else
@@ -133,7 +134,7 @@ public class XenotypeTab : EditTab
 
             Rect delete = new(area.xMax - 105, area.y + 5, 100, 20);
             GUI.color = Color.red;
-            if (Widgets.ButtonText(delete, "<b>REMOVE</b>"))
+            if (Widgets.ButtonText(delete, "<b>" + "Remove".Translate().ToString().ToUpper() + "</b>"))
             {
                 edits.RemoveAt(i);
                 i--;
@@ -161,11 +162,11 @@ public class XenotypeTab : EditTab
             }
 
             Rect xenogeneRect = new(area.x + 10, area.y + 40, area.width - 10, 30);
-            Widgets.CheckboxLabeled(xenogeneRect, "Xenogene", ref item.xenogene);
+            Widgets.CheckboxLabeled(xenogeneRect, "FactionLoadout_Xenotype_Xenogene".Translate(), ref item.xenogene);
             Rect forceActiveRect = new(area.x + 10, area.y + 70, area.width - 10, 30);
-            Widgets.CheckboxLabeled(forceActiveRect, "Force Active", ref item.forceActive);
+            Widgets.CheckboxLabeled(forceActiveRect, "FactionLoadout_ForceActive".Translate(), ref item.forceActive);
             Rect geneChanceRect = new(area.x + 10, area.y + 100, area.width - 10, 30);
-            Widgets.Label(geneChanceRect.LeftPart(0.7f), $"Chance to Apply: ({item.chance.ToStringPercent()})");
+            Widgets.Label(geneChanceRect.LeftPart(0.7f), "FactionLoadout_ChanceToApply".Translate(item.chance.ToStringPercent()));
             Widgets.TextFieldPercent(geneChanceRect.RightPart(0.29f), ref item.chance, ref buffers[bufferIndex++]);
             tempUI.Gap(3);
         }

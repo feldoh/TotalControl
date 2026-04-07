@@ -13,15 +13,29 @@ public class PsycastsTab : EditTab
     private string vpeLevelBuffer = null;
 
     public PsycastsTab(PawnKindEdit current, PawnKindDef defaultKind)
-        : base("VE Psycasts", current, defaultKind) { }
+        : base("FactionLoadout_Tab_VEPsycasts".Translate(), current, defaultKind) { }
 
     protected override void DrawContents(Listing_Standard ui)
     {
         if (!VEPsycastsReflectionModule.ModLoaded.Value)
             return;
-        DrawOverride(ui, false, ref Current.VEPsycastRandomAbilities, "Give Random Abilities", DrawVPERandomAbilities, pasteGet: e => e.VEPsycastRandomAbilities);
-        DrawOverride(ui, 1, ref Current.VEPsycastLevel, "Psycaster Level", DrawVPELevel, pasteGet: e => e.VEPsycastLevel);
-        DrawOverride(ui, IntRange.Zero, ref Current.VEPsycastStatPoints, "Psycaster Stat Points", DrawVPEStats, pasteGet: e => e.VEPsycastStatPoints);
+        DrawOverride(
+            ui,
+            false,
+            ref Current.VEPsycastRandomAbilities,
+            "FactionLoadout_Psycasts_GiveRandomAbilities".Translate().ToString(),
+            DrawVPERandomAbilities,
+            pasteGet: e => e.VEPsycastRandomAbilities
+        );
+        DrawOverride(ui, 1, ref Current.VEPsycastLevel, "FactionLoadout_Psycasts_Level".Translate().ToString(), DrawVPELevel, pasteGet: e => e.VEPsycastLevel);
+        DrawOverride(
+            ui,
+            IntRange.Zero,
+            ref Current.VEPsycastStatPoints,
+            "FactionLoadout_Psycasts_StatPoints".Translate().ToString(),
+            DrawVPEStats,
+            pasteGet: e => e.VEPsycastStatPoints
+        );
     }
 
     // --- Private draw methods ---
@@ -39,7 +53,7 @@ public class PsycastsTab : EditTab
                     VEPsycastsReflectionModule.FindVEPsycastsExtension(Current.Def) is { } psycastsExtension
                     && VEPsycastsReflectionModule.GiveRandomAbilitiesField.Value?.GetValue(psycastsExtension) is true
                 );
-            Widgets.CheckboxLabeled(rect, "GiveRandomAbilities", ref value);
+            Widgets.CheckboxLabeled(rect, "FactionLoadout_Psycasts_GiveRandomAbilities".Translate(), ref value);
             Current.VEPsycastRandomAbilities = value;
         }
         else

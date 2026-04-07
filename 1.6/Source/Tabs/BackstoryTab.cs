@@ -94,7 +94,12 @@ public class BackstoryTab : EditTab
         TooltipHandler.TipRegion(ui.GetRect(0), "FactionLoadout_Backstory_FiltersOverrideTooltip".Translate());
         Rect rect = ui.GetRect(height);
         bool active = filters != null;
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        if (
+            Widgets.ButtonText(
+                new Rect(rect.x, rect.y, 120, 32),
+                "FactionLoadout_OverrideYesNo".Translate(active ? "#81f542" : "#ff4d4d", active ? "Yes".Translate() : "No".Translate())
+            )
+        )
         {
             if (active)
             {
@@ -277,7 +282,12 @@ public class BackstoryTab : EditTab
         Rect rect = ui.GetRect(height);
         bool active = traits != null;
 
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        if (
+            Widgets.ButtonText(
+                new Rect(rect.x, rect.y, 120, 32),
+                "FactionLoadout_OverrideYesNo".Translate(active ? "#81f542" : "#ff4d4d", active ? "Yes".Translate() : "No".Translate())
+            )
+        )
         {
             if (active)
             {
@@ -354,7 +364,12 @@ public class BackstoryTab : EditTab
         Rect rect = ui.GetRect(height);
         bool active = traits != null;
 
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        if (
+            Widgets.ButtonText(
+                new Rect(rect.x, rect.y, 120, 32),
+                "FactionLoadout_OverrideYesNo".Translate(active ? "#81f542" : "#ff4d4d", active ? "Yes".Translate() : "No".Translate())
+            )
+        )
         {
             Current.ForcedTraits = active ? null : [];
             active = !active;

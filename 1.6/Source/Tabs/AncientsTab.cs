@@ -14,18 +14,25 @@ public class AncientsTab : EditTab
     private string numVFEAncientsWeaknessesBuffer = null;
 
     public AncientsTab(PawnKindEdit current, PawnKindDef defaultKind)
-        : base("VFE Ancients", current, defaultKind) { }
+        : base("FactionLoadout_Tab_VFEAncients".Translate(), current, defaultKind) { }
 
     protected override void DrawContents(Listing_Standard ui)
     {
         if (!VFEAncientsReflectionModule.ModLoaded.Value)
             return;
-        DrawOverride(ui, 0, ref Current.NumVFEAncientsSuperPowers, "# of VFE Ancients Super Powers", DrawNumVFEAncientsSuperPowers, pasteGet: e => e.NumVFEAncientsSuperPowers);
+        DrawOverride(
+            ui,
+            0,
+            ref Current.NumVFEAncientsSuperPowers,
+            "FactionLoadout_Ancients_SuperPowers".Translate().ToString(),
+            DrawNumVFEAncientsSuperPowers,
+            pasteGet: e => e.NumVFEAncientsSuperPowers
+        );
         DrawOverride(
             ui,
             0,
             ref Current.NumVFEAncientsSuperWeaknesses,
-            "# of VFE Ancients Super Weaknesses",
+            "FactionLoadout_Ancients_SuperWeaknesses".Translate().ToString(),
             DrawNumVFEAncientsSuperWeaknesses,
             pasteGet: e => e.NumVFEAncientsSuperWeaknesses
         );
@@ -33,7 +40,7 @@ public class AncientsTab : EditTab
             ui,
             new List<string>(),
             ref Current.ForcedVFEAncientsItems,
-            "Forced Powers and Weaknesses",
+            "FactionLoadout_Ancients_ForcedPowers".Translate().ToString(),
             DrawVFEAncientsPowers,
             GetHeightFor(Current.ForcedVFEAncientsItems),
             true,

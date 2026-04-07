@@ -23,7 +23,8 @@ public static class SpecificGearDrawer
         Rect rect = ui.GetRect(height);
         bool active = edits != null;
 
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        string overrideLabel = "FactionLoadout_OverrideYesNo".Translate(active ? "#81f542" : "#ff4d4d", active ? "Yes".Translate() : "No".Translate());
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), overrideLabel))
         {
             edits = active ? null : [];
             active = !active;
@@ -45,12 +46,12 @@ public static class SpecificGearDrawer
             content.y += content.height + 5;
             content.height = 28;
             content.width = 250;
-            if (Widgets.ButtonText(content, "<b>Add New</b>"))
+            if (Widgets.ButtonText(content, "<b>" + "Add".Translate().CapitalizeFirst() + "</b>"))
                 edits.Add(new SpecRequirementEdit { Thing = defaultThing });
         }
         else
         {
-            string text = "[Default] <i>None</i>";
+            string text = "FactionLoadout_DefaultPrefix".Translate($"<i>{"None".Translate()}</i>");
             GUI.enabled = false;
             Widgets.Label(content.GetCentered(text), text);
             GUI.enabled = true;
@@ -112,7 +113,7 @@ public static class SpecificGearDrawer
     {
         Rect delete = new(area.xMax - 105, area.y + 5, 100, 20);
         GUI.color = Color.red;
-        bool removed = Widgets.ButtonText(delete, "<b>REMOVE</b>");
+        bool removed = Widgets.ButtonText(delete, "<b>" + "Remove".Translate().ToString().ToUpper() + "</b>");
         GUI.color = Color.white;
         if (removed)
             edits.RemoveAt(index);
@@ -175,7 +176,7 @@ public static class SpecificGearDrawer
 
         if (canDoStuff)
         {
-            Widgets.Label(material, "<b>Material: </b>");
+            Widgets.Label(material, "FactionLoadout_Gear_Material".Translate());
         }
         else
         {
@@ -191,7 +192,7 @@ public static class SpecificGearDrawer
             }
             else
             {
-                Widgets.Label(material, "None");
+                Widgets.Label(material, "None".Translate());
             }
         }
 
@@ -231,7 +232,7 @@ public static class SpecificGearDrawer
         style.y += 86;
         style.x += 10;
 
-        Widgets.Label(style, "<b>Style: </b>");
+        Widgets.Label(style, "FactionLoadout_Gear_Style".Translate());
         style.x += 68;
 
         bool canHaveStyle = item.Thing != null && item.Thing.CanBeStyled();
@@ -240,11 +241,11 @@ public static class SpecificGearDrawer
 
         if (item.Style != null)
         {
-            Widgets.Label(style, item.Style.Category?.LabelCap ?? "<VALID_STYLE_BUT_MISSING_CAT>");
+            Widgets.Label(style, item.Style.Category?.LabelCap ?? "FactionLoadout_Gear_StyleMissingCat".Translate());
         }
         else
         {
-            Widgets.Label(style, $"None {(canHaveStyle ? "" : "(cannot be styled)")}");
+            Widgets.Label(style, canHaveStyle ? "None".Translate().ToString() : $"{"None".Translate()} {"FactionLoadout_Gear_CannotBeStyled".Translate()}");
         }
 
         style.x = area.x + 5;
@@ -252,7 +253,7 @@ public static class SpecificGearDrawer
         if (Widgets.ButtonInvisible(style) && canHaveStyle)
         {
             List<MenuItemBase> items = CustomFloatMenu.MakeItems(StyleHelper.GetValidStyles(item.Thing), s => new MenuItemText(s.style, s.name, s.exampleIcon));
-            items.Add(new MenuItemText(null, "_ No Style _", null, default, "This item will have no style at all."));
+            items.Add(new MenuItemText(null, "FactionLoadout_Gear_NoStyle".Translate().ToString(), null, default, "FactionLoadout_Gear_NoStyleTooltip".Translate().ToString()));
             CustomFloatMenu.Open(items, raw => item.Style = raw.Payload == null ? null : raw.GetPayload<ThingStyleDef>());
         }
     }
@@ -265,7 +266,7 @@ public static class SpecificGearDrawer
 
         if (item.Thing != null && item.Thing.HasAssignableCompFrom(typeof(CompBiocodable)))
         {
-            Widgets.CheckboxLabeled(biocode, "<b>Biocode: </b>", ref item.Biocode);
+            Widgets.CheckboxLabeled(biocode, "FactionLoadout_Gear_Biocode".Translate(), ref item.Biocode);
         }
         else
         {
@@ -286,7 +287,10 @@ public static class SpecificGearDrawer
 
         if (
             canDoQuality
-            && Widgets.ButtonText(qualityCheck, $"<b>Specific quality: </b><color={(item.Quality != null ? "#81f542" : "#ff4d4d")}>{(item.Quality != null ? "Yes" : "No")}</color>")
+            && Widgets.ButtonText(
+                qualityCheck,
+                $"{"FactionLoadout_Gear_SpecificQuality".Translate()}<color={(item.Quality != null ? "#81f542" : "#ff4d4d")}>{(item.Quality != null ? "Yes".Translate() : "No".Translate())}</color>"
+            )
         )
         {
             if (item.Quality == null)
@@ -323,7 +327,7 @@ public static class SpecificGearDrawer
 
         if (canDoColor)
         {
-            Widgets.Label(color, "<b>Color: </b>");
+            Widgets.Label(color, "FactionLoadout_Gear_ColorLabel".Translate());
         }
 
         color.x += 60;
@@ -351,7 +355,7 @@ public static class SpecificGearDrawer
 
             if (isDefault)
             {
-                Widgets.Label(color.GetCentered("No color"), "No color");
+                Widgets.Label(color.GetCentered("FactionLoadout_Gear_NoColor".Translate()), "FactionLoadout_Gear_NoColor".Translate());
             }
             else
             {
@@ -361,7 +365,7 @@ public static class SpecificGearDrawer
 
                 color.x += 154;
                 color.width = 48;
-                if (Widgets.ButtonText(color, "Clear"))
+                if (Widgets.ButtonText(color, "Clear".Translate()))
                     item.Color = default;
             }
         }
@@ -376,12 +380,12 @@ public static class SpecificGearDrawer
         static string ModeToName(ApparelSelectionMode mode) =>
             mode switch
             {
-                ApparelSelectionMode.AlwaysTake => "Always picked",
-                ApparelSelectionMode.RandomChance => "Random chance to be picked",
-                ApparelSelectionMode.FromPool1 => "Part of pool 1",
-                ApparelSelectionMode.FromPool2 => "Part of pool 2",
-                ApparelSelectionMode.FromPool3 => "Part of pool 3",
-                ApparelSelectionMode.FromPool4 => "Part of pool 4",
+                ApparelSelectionMode.AlwaysTake => "FactionLoadout_Gear_AlwaysPicked".Translate().ToString(),
+                ApparelSelectionMode.RandomChance => "FactionLoadout_Gear_RandomChance".Translate().ToString(),
+                ApparelSelectionMode.FromPool1 => "FactionLoadout_Gear_FromPool".Translate(1).ToString(),
+                ApparelSelectionMode.FromPool2 => "FactionLoadout_Gear_FromPool".Translate(2).ToString(),
+                ApparelSelectionMode.FromPool3 => "FactionLoadout_Gear_FromPool".Translate(3).ToString(),
+                ApparelSelectionMode.FromPool4 => "FactionLoadout_Gear_FromPool".Translate(4).ToString(),
                 _ => mode.ToString(),
             };
 
@@ -392,7 +396,7 @@ public static class SpecificGearDrawer
 
         Rect modeLabel = modeBox.ExpandedBy(-5);
         modeLabel.height = 30;
-        Widgets.Label(modeLabel, "Selection mode:");
+        Widgets.Label(modeLabel, "FactionLoadout_Gear_SelectionMode".Translate());
 
         Rect modeButton = modeBox.ExpandedBy(-5);
         modeButton.y += 22;
@@ -414,7 +418,12 @@ public static class SpecificGearDrawer
                 chanceRect,
                 ref item.SelectionChance,
                 FloatRange.ZeroToOne,
-                $"{(item.SelectionMode == ApparelSelectionMode.RandomChance ? "Chance" : "Weight")}: {item.SelectionChance * 100f:F0}%"
+                "FactionLoadout_Gear_ChanceWeight"
+                    .Translate(
+                        item.SelectionMode == ApparelSelectionMode.RandomChance ? "FactionLoadout_Traits_Chance".Translate() : "FactionLoadout_GroupEditor_WeightLabel".Translate(),
+                        $"{item.SelectionChance * 100f:F0}"
+                    )
+                    .ToString()
             );
         }
     }

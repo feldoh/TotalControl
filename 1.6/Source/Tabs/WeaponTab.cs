@@ -13,20 +13,41 @@ public class WeaponTab : EditTab
 
     protected override void DrawContents(Listing_Standard ui)
     {
-        DrawOverride(ui, DefaultKind.weaponMoney, ref Current.WeaponMoney, "Weapon Value", DrawWeaponMoney, pasteGet: e => e.WeaponMoney);
-        DrawOverride(ui, QualityCategory.Normal, ref Current.ForcedWeaponQuality, "Forced Weapon Quality", DrawWeaponQuality, pasteGet: e => e.ForcedWeaponQuality);
-        DrawOverride(ui, DefaultKind.biocodeWeaponChance, ref Current.BiocodeWeaponChance, "Biocode Chance", DrawBiocodeChance, pasteGet: e => e.BiocodeWeaponChance);
+        DrawOverride(
+            ui,
+            DefaultKind.weaponMoney,
+            ref Current.WeaponMoney,
+            "FactionLoadout_ValueLabel".Translate("FactionLoadout_Tab_Weapon".Translate()),
+            DrawWeaponMoney,
+            pasteGet: e => e.WeaponMoney
+        );
+        DrawOverride(
+            ui,
+            QualityCategory.Normal,
+            ref Current.ForcedWeaponQuality,
+            "FactionLoadout_Weapon_ForcedQuality".Translate(),
+            DrawWeaponQuality,
+            pasteGet: e => e.ForcedWeaponQuality
+        );
+        DrawOverride(
+            ui,
+            DefaultKind.biocodeWeaponChance,
+            ref Current.BiocodeWeaponChance,
+            "FactionLoadout_Weapon_BiocodeChance".Translate(),
+            DrawBiocodeChance,
+            pasteGet: e => e.BiocodeWeaponChance
+        );
         DrawOverride(
             ui,
             DefaultKind.weaponTags,
             ref Current.WeaponTags,
-            "Allowed Weapon Types",
+            "FactionLoadout_AllowedTypes".Translate("FactionLoadout_Tab_Weapon".Translate()),
             DrawWeaponTags,
             GetHeightFor(Current.WeaponTags),
             true,
             pasteGet: e => e.WeaponTags
         );
-        DrawSpecificGear(ui, ref Current.SpecificWeapons, "Required Weapons (advanced)", t => t.IsWeapon, ThingDef.Named("Gun_AssaultRifle"));
+        DrawSpecificGear(ui, ref Current.SpecificWeapons, "FactionLoadout_Weapon_RequiredAdvanced".Translate(), t => t.IsWeapon, ThingDef.Named("Gun_AssaultRifle"));
         DrawOverride(
             ui,
             null,

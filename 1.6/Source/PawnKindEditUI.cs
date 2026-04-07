@@ -67,13 +67,14 @@ public class PawnKindEditUI : Window
 
         if ((tabs?.Count ?? 0) == 0)
         {
-            Widgets.Label(inRect, "No editable properties for this pawn kind.");
+            Widgets.Label(inRect, "FactionLoadout_NoEditableProperties".Translate());
             return;
         }
 
         Rect titleArea = inRect;
         titleArea.height = 40;
-        string title = $"<size=32><b>Pawn Type: <color=#cf9af5>{(Current.IsGlobal ? "Global (affects all faction pawns)" : Current.Def.LabelCap)}</color></b></size>";
+        string title =
+            $"<size=32><b>Pawn Type: <color=#cf9af5>{(Current.IsGlobal ? "FactionLoadout_GlobalLabel".Translate().ToString() : Current.Def.LabelCap.ToString())}</color></b></size>";
         Widgets.Label(titleArea, title);
 
         Rect tabRect = inRect;

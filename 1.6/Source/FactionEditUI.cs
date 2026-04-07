@@ -104,16 +104,16 @@ public class FactionEditUI : Window
 
         // --- Header (always visible) ---
         Rect r = ui.GetRect(50);
-        Widgets.Label(r, $"<size=34><b>Faction: <color=#cf9af5>{Current.Faction.Def?.LabelCap ?? "none"}</color></b></size>");
+        Widgets.Label(r, $"<size=34><b>Faction: <color=#cf9af5>{Current.Faction.Def?.LabelCap ?? "None".Translate()}</color></b></size>");
         if (Current.Faction.IsMissing)
         {
             ui.Label($"<color=orange>{"FactionLoadout_FactionMissingEditWarning".Translate()}</color>");
         }
 
         if (Current.Faction.DefName == Preset.SpecialCreepjoinerFactionDefName)
-            ui.Label("<color=yellow>EXPERIMENTAL! - This is a fake faction used for Creepjoiner editing, use at your own risk.</color>");
+            ui.Label($"<color=yellow>{"FactionLoadout_FactionEdit_ExperimentalCreepjoiner".Translate()}</color>");
         if (Current.Faction.DefName == Preset.SpecialWildManFactionDefName)
-            ui.Label("<color=yellow>EXPERIMENTAL! - This is a fake faction used for WildMan editing, use at your own risk.</color>");
+            ui.Label($"<color=yellow>{"FactionLoadout_FactionEdit_ExperimentalWildMan".Translate()}</color>");
         if (Current.Faction.DefName == Preset.SpecialFactionlessPawnsFactionDefName)
             ui.Label($"<color=yellow>{"FactionLoadout_Special_FactionlessWarning".Translate()}</color>");
 
@@ -241,26 +241,30 @@ public class FactionEditUI : Window
         }
 
         inner.GapLine();
-        inner.Label("<b>Loadout Overrides:</b>");
+        inner.Label($"<b>{"FactionLoadout_FactionEdit_LoadoutOverrides".Translate()}</b>");
         inner.Gap();
 
         HashSet<PawnKindDef> orphanedKinds = Current?.GetOrphanedKinds() ?? [];
         foreach (PawnKindEdit edit in Current.KindEdits)
         {
             Rect rect = inner.GetRect(30);
+            string delText = "Delete".Translate();
+            float delW = Mathf.Max(38, Text.CalcSize(delText).x + 10);
             GUI.color = Color.red;
-            if (Widgets.ButtonText(new Rect(rect.x, rect.y, 38, 24), "DEL"))
+            if (Widgets.ButtonText(new Rect(rect.x, rect.y, delW, 24), delText))
             {
                 bin.Add(edit);
                 edit.DeletedOrClosed = true;
             }
 
             GUI.color = Color.white;
-            rect.x += 42;
-            if (Widgets.ButtonText(new Rect(rect.x, rect.y, 50, 24), "EDIT"))
+            rect.x += delW + 4;
+            string editText = "FactionLoadout_Edit".Translate().CapitalizeFirst();
+            float editW = Mathf.Max(50, Text.CalcSize(editText).x + 10);
+            if (Widgets.ButtonText(new Rect(rect.x, rect.y, editW, 24), editText))
                 Find.WindowStack.Add(new PawnKindEditUI(edit));
 
-            rect.x += 54;
+            rect.x += editW + 4;
             if (Widgets.ButtonImageFitted(new Rect(rect.x, rect.y, 24, 24), TexButton.Copy))
                 PawnKindClipboard.Copy(edit);
             TooltipHandler.TipRegion(new Rect(rect.x, rect.y, 24, 24), "FactionLoadout_Clipboard_CopyTooltip".Translate());
@@ -293,14 +297,14 @@ public class FactionEditUI : Window
                 rect.x += 22f;
             }
 
-            Widgets.Label(rect, $"<b>{(edit.IsGlobal ? "<color=cyan>Global (affects all faction pawns)</color>" : edit.Def.LabelCap)}</b>");
+            Widgets.Label(rect, $"<b>{(edit.IsGlobal ? $"<color=cyan>{"FactionLoadout_GlobalLabel".Translate()}</color>" : edit.Def.LabelCap.ToString())}</b>");
         }
 
         foreach (PawnKindEdit item in bin)
             Current.KindEdits.Remove(item);
         bin.Clear();
 
-        if (!Current.Faction.IsMissing && inner.ButtonText("Add new..."))
+        if (!Current.Faction.IsMissing && inner.ButtonText("Add".Translate().CapitalizeFirst() + "..."))
         {
             IEnumerable<PawnKindDef> MakeKinds()
             {
@@ -358,7 +362,7 @@ public class FactionEditUI : Window
                 k =>
                     k != null
                         ? new MenuItemText(k, $"{k.LabelCap} ({k.defName})", tooltip: k.description)
-                        : new MenuItemText(null, "<color=cyan><b>Global (affects all faction pawns)</b></color>")
+                        : new MenuItemText(null, $"<color=cyan><b>{"FactionLoadout_GlobalLabel".Translate()}</b></color>")
             );
             CustomFloatMenu.Open(
                 items,
@@ -387,7 +391,7 @@ public class FactionEditUI : Window
         // --- Footer (always visible) ---
         ui.GapLine(26);
 
-        if (Prefs.DevMode && clonedFac != null && ui.ButtonText("DevMode: Debug cloned kinds"))
+        if (Prefs.DevMode && clonedFac != null && ui.ButtonText("FactionLoadout_FactionEdit_DebugClonedKinds".Translate()))
             foreach (PawnKindDef kind in clonedFac.GetKindDefs())
             {
                 ModCore.Log($"Kind: {kind.label} ({kind.defName})");
@@ -403,11 +407,11 @@ public class FactionEditUI : Window
 
         if (!isInGame)
         {
-            ui.Label("<color=yellow>[ERROR] You must load a save game to preview pawns. Sorry!</color>");
+            ui.Label($"<color=yellow>{"FactionLoadout_FactionEdit_PreviewError".Translate()}</color>");
         }
         else
         {
-            ui.CheckboxLabeled("Thing ID Patch", ref _ThingIDPatch, "Turn on to save thing IDs");
+            ui.CheckboxLabeled("FactionLoadout_FactionEdit_ThingIDPatch".Translate(), ref _ThingIDPatch, "FactionLoadout_FactionEdit_ThingIDPatchTooltip".Translate());
             ui.Gap(20);
             Rect total = ui.GetRect(inRect.height - ui.CurHeight - 32);
             int count = pawns.Count;
@@ -464,7 +468,7 @@ public class FactionEditUI : Window
 
         GUI.enabled = isInGame;
         bool f = Input.GetKeyDown(KeyCode.F);
-        if ((ui.ButtonText("Regenerate previews [Hotkey: F]") || (pawns.Count == 0 && !_previewFailed) || (f && framesSinceF > 20)) && isInGame)
+        if ((ui.ButtonText("FactionLoadout_FactionEdit_RegeneratePreviews".Translate()) || (pawns.Count == 0 && !_previewFailed) || (f && framesSinceF > 20)) && isInGame)
         {
             if (f)
                 framesSinceF = 0;
@@ -571,7 +575,12 @@ public class FactionEditUI : Window
     {
         Rect matRect = ui.GetRect(28);
         matRect.width = 300;
-        if (Widgets.ButtonText(matRect, $"Use custom apparel materials: {(Current.ApparelStuffFilter == null ? "<color=#ff4d4d>NO</color>" : "<color=#81f542>YES</color>")}"))
+        if (
+            Widgets.ButtonText(
+                matRect,
+                $"{"FactionLoadout_FactionEdit_CustomMaterials".Translate()}{(Current.ApparelStuffFilter == null ? $"<color=#ff4d4d>{"No".Translate()}</color>" : $"<color=#81f542>{"Yes".Translate()}</color>")}"
+            )
+        )
         {
             filterState = new ThingFilterUI.UIState();
 

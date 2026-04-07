@@ -18,12 +18,19 @@ public class ImplantsTab : EditTab
 
     protected override void DrawContents(Listing_Standard ui)
     {
-        DrawOverride(ui, DefaultKind.techHediffsMoney, ref Current.TechMoney, "Implants & Bionics Value", DrawTechMoney, pasteGet: e => e.TechMoney);
+        DrawOverride(
+            ui,
+            DefaultKind.techHediffsMoney,
+            ref Current.TechMoney,
+            "FactionLoadout_ValueLabel".Translate("FactionLoadout_Tab_ImplantsAndBionics".Translate()).ToString(),
+            DrawTechMoney,
+            pasteGet: e => e.TechMoney
+        );
         DrawOverride(
             ui,
             DefaultKind.techHediffsTags,
             ref Current.TechHediffTags,
-            "Allowed Implants & Bionics Types",
+            "FactionLoadout_AllowedTypes".Translate("FactionLoadout_Tab_ImplantsAndBionics".Translate()).ToString(),
             DrawTechTags,
             GetHeightFor(Current.TechHediffTags),
             true,
@@ -33,7 +40,7 @@ public class ImplantsTab : EditTab
             ui,
             DefaultKind.techHediffsDisallowTags,
             ref Current.TechHediffDisallowedTags,
-            "Disallowed Implants & Bionics Types",
+            "FactionLoadout_DisallowedTypes".Translate("FactionLoadout_Tab_ImplantsAndBionics".Translate()).ToString(),
             DrawDisallowedTechTags,
             GetHeightFor(Current.TechHediffDisallowedTags),
             true,
@@ -43,15 +50,29 @@ public class ImplantsTab : EditTab
             ui,
             (List<DefRef<ThingDef>>)null,
             ref Current.TechRequired,
-            "Required Implants & Bionics",
+            "FactionLoadout_Implants_Required".Translate().ToString(),
             DrawRequiredTech,
             GetHeightFor(Current.TechRequired),
             true,
             pasteGet: e => e.TechRequired
         );
-        DrawOverride(ui, DefaultKind.techHediffsChance, ref Current.TechHediffChance, "Implants & Bionics Chance", DrawTechChance, pasteGet: e => e.TechHediffChance);
-        DrawOverride(ui, DefaultKind.techHediffsMaxAmount, ref Current.TechHediffsMaxAmount, "Max # of Implants & Bionics", DrawMaxTech, pasteGet: e => e.TechHediffsMaxAmount);
-        DrawSpecificHediffs(ui, ref Current.ForcedHediffs, "Required Hediffs (advanced)", _ => true, HediffDefOf.Scaria);
+        DrawOverride(
+            ui,
+            DefaultKind.techHediffsChance,
+            ref Current.TechHediffChance,
+            "FactionLoadout_Implants_Chance".Translate().ToString(),
+            DrawTechChance,
+            pasteGet: e => e.TechHediffChance
+        );
+        DrawOverride(
+            ui,
+            DefaultKind.techHediffsMaxAmount,
+            ref Current.TechHediffsMaxAmount,
+            "FactionLoadout_Implants_MaxCount".Translate().ToString(),
+            DrawMaxTech,
+            pasteGet: e => e.TechHediffsMaxAmount
+        );
+        DrawSpecificHediffs(ui, ref Current.ForcedHediffs, "FactionLoadout_Implants_RequiredAdvanced".Translate().ToString(), _ => true, HediffDefOf.Scaria);
     }
 
     // --- Private draw methods ---
@@ -63,7 +84,8 @@ public class ImplantsTab : EditTab
         ui.Label($"<b>{label}</b>");
         Rect rect = ui.GetRect(height);
         bool active = edits != null;
-        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), $"Override: <color={(active ? "#81f542" : "#ff4d4d")}>{(active ? "Yes" : "No")}</color>"))
+        string overrideLabel = "FactionLoadout_OverrideYesNo".Translate(active ? "#81f542" : "#ff4d4d", active ? "Yes".Translate() : "No".Translate());
+        if (Widgets.ButtonText(new Rect(rect.x, rect.y, 120, 32), overrideLabel))
         {
             edits = active ? null : [];
             active = !active;
@@ -85,7 +107,7 @@ public class ImplantsTab : EditTab
             content.y += content.height + 5;
             content.height = 28;
             content.width = 250;
-            if (Widgets.ButtonText(content, "<b>Add New</b>"))
+            if (Widgets.ButtonText(content, "<b>" + "Add".Translate().CapitalizeFirst() + "</b>"))
                 edits.Add(new ForcedHediff { HediffDef = defaultHediffDef });
         }
         else
@@ -117,7 +139,7 @@ public class ImplantsTab : EditTab
 
             Rect delete = new(area.xMax - 105, area.y + 5, 100, 20);
             GUI.color = Color.red;
-            if (Widgets.ButtonText(delete, "<b>REMOVE</b>"))
+            if (Widgets.ButtonText(delete, "<b>" + "Remove".Translate().ToString().ToUpper() + "</b>"))
             {
                 edits.RemoveAt(i);
                 i--;
@@ -142,16 +164,16 @@ public class ImplantsTab : EditTab
             }
 
             Rect hediffMaxPartsRect = new(area.x + 10, area.y + 32, (area.width - 100) * 0.8f, 20);
-            Widgets.Label(hediffMaxPartsRect.LeftPart(0.15f), "Max parts to hit");
+            Widgets.Label(hediffMaxPartsRect.LeftPart(0.15f), "FactionLoadout_Implants_MaxPartsToHit".Translate());
             Widgets.IntEntry(hediffMaxPartsRect.RightPart(0.75f), ref item.maxParts, ref buffers[bufferIndex++]);
             Rect hediffMaxPartsRangeRect = new(area.x + 10, area.y + 60, area.width - 10, 30);
-            Widgets.Label(hediffMaxPartsRangeRect.LeftPart(0.15f), "Parts to Hit");
+            Widgets.Label(hediffMaxPartsRangeRect.LeftPart(0.15f), "FactionLoadout_Implants_PartsToHit".Translate());
             Widgets.IntRange(hediffMaxPartsRangeRect.RightPart(0.75f), (int)hediffMaxPartsRangeRect.y, ref item.maxPartsRange, 0, 10);
             Rect hediffChanceRect = new(area.x + 10, area.y + 90, area.width - 10, 30);
-            Widgets.Label(hediffChanceRect.LeftPart(0.7f), $"Chance to Apply Any: ({item.chance.ToStringPercent()})");
+            Widgets.Label(hediffChanceRect.LeftPart(0.7f), "FactionLoadout_ChanceToApply".Translate(item.chance.ToStringPercent()));
             Widgets.TextFieldPercent(hediffChanceRect.RightPart(0.29f), ref item.chance, ref buffers[bufferIndex++]);
             Rect partsLabelRect = new(area.x + 10, area.y + 130, area.width - 10, 30);
-            Widgets.Label(partsLabelRect, "Body Parts to Hit (None if should not target specific parts)");
+            Widgets.Label(partsLabelRect, "FactionLoadout_Implants_BodyPartsToHit".Translate());
             Rect validPartsRect = new(area.x, area.y + 160, (area.width) * 0.5f, area.height - 170);
             IEnumerable<BodyPartDef> bodyPartDefs = (Current.Race?.race ?? Current.Def.RaceProps).body.AllParts.Select(bpr => bpr.def).Distinct().ToList();
             item.parts ??= [];

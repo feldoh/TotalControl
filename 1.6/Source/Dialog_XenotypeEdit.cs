@@ -96,7 +96,7 @@ public class Dialog_XenotypeEdit : Window
                 );
             }
 
-            if (ModLister.BiotechInstalled && ui.ButtonText("FactionLoadout_AddNew".Translate()))
+            if (ModLister.BiotechInstalled && ui.ButtonText("Add".Translate().CapitalizeFirst() + "..."))
             {
                 List<MenuItemBase> xenoItems = CustomFloatMenu.MakeItems(
                     DefDatabase<XenotypeDef>.AllDefs.Where(def => !_edit.xenotypeChances.ContainsKey(def.defName)),
