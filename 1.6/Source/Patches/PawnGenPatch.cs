@@ -48,9 +48,25 @@ public static class PawnGenPatchCore
             {
                 if (__result.health.hediffSet.GetHediffCount(forcedHediff.HediffDef) >= maxToApply)
                     break;
+
+                BodyPartRecord part = validParts?.Pop();
+
+                if (part == null && typeof(Hediff_Implant).IsAssignableFrom(forcedHediff.HediffDef.hediffClass))
                 {
-                    Hediff hediff = HediffMaker.MakeHediff(forcedHediff.HediffDef, __result, validParts?.Pop());
+                    ModCore.Warn(
+                        $"Skipping hediff '{forcedHediff.HediffDef.defName}' on pawn " + $"'{__result.kindDef?.defName}': implant requires a body part but none was found."
+                    );
+                    continue;
+                }
+
+                try
+                {
+                    Hediff hediff = HediffMaker.MakeHediff(forcedHediff.HediffDef, __result, part);
                     __result.health.AddHediff(hediff);
+                }
+                catch (Exception e)
+                {
+                    ModCore.Warn($"Failed to apply hediff '{forcedHediff.HediffDef.defName}' " + $"to pawn '{__result.kindDef?.defName}': {e.Message}");
                 }
             }
         }
