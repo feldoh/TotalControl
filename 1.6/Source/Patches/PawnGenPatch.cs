@@ -156,3 +156,39 @@ public static class PawnGenPatchRecruitable
         return false;
     }
 }
+
+[HarmonyPatch(typeof(PawnGenerator), "GenerateNewPawnInternal")]
+public static class PawnGenPatchIdeo
+{
+    [HarmonyPostfix]
+    public static void Postfix(Pawn __result, PawnGenerationRequest request)
+    {
+        if (!ModsConfig.IdeologyActive)
+            return;
+        if (__result?.ideo == null || __result.kindDef == null)
+            return;
+
+        string forcedName = null;
+        foreach (PawnKindEdit edit in PawnKindEdit.GetEditsFor(__result.kindDef, __result.Faction?.def))
+        {
+            if (edit.ForcedIdeoName != null && (!edit.IsGlobal || forcedName == null))
+                forcedName = edit.ForcedIdeoName;
+        }
+
+        if (string.IsNullOrEmpty(forcedName))
+            return;
+
+        Ideo matched = null;
+        foreach (Ideo ideo in Find.IdeoManager.IdeosListForReading)
+        {
+            if (ideo.name == forcedName)
+            {
+                matched = ideo;
+                break;
+            }
+        }
+
+        if (matched != null)
+            __result.ideo.SetIdeo(matched);
+    }
+}

@@ -311,6 +311,15 @@
     <FactionLoadout_General_ForcedByGlobal> - Forced By Global</FactionLoadout_General_ForcedByGlobal>
     <FactionLoadout_General_RenameTooltip>This will give the cloned pawn kind a new name\nThis may have unintended consequences and may break existing pawns spawned for this faction.</FactionLoadout_General_RenameTooltip>
 
+    <!-- Ideology (General Tab) -->
+    <FactionLoadout_General_ForcedIdeo>Forced Ideology</FactionLoadout_General_ForcedIdeo>
+    <FactionLoadout_General_ForcedIdeoTooltip>Forces pawns of this kind to follow a specific ideology instead of their faction's default. Requires the Ideology DLC and a loaded save to select from available ideologies.</FactionLoadout_General_ForcedIdeoTooltip>
+    <FactionLoadout_General_IdeoNoneSelected>(none selected)</FactionLoadout_General_IdeoNoneSelected>
+    <FactionLoadout_General_IdeoNoWorld>(load a save to change)</FactionLoadout_General_IdeoNoWorld>
+    <FactionLoadout_General_FactionDefault>Use faction ideology</FactionLoadout_General_FactionDefault>
+    <FactionLoadout_OverrideOn>Override: On</FactionLoadout_OverrideOn>
+    <FactionLoadout_OverrideOff>Override: Off</FactionLoadout_OverrideOff>
+
     <!-- Appearance Tab -->
     <FactionLoadout_Appearance_Beards>Forced Beard Styles</FactionLoadout_Appearance_Beards>
     <FactionLoadout_Appearance_Hair>Forced Hair Styles</FactionLoadout_Appearance_Hair>

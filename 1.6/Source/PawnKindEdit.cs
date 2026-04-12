@@ -151,6 +151,7 @@ public class PawnKindEdit : IExposable
     public Dictionary<string, float> ForcedXenotypeChances = new();
     public Dictionary<XenotypeDef, float> ForcedXenotypeChanceDefs = new();
     public Gender? ForcedGender = null;
+    public string ForcedIdeoName = null;
     public SimpleCurve RaidCommonalityFromPointsCurve = null;
     public SimpleCurve RaidLootValueFromPointsCurve = null;
     public SimpleCurve MaxPawnCostPerTotalPointsCurve = null;
@@ -245,6 +246,7 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref Label, "label");
         Scribe_Defs.Look(ref Race, "race");
         Scribe_Values.Look(ref ForcedGender, "forcedGender");
+        Scribe_Values.Look(ref ForcedIdeoName, "forcedIdeoName");
         ScribeMigrateDefRefList(ref BodyTypes, "bodyTypes");
         ScribeMigrateDefRefList(ref CustomBeards, "customBeards");
         ScribeMigrateDefRefList(ref CustomHair, "customHair");
