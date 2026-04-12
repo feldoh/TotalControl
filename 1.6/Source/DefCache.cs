@@ -27,6 +27,7 @@ public static class DefCache
     public static List<PawnKindDef> AllAnimalKindDefs;
     public static List<RulePackDef> AllRulePackDefs;
     public static List<GeneDef> AllGeneDefs;
+    public static Dictionary<FactionDef, List<PawnKindDef>> DefaultFactionKinds;
 
     public static List<string> AllBackstoryCategories;
     public static List<BackstoryDef> AllChildhoodBackstories;
@@ -55,11 +56,25 @@ public static class DefCache
         HashSet<BodyTypeDef> allBodyTypeDefs = new(32);
         HashSet<GeneDef> allGeneDefs = new(1024);
 
+        Dictionary<FactionDef, List<PawnKindDef>> defaultFactionKinds = new(64);
+
         foreach (PawnKindDef def in DefDatabase<PawnKindDef>.AllDefsListForReading)
         {
             if (def.RaceProps is { Animal: true, packAnimal: true })
                 allAnimalKindDefs.Add(def);
+
+            if (def.defaultFactionDef != null)
+            {
+                if (!defaultFactionKinds.TryGetValue(def.defaultFactionDef, out List<PawnKindDef> factionKinds))
+                {
+                    factionKinds = new List<PawnKindDef>();
+                    defaultFactionKinds[def.defaultFactionDef] = factionKinds;
+                }
+                factionKinds.Add(def);
+            }
         }
+
+        DefaultFactionKinds = defaultFactionKinds;
 
         foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
         {
