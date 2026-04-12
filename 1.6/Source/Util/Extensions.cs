@@ -56,6 +56,12 @@ namespace FactionLoadout.Util
             if (def.basicMemberKind != null)
                 tempKinds.Add(def.basicMemberKind);
 
+            if (DefCache.DefaultFactionKinds != null && DefCache.DefaultFactionKinds.TryGetValue(def, out List<PawnKindDef> defaultKinds))
+            {
+                foreach (PawnKindDef kind in defaultKinds)
+                    tempKinds.Add(kind);
+            }
+
             return tempKinds;
         }
 
