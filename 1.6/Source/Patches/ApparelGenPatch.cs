@@ -206,8 +206,37 @@ public static class ApparelGenPatch
         if (spec.Style != null)
             thing.SetStyleDef(spec.Style);
 
-        if (spec.Quality != null)
-            thing.TryGetComp<CompQuality>()?.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
+        CompQuality compQuality = thing.TryGetComp<CompQuality>();
+        if (compQuality != null)
+        {
+            if (spec.Quality != null)
+            {
+                compQuality.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
+            }
+            else
+            {
+                QualityCategory quality = QualityUtility.GenerateQualityGeneratingPawn(pawn.kindDef, thing.def);
+                if (pawn.royalty != null && pawn.Faction != null)
+                {
+                    RoyalTitleDef currentTitle = pawn.royalty.GetCurrentTitle(pawn.Faction);
+                    if (currentTitle != null)
+                    {
+                        quality = (QualityCategory)Mathf.Clamp((int)quality, (int)currentTitle.requiredMinimumApparelQuality, 6);
+                    }
+                }
+                compQuality.SetQuality(quality, ArtGenerationContext.Outsider);
+            }
+        }
+
+        if (thing.def.useHitPoints)
+        {
+            float healthFactor = pawn.kindDef.gearHealthRange.RandomInRange;
+            if (healthFactor < 1f)
+            {
+                int hitPoints = Mathf.Max(1, Mathf.RoundToInt(healthFactor * (float)thing.MaxHitPoints));
+                thing.HitPoints = hitPoints;
+            }
+        }
 
         if (spec.Color != default)
             thing.SetColor(spec.Color, false);
