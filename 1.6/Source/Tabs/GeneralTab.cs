@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using FactionLoadout.UISupport;
 using FactionLoadout.Util;
 using RimWorld;
@@ -37,6 +38,12 @@ public class GeneralTab : EditTab
         );
 
         DrawOverride(ui, Gender.None, ref Current.ForcedGender, "FactionLoadout_General_ForcedGender".Translate().ToString(), DrawGender, pasteGet: e => e.ForcedGender);
+
+        if (ModsConfig.IdeologyActive && !isAnimal)
+        {
+            DrawIdeoOverride(ui);
+        }
+
         DrawOverride(ui, DefaultKind.label, ref Current.Label, "FactionLoadout_General_CustomName".Translate().ToString(), DrawCustomName, pasteGet: e => e.Label);
         DrawOverride(
             ui,
@@ -225,5 +232,76 @@ public class GeneralTab : EditTab
     private void DrawUnwaveringlyLoyalChance(Rect rect, bool active, float def)
     {
         DrawChance(ref Current.UnwaveringlyLoyalChance, def, rect, active);
+    }
+
+    private void DrawIdeoOverride(Listing_Standard ui)
+    {
+        Rect headerRect = ui.GetRect(Text.LineHeight);
+        Widgets.Label(headerRect, "<b>" + "FactionLoadout_General_ForcedIdeo".Translate() + "</b>");
+        TooltipHandler.TipRegion(headerRect, "FactionLoadout_General_ForcedIdeoTooltip".Translate());
+
+        Rect row = ui.GetRect(32);
+        bool active = Current.ForcedIdeoName != null;
+
+        Rect toggleRect = new Rect(row.x, row.y, 120, 32);
+        string toggleLabel = active ? "FactionLoadout_OverrideOn".Translate().ToString() : "FactionLoadout_OverrideOff".Translate().ToString();
+        if (Widgets.ButtonText(toggleRect, toggleLabel))
+        {
+            if (active)
+            {
+                Current.ForcedIdeoName = null;
+            }
+            else
+            {
+                Current.ForcedIdeoName = "";
+            }
+            active = !active;
+        }
+
+        Rect contentRect = new Rect(row.x + 124, row.y, row.width - 126, 32);
+
+        if (!active)
+        {
+            string txt = Current.IsGlobal ? "---" : "FactionLoadout_General_FactionDefault".Translate().ToString();
+            Widgets.Label(contentRect.GetCentered(txt), txt);
+        }
+        else
+        {
+            bool worldLoaded = Verse.Current.Game != null && Find.IdeoManager != null;
+            string displayName = string.IsNullOrEmpty(Current.ForcedIdeoName) ? "FactionLoadout_General_IdeoNoneSelected".Translate().ToString() : Current.ForcedIdeoName;
+
+            if (worldLoaded)
+            {
+                if (Widgets.ButtonText(contentRect, displayName))
+                {
+                    List<FloatMenuOption> options = new List<FloatMenuOption>();
+                    foreach (Ideo ideo in Find.IdeoManager.IdeosListForReading)
+                    {
+                        if (ideo.hidden)
+                            continue;
+                        Ideo localIdeo = ideo;
+                        options.Add(
+                            new FloatMenuOption(
+                                localIdeo.name,
+                                () =>
+                                {
+                                    Current.ForcedIdeoName = localIdeo.name;
+                                }
+                            )
+                        );
+                    }
+                    if (options.Count > 0)
+                    {
+                        Find.WindowStack.Add(new FloatMenu(options));
+                    }
+                }
+            }
+            else
+            {
+                Widgets.Label(contentRect, displayName + " " + "FactionLoadout_General_IdeoNoWorld".Translate());
+            }
+        }
+
+        ui.Gap();
     }
 }
