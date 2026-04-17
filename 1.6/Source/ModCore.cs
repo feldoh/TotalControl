@@ -80,6 +80,7 @@ public class ModCore : Mod
         Harmony.DEBUG = true;
 #endif
         harmony.Patch(AccessTools.Method(typeof(PawnApparelGenerator), "GenerateStartingApparelFor"), postfix: new HarmonyMethod(typeof(ApparelGenPatch), "Postfix"));
+        harmony.Patch(AccessTools.Method(typeof(PawnApparelGenerator), "CanUsePair"), postfix: new HarmonyMethod(AccessTools.Method(typeof(CanUsePairBlacklistPatch), "Postfix")));
         harmony.Patch(
             AccessTools.Method(typeof(Faction), "TryGenerateNewLeader"),
             prefix: new HarmonyMethod(AccessTools.Method(typeof(FactionLeaderPatch), "Prefix"), priority: Priority.First)
@@ -99,6 +100,10 @@ public class ModCore : Mod
         harmony.Patch(
             AccessTools.Method(typeof(PawnWeaponGenerator), "TryGenerateWeaponFor"),
             postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGenPatch), "Postfix")) { before = new[] { "CombatExtended.HarmonyCE" } }
+        );
+        harmony.Patch(
+            AccessTools.Method(typeof(PawnWeaponGenerator), "GetCommonality"),
+            postfix: new HarmonyMethod(AccessTools.Method(typeof(WeaponGetCommonalityBlacklistPatch), "Postfix"))
         );
         harmony.Patch(
             AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
