@@ -47,7 +47,8 @@ public class WeaponTab : EditTab
             true,
             pasteGet: e => e.WeaponTags
         );
-        DrawSpecificGear(ui, ref Current.SpecificWeapons, "FactionLoadout_Weapon_RequiredAdvanced".Translate(), t => t.IsWeapon, ThingDef.Named("Gun_AssaultRifle"));
+        ThingDef defaultWeapon = DefCache.AllWeapons?.Count > 0 ? DefCache.AllWeapons[0] : null;
+        DrawSpecificGear(ui, ref Current.SpecificWeapons, "FactionLoadout_Weapon_RequiredAdvanced".Translate(), t => t.IsWeapon, defaultWeapon);
         DrawOverride(
             ui,
             null,

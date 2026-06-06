@@ -65,7 +65,8 @@ public class ApparelTab : EditTab
             true,
             pasteGet: e => e.ApparelRequired
         );
-        DrawSpecificGear(ui, ref Current.SpecificApparel, "FactionLoadout_Apparel_RequiredAdvanced".Translate().ToString(), t => t.IsApparel, ThingDefOf.Apparel_Parka);
+        ThingDef defaultApparel = DefCache.AllApparel?.Count > 0 ? DefCache.AllApparel[0] : null;
+        DrawSpecificGear(ui, ref Current.SpecificApparel, "FactionLoadout_Apparel_RequiredAdvanced".Translate().ToString(), t => t.IsApparel, defaultApparel);
         DrawOverride(
             ui,
             null,
