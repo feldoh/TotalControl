@@ -184,7 +184,7 @@ public class ApparelTab : EditTab
     private void DrawApparelMaterials(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> defaultList)
     {
         Rect listRect = DrawMaterialModeToggle(rect, ref Current.ApparelMaterialsBlacklist);
-        DrawDefRefList(listRect, active, ref scrolls[scrollIndex++], Current.ApparelMaterials, null, DefCache.AllStuff);
+        DrawDefRefList(listRect, active, ref scrolls[scrollIndex++], Current.ApparelMaterials, null, GenStuff.StuffDefs);
     }
 
     private void DrawRequiredApparel(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> _)

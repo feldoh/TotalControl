@@ -100,6 +100,6 @@ public class WeaponTab : EditTab
     private void DrawWeaponMaterials(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> defaultList)
     {
         Rect listRect = DrawMaterialModeToggle(rect, ref Current.WeaponMaterialsBlacklist);
-        DrawDefRefList(listRect, active, ref scrolls[scrollIndex++], Current.WeaponMaterials, null, DefCache.AllStuff);
+        DrawDefRefList(listRect, active, ref scrolls[scrollIndex++], Current.WeaponMaterials, null, GenStuff.StuffDefs);
     }
 }

@@ -37,9 +37,6 @@ public static class DefCache
 
     public static List<string> AllPowerDefs;
 
-    /// <summary>Every stuff ThingDef, sorted by label. Used to populate the material allow-list pickers.</summary>
-    public static List<ThingDef> AllStuff;
-
     public static void ScanDefs()
     {
         if (AllTechHediffTags != null)
@@ -198,15 +195,6 @@ public static class DefCache
             .ToList();
 
         PopulateVFEAncientsObjects();
-
-        List<ThingDef> allStuff = new(64);
-        foreach (ThingDef td in DefDatabase<ThingDef>.AllDefsListForReading)
-        {
-            if (td.IsStuff)
-                allStuff.Add(td);
-        }
-        allStuff.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, StringComparison.InvariantCulture));
-        AllStuff = allStuff;
     }
 
     private static void PopulateVFEAncientsObjects()
@@ -274,8 +262,7 @@ public static class DefCache
             }
         }
 
-        IEnumerable<ThingDef> source = AllStuff ?? Enumerable.Empty<ThingDef>();
-        IEnumerable<ThingDef> allowed = isBlacklist ? source.Where(s => !listed.Contains(s)) : listed;
+        IEnumerable<ThingDef> allowed = isBlacklist ? GenStuff.StuffDefs.Where(s => !listed.Contains(s)) : listed;
 
         Dictionary<StuffCategoryDef, int> counts = new();
         foreach (ThingDef s in allowed)
