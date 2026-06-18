@@ -44,6 +44,8 @@
     <FactionLoadout_Settings_FactionPresetDesc>Here you can manage faction edit <b>presets</b>.\nEach preset contains a collection of faction edits. Only one preset can be active at a time.\n<i>Hold the SHIFT key to delete presets.</i>\nRemember all changes require a game restart to take effect.</FactionLoadout_Settings_FactionPresetDesc>
     <FactionLoadout_Settings_PatchKindInRequests>Patch forced pawn kinds in PawnGen (Restart Required):  </FactionLoadout_Settings_PatchKindInRequests>
     <FactionLoadout_Settings_PatchKindInRequestsDesc>Patch the pawn kind set in PawnGenerationRequests. Should catch cases where the game generates a pawn without taking the patched version from the faction when generating pawns like for royal permits. Currently experimental.</FactionLoadout_Settings_PatchKindInRequestsDesc>
+    <FactionLoadout_Settings_IgnorePrice>Ignore price limits when necessary</FactionLoadout_Settings_IgnorePrice>
+    <FactionLoadout_Settings_IgnorePriceDesc>When a Total Control-managed pawn can't afford any allowed weapon or torso apparel within its budget, equip the cheapest matching option anyway instead of leaving the slot empty. With verbose logging on, such cases are logged even when this is off, so you know to raise the budget.</FactionLoadout_Settings_IgnorePriceDesc>
 
     <FactionLoadout_Faction_Techlevel>Tech Level</FactionLoadout_Faction_Techlevel>
     <FactionLoadout_NotOverriden_WithDefault>Not Overriden ({0})</FactionLoadout_NotOverriden_WithDefault>
@@ -278,6 +280,12 @@
     <FactionLoadout_Apparel_Coverage>Coverage: {0}</FactionLoadout_Apparel_Coverage>
     <FactionLoadout_ApparelBlacklist>Apparel Blacklist</FactionLoadout_ApparelBlacklist>
     <FactionLoadout_WeaponBlacklist>Weapon Blacklist</FactionLoadout_WeaponBlacklist>
+    <FactionLoadout_ApparelMaterials>Apparel Materials</FactionLoadout_ApparelMaterials>
+    <FactionLoadout_WeaponMaterials>Weapon Materials</FactionLoadout_WeaponMaterials>
+    <FactionLoadout_Materials_ModeWhitelist>Mode: Whitelist (only these)</FactionLoadout_Materials_ModeWhitelist>
+    <FactionLoadout_Materials_ModeBlacklist>Mode: Blacklist (all except these)</FactionLoadout_Materials_ModeBlacklist>
+    <FactionLoadout_Materials_AllowedSummary>Allowed: {0}</FactionLoadout_Materials_AllowedSummary>
+    <FactionLoadout_Materials_NoValidStuff>No material allowed by this kind's material rule can make this item — it will be skipped when the pawn is generated.</FactionLoadout_Materials_NoValidStuff>
 
     <!-- Shared UI patterns -->
     <FactionLoadout_OverrideYesNo>Override: &lt;color={0}&gt;{1}&lt;/color&gt;</FactionLoadout_OverrideYesNo>

@@ -99,9 +99,10 @@ public abstract class EditTab : Tab
         IList<T> defaults,
         IEnumerable<T> allDefs,
         Func<T, MenuItemBase> makeItem = null,
-        Func<T, string> labelFunc = null
+        Func<T, string> labelFunc = null,
+        Func<T, string> warningFunc = null
     )
-        where T : Def, new() => ListDrawSupport.DrawDefRefList(rect, active, ref scroll, current, defaults, allDefs, Current.IsGlobal, makeItem, labelFunc);
+        where T : Def, new() => ListDrawSupport.DrawDefRefList(rect, active, ref scroll, current, defaults, allDefs, Current.IsGlobal, makeItem, labelFunc, warningFunc);
 
     protected CustomFloatMenu DrawDefList<T>(
         Rect rect,
@@ -143,6 +144,40 @@ public abstract class EditTab : Tab
 
     protected void DrawSpecificGear(Listing_Standard ui, ref List<SpecRequirementEdit> edits, string label, Func<ThingDef, bool> thingFilter, ThingDef defaultThing) =>
         SpecificGearDrawer.Draw(ui, ref edits, label, thingFilter, defaultThing, ref scrolls[scrollIndex++]);
+
+    /// <summary>
+    /// Draws the whitelist/blacklist mode toggle for a material list at the top of <paramref name="rect"/>
+    /// and returns the remaining rect below it for the def-list picker.
+    /// </summary>
+    protected Rect DrawMaterialModeToggle(Rect rect, ref bool isBlacklist)
+    {
+        string label = isBlacklist ? "FactionLoadout_Materials_ModeBlacklist".Translate() : "FactionLoadout_Materials_ModeWhitelist".Translate();
+        Rect modeRow = rect;
+        modeRow.height = 24f;
+        modeRow.width = Mathf.Min(rect.width, Mathf.Max(180f, Text.CalcSize(label).x + 24f));
+        if (Widgets.ButtonText(modeRow, label))
+            isBlacklist = !isBlacklist;
+
+        Rect listRect = rect;
+        listRect.yMin += 26f;
+        return listRect;
+    }
+
+    /// <summary>
+    /// Draws a one-line "Allowed: Leathery 13, Metallic 4, …" summary of what a material list+mode permits.
+    /// No-op when the field is inactive (null list) or nothing is permitted.
+    /// </summary>
+    protected void DrawMaterialSummary(Listing_Standard ui, List<DefRef<ThingDef>> materials, bool isBlacklist)
+    {
+        if (materials == null)
+            return;
+        string summary = DefCache.MaterialCategorySummary(materials, isBlacklist);
+        if (string.IsNullOrEmpty(summary))
+            return;
+        GUI.color = new Color(0.62f, 0.78f, 1f);
+        ui.Label("FactionLoadout_Materials_AllowedSummary".Translate(summary));
+        GUI.color = Color.white;
+    }
 
     public void DrawCurve(Listing_Standard listing, ref SimpleCurve curve, ref List<(string x, string y)> curvePointBuffer) =>
         CurveDrawer.DrawCurve(listing, ref curve, ref curvePointBuffer);

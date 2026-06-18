@@ -41,6 +41,10 @@ public static class WeaponGenPatch
 
         if (edits.editCount > 0 && pawn.RaceProps.ToolUser)
             ForceGiveWeapons(pawn, edits);
+
+        // For TC-managed kinds, surface (and optionally fix) weapon slots left empty by a too-low budget.
+        if (edits.editCount > 0)
+            HandleWeaponPriceLimit(pawn);
     }
 
     static void ForceGiveWeapons(Pawn pawn, AccumulatedWeaponEdits edits)
@@ -178,6 +182,97 @@ public static class WeaponGenPatch
 
         return thing;
     }
+
+    // ==================== Price-limited weapon fallback ====================
+
+    /// <summary>
+    /// When a TC-managed pawn ends up with no primary weapon, determines whether price was the
+    /// limiting factor (matching weapons exist but none were affordable) and, if so, logs it
+    /// (verbose) and optionally equips the cheapest matching weapon (<see cref="MySettings.IgnorePriceLimits"/>).
+    /// </summary>
+    static void HandleWeaponPriceLimit(Pawn pawn)
+    {
+        if (pawn.equipment == null || pawn.equipment.Primary != null)
+            return;
+
+        PawnKindDef kind = pawn.kindDef;
+        if (kind.weaponTags == null || kind.weaponTags.Count == 0)
+            return;
+        if (!pawn.RaceProps.ToolUser || !pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation) || pawn.WorkTagIsDisabled(WorkTags.Violent))
+            return;
+
+        ThingStuffPair? cheapest = null;
+        List<ThingStuffPair> pairs = PawnWeaponGenerator.allWeaponPairs;
+        for (int i = 0; i < pairs.Count; i++)
+        {
+            ThingStuffPair w = pairs[i];
+            if (!WeaponMatchesKind(w, pawn, kind))
+                continue;
+            // GetCommonality already includes our blacklist/material zeroing, so a positive value means TC allows it.
+            if (PawnWeaponGenerator.GetCommonality(pawn, w) <= 0f)
+                continue;
+            if (cheapest == null || w.Price < cheapest.Value.Price)
+                cheapest = w;
+        }
+
+        // No matching weapon at all → the cause is tags/filters, not price. Stay quiet.
+        if (cheapest == null)
+            return;
+
+        ThingStuffPair pair = cheapest.Value;
+        if (MySettings.VerboseLogging)
+        {
+            string mat = pair.stuff != null ? $" ({pair.stuff.LabelCap})" : "";
+            ModCore.Warn(
+                $"Weapon slot left empty by price for '{pawn.kindDef.LabelCap}': nothing affordable within weaponMoney {kind.weaponMoney}. "
+                    + $"Cheapest matching option is {pair.thing.LabelCap}{mat} at ${pair.Price:F0} — raise weaponMoney or relax the weapon/material filters."
+            );
+        }
+
+        if (MySettings.IgnorePriceLimits)
+            EquipFallbackWeapon(pawn, pair);
+    }
+
+    static bool WeaponMatchesKind(ThingStuffPair w, Pawn pawn, PawnKindDef kind)
+    {
+        bool tagMatch = false;
+        for (int i = 0; i < kind.weaponTags.Count; i++)
+        {
+            if (w.thing.weaponTags != null && w.thing.weaponTags.Contains(kind.weaponTags[i]))
+            {
+                tagMatch = true;
+                break;
+            }
+        }
+
+        if (!tagMatch)
+            return false;
+        if (kind.weaponStuffOverride != null && w.stuff != kind.weaponStuffOverride)
+            return false;
+        if (w.thing.IsRangedWeapon && pawn.WorkTagIsDisabled(WorkTags.Shooting))
+            return false;
+        if (w.stuff != null && !w.stuff.stuffProps.allowedInStuffGeneration)
+            return false;
+        return true;
+    }
+
+    static void EquipFallbackWeapon(Pawn pawn, ThingStuffPair pair)
+    {
+        try
+        {
+            if (ThingMaker.MakeThing(pair.thing, pair.stuff) is not ThingWithComps weapon)
+                return;
+            PawnGenerator.PostProcessGeneratedGear(weapon, pawn);
+            if (pawn.equipment.Primary != null)
+                pawn.equipment.Remove(pawn.equipment.Primary);
+            pawn.equipment.AddEquipment(weapon);
+            ModCore.Debug($"Ignore-price fallback armed '{pawn.kindDef.LabelCap}' with {weapon.LabelCap}.");
+        }
+        catch (Exception e)
+        {
+            ModCore.Error($"Ignore-price weapon fallback failed for '{pawn.kindDef.LabelCap}'", e);
+        }
+    }
 }
 
 /// <summary>
@@ -195,6 +290,13 @@ public static class WeaponGetCommonalityBlacklistPatch
             return;
 
         if (DefCache.WeaponBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
+        {
+            __result = 0f;
+            return;
+        }
+
+        // Material rule (whitelist or blacklist): zero out stuff-based weapons the kind's rule disallows.
+        if (!DefCache.WeaponMaterialAllows(pawn.kindDef, pair.stuff))
             __result = 0f;
     }
 }

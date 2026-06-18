@@ -77,6 +77,17 @@ public class ApparelTab : EditTab
             false,
             pasteGet: e => e.ApparelBlacklist
         );
+        DrawOverride(
+            ui,
+            null,
+            ref Current.ApparelMaterials,
+            "FactionLoadout_ApparelMaterials".Translate(),
+            DrawApparelMaterials,
+            GetHeightFor(Current.ApparelMaterials) + 26f,
+            false,
+            pasteGet: e => e.ApparelMaterials
+        );
+        DrawMaterialSummary(ui, Current.ApparelMaterials, Current.ApparelMaterialsBlacklist);
     }
 
     private void DrawForceOnlySelected(Listing_Standard ui)
@@ -170,8 +181,49 @@ public class ApparelTab : EditTab
         DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.ApparelBlacklist, null, DefCache.AllApparel);
     }
 
+    private void DrawApparelMaterials(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> defaultList)
+    {
+        Rect listRect = DrawMaterialModeToggle(rect, ref Current.ApparelMaterialsBlacklist);
+        DrawDefRefList(listRect, active, ref scrolls[scrollIndex++], Current.ApparelMaterials, null, DefCache.AllStuff);
+    }
+
     private void DrawRequiredApparel(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> _)
     {
-        DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.ApparelRequired, DefaultKind.apparelRequired, DefCache.AllApparel);
+        DrawDefRefList(
+            rect,
+            active,
+            ref scrolls[scrollIndex++],
+            Current.ApparelRequired,
+            DefaultKind.apparelRequired,
+            DefCache.AllApparel,
+            warningFunc: RequiredApparelMaterialWarning
+        );
+    }
+
+    private string RequiredApparelMaterialWarning(ThingDef item)
+    {
+        if (item == null || !item.MadeFromStuff)
+            return null;
+        if (Current.ApparelMaterials == null || Current.ApparelMaterials.Count == 0)
+            return null;
+
+        HashSet<ThingDef> listed = new();
+        foreach (DefRef<ThingDef> r in Current.ApparelMaterials)
+        {
+            if (r.HasValue)
+                listed.Add(r.Def);
+        }
+        if (listed.Count == 0)
+            return null;
+
+        bool blacklist = Current.ApparelMaterialsBlacklist;
+        foreach (ThingDef stuff in GenStuff.AllowedStuffsFor(item))
+        {
+            bool stuffAllowed = blacklist ? !listed.Contains(stuff) : listed.Contains(stuff);
+            if (stuffAllowed)
+                return null;
+        }
+
+        return "FactionLoadout_Materials_NoValidStuff".Translate();
     }
 }

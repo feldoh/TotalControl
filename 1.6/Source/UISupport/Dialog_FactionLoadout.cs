@@ -52,6 +52,7 @@ public class Dialog_FactionLoadout : Window
                 ref MySettings.PatchKindInRequests,
                 "FactionLoadout_Settings_PatchKindInRequestsDesc".Translate()
             );
+            ui.CheckboxLabeled("FactionLoadout_Settings_IgnorePrice".Translate(), ref MySettings.IgnorePriceLimits, "FactionLoadout_Settings_IgnorePriceDesc".Translate());
             ui.GapLine();
             ui.Label("FactionLoadout_Settings_FactionPresetDesc".Translate());
             ui.GapLine();

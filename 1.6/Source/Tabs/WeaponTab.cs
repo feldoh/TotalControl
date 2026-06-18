@@ -59,6 +59,17 @@ public class WeaponTab : EditTab
             false,
             pasteGet: e => e.WeaponBlacklist
         );
+        DrawOverride(
+            ui,
+            null,
+            ref Current.WeaponMaterials,
+            "FactionLoadout_WeaponMaterials".Translate(),
+            DrawWeaponMaterials,
+            GetHeightFor(Current.WeaponMaterials) + 26f,
+            false,
+            pasteGet: e => e.WeaponMaterials
+        );
+        DrawMaterialSummary(ui, Current.WeaponMaterials, Current.WeaponMaterialsBlacklist);
     }
 
     private void DrawWeaponQuality(Rect rect, bool active, QualityCategory _)
@@ -84,5 +95,11 @@ public class WeaponTab : EditTab
     private void DrawWeaponBlacklist(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> defaultList)
     {
         DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.WeaponBlacklist, null, DefCache.AllWeapons);
+    }
+
+    private void DrawWeaponMaterials(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> defaultList)
+    {
+        Rect listRect = DrawMaterialModeToggle(rect, ref Current.WeaponMaterialsBlacklist);
+        DrawDefRefList(listRect, active, ref scrolls[scrollIndex++], Current.WeaponMaterials, null, DefCache.AllStuff);
     }
 }
