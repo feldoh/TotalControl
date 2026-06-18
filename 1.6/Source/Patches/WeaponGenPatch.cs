@@ -192,6 +192,10 @@ public static class WeaponGenPatch
     /// </summary>
     static void HandleWeaponPriceLimit(Pawn pawn)
     {
+        // Nothing to log or fix when both toggles are off — skip the allWeaponPairs scan entirely.
+        if (!MySettings.VerboseLogging && !MySettings.IgnorePriceLimits)
+            return;
+
         if (pawn.equipment == null || pawn.equipment.Primary != null)
             return;
 

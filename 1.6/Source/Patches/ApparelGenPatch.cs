@@ -266,6 +266,10 @@ public static class ApparelGenPatch
     /// </summary>
     private static void HandleApparelPriceLimit(Pawn pawn)
     {
+        // Nothing to log or fix when both toggles are off — skip the allApparelPairs scan entirely.
+        if (!MySettings.VerboseLogging && !MySettings.IgnorePriceLimits)
+            return;
+
         if (pawn.apparel == null || !pawn.RaceProps.ToolUser || !pawn.RaceProps.IsFlesh)
             return;
         if (CoversTorso(pawn))
