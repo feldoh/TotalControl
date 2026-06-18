@@ -403,4 +403,22 @@
     <FactionLoadout_Preset_AddFactionEdit>Add new faction edit...</FactionLoadout_Preset_AddFactionEdit>
     <FactionLoadout_Preset_MissingWarning>WARNING: This preset has missing factions, probably because they are added by a mod that is not loaded:</FactionLoadout_Preset_MissingWarning>
     <FactionLoadout_Preset_MissingHeader>Missing factions</FactionLoadout_Preset_MissingHeader>
+
+    <!-- Total Control fullscreen UI (overhaul) -->
+    <FactionLoadout_TC_Title>Total Control</FactionLoadout_TC_Title>
+    <FactionLoadout_TC_PresetLabel>Preset: {0}</FactionLoadout_TC_PresetLabel>
+    <FactionLoadout_TC_NoPreset>(no preset selected)</FactionLoadout_TC_NoPreset>
+    <FactionLoadout_TC_FactionHeader>Faction</FactionLoadout_TC_FactionHeader>
+    <FactionLoadout_TC_PawnHeader>Pawn: {0}</FactionLoadout_TC_PawnHeader>
+    <FactionLoadout_Preview_Placeholder>Generating preview...</FactionLoadout_Preview_Placeholder>
+    <FactionLoadout_Preview_Failed>Preview failed to generate. Click Regenerate to retry.</FactionLoadout_Preview_Failed>
+    <FactionLoadout_Preview_Regenerate>Regenerate</FactionLoadout_Preview_Regenerate>
+    <FactionLoadout_Preview_ShowHeadgear>Headgear</FactionLoadout_Preview_ShowHeadgear>
+    <FactionLoadout_Preview_ShowClothes>Clothes</FactionLoadout_Preview_ShowClothes>
+    <FactionLoadout_Tab_FactionView>Faction View</FactionLoadout_Tab_FactionView>
+    <FactionLoadout_Tab_FactionEdit>Faction Edit</FactionLoadout_Tab_FactionEdit>
+    <FactionLoadout_Tab_PawnEdit>Pawn Edit</FactionLoadout_Tab_PawnEdit>
+    <FactionLoadout_Breadcrumb_Home>Home</FactionLoadout_Breadcrumb_Home>
+    <FactionLoadout_Open>Open Total Control</FactionLoadout_Open>
+    <FactionLoadout_Settings_LauncherBlurb>Total Control opens in a fullscreen editor where you can manage presets, edit factions, and customise pawns with a live preview.</FactionLoadout_Settings_LauncherBlurb>
 </LanguageData>

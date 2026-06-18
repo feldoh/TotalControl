@@ -19,7 +19,7 @@ public static class OptionListingUtility_Patch
                     "FactionLoadout_SettingName".Translate(),
                     delegate
                     {
-                        Find.WindowStack.Add(new Dialog_FactionLoadout());
+                        Find.WindowStack.Add(new Dialog_TotalControl());
                     },
                     Textures.TC_Link
                 )

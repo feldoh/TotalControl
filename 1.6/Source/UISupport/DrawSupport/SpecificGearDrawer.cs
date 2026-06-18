@@ -204,7 +204,7 @@ public static class SpecificGearDrawer
 
         if (item.Material == null)
         {
-            FactionDef faction = Find.WindowStack.WindowOfType<FactionEditUI>()?.Current?.Faction?.Def;
+            FactionDef faction = TCEditContext.CurrentFaction?.Faction?.Def;
             TechLevel techLevel = MySettings.VanillaRestrictions ? faction?.techLevel ?? TechLevel.Undefined : TechLevel.Undefined;
             item.Material = GenStuff.AllowedStuffsFor(item.Thing, techLevel).FirstOrDefault();
         }
@@ -212,7 +212,7 @@ public static class SpecificGearDrawer
         Widgets.DrawHighlightIfMouseover(material);
         if (Widgets.ButtonInvisible(material))
         {
-            FactionDef faction = Find.WindowStack.WindowOfType<FactionEditUI>()?.Current?.Faction?.Def;
+            FactionDef faction = TCEditContext.CurrentFaction?.Faction?.Def;
             TechLevel techLevel = MySettings.VanillaRestrictions ? faction?.techLevel ?? TechLevel.Undefined : TechLevel.Undefined;
             IEnumerable<ThingDef> defs = GenStuff.AllowedStuffsFor(item.Thing, techLevel);
             List<MenuItemBase> stuffItems = CustomFloatMenu.MakeItems(

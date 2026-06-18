@@ -12,9 +12,7 @@ namespace FactionLoadout;
 
 public class ModCore : Mod
 {
-    public Dialog_FactionLoadout settingsDialog = null;
     public static MySettings Settings;
-    public Dialog_FactionLoadout SettingsDialog => settingsDialog ??= new Dialog_FactionLoadout();
 
     public static void Debug(string msg)
     {
@@ -54,7 +52,17 @@ public class ModCore : Mod
 
     public override void DoSettingsWindowContents(Rect inRect)
     {
-        SettingsDialog.DoWindowContents(inRect);
+        Listing_Standard ui = new();
+        ui.Begin(inRect);
+        ui.Label("FactionLoadout_Settings_LauncherBlurb".Translate());
+        ui.Gap();
+        if (ui.ButtonText("FactionLoadout_Open".Translate()))
+        {
+            Find.WindowStack.Add(new Dialog_TotalControl());
+            Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
+            Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
+        }
+        ui.End();
     }
 
     private void LoadLate()

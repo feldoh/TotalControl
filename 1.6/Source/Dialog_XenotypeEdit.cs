@@ -38,11 +38,11 @@ public class Dialog_XenotypeEdit : Window
             if (_edit.xenotypeChances.NullOrEmpty())
             {
                 _edit.xenotypeChances = _edit.Faction?.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype.defName, x => x.chance) ?? new Dictionary<string, float>();
-                if (!_edit.xenotypeChances.ContainsKey(FactionEditUI.BaselinerDefName))
-                    _edit.xenotypeChances.Add(FactionEditUI.BaselinerDefName, _edit.Faction?.Def?.xenotypeSet?.BaselinerChance ?? 1f);
+                if (!_edit.xenotypeChances.ContainsKey(FactionEdit.BaselinerDefName))
+                    _edit.xenotypeChances.Add(FactionEdit.BaselinerDefName, _edit.Faction?.Def?.xenotypeSet?.BaselinerChance ?? 1f);
             }
 
-            _edit.xenotypeChances[FactionEditUI.BaselinerDefName] = Math.Max(0f, 1f - _edit.xenotypeChances.Sum(x => x.Key == FactionEditUI.BaselinerDefName ? 0 : x.Value));
+            _edit.xenotypeChances[FactionEdit.BaselinerDefName] = Math.Max(0f, 1f - _edit.xenotypeChances.Sum(x => x.Key == FactionEdit.BaselinerDefName ? 0 : x.Value));
 
             // Reserve space for add buttons at bottom.
             const float addButtonsHeight = 70f;

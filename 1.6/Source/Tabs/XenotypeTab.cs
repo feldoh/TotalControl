@@ -27,8 +27,8 @@ public class XenotypeTab : EditTab
         if (Current.ForcedXenotypeChances.NullOrEmpty())
         {
             Current.ForcedXenotypeChances = Current.Def?.xenotypeSet?.xenotypeChances?.ToDictionary(x => x.xenotype.defName, x => x.chance) ?? new Dictionary<string, float>();
-            if (!Current.ForcedXenotypeChances.ContainsKey(FactionEditUI.BaselinerDefName))
-                Current.ForcedXenotypeChances.Add(FactionEditUI.BaselinerDefName, Current.Def?.xenotypeSet?.BaselinerChance ?? 1f);
+            if (!Current.ForcedXenotypeChances.ContainsKey(FactionEdit.BaselinerDefName))
+                Current.ForcedXenotypeChances.Add(FactionEdit.BaselinerDefName, Current.Def?.xenotypeSet?.BaselinerChance ?? 1f);
         }
 
         foreach (string key in Current.ForcedXenotypeChances.Keys.ToList())

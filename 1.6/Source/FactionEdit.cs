@@ -13,6 +13,9 @@ namespace FactionLoadout;
 [HotSwappable]
 public class FactionEdit : IExposable
 {
+    /// <summary>Xenotype defName used to represent the "Baseliner" chance in xenotype edits.</summary>
+    public const string BaselinerDefName = "Baseliner";
+
     private static readonly Dictionary<string, FactionDef> originalFactionDefs = new();
     private static Dictionary<(FactionDef, PawnKindDef), PawnKindDef> factionSpecificPawnKindReplacements = new();
     public bool Active = true;
