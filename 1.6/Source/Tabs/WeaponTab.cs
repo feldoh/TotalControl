@@ -67,7 +67,11 @@ public class WeaponTab : EditTab
             DrawWeaponMaterials,
             GetHeightFor(Current.WeaponMaterials) + 26f,
             false,
-            pasteGet: e => e.WeaponMaterials
+            pasteGet: e =>
+            {
+                Current.WeaponMaterialsBlacklist = e.WeaponMaterialsBlacklist;
+                return e.WeaponMaterials;
+            }
         );
         DrawMaterialSummary(ui, Current.WeaponMaterials, Current.WeaponMaterialsBlacklist);
     }

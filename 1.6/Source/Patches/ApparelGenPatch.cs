@@ -276,7 +276,13 @@ public static class ApparelGenPatch
             return; // No allowed torso apparel exists → the cause is tags/filters, not price.
 
         ThingStuffPair pair = cheapest.Value;
-        if (MySettings.VerboseLogging && pair.Price > pawn.kindDef.apparelMoney.max)
+
+        // Only act when price was genuinely the limiter: the cheapest allowed torso item must exceed the
+        // budget. If it was affordable, the bare torso came from something else and isn't ours to "fix".
+        if (pair.Price <= pawn.kindDef.apparelMoney.max)
+            return;
+
+        if (MySettings.VerboseLogging)
         {
             string mat = pair.stuff != null ? $" ({pair.stuff.LabelCap})" : "";
             ModCore.Warn(

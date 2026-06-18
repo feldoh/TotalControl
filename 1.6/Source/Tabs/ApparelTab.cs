@@ -85,7 +85,11 @@ public class ApparelTab : EditTab
             DrawApparelMaterials,
             GetHeightFor(Current.ApparelMaterials) + 26f,
             false,
-            pasteGet: e => e.ApparelMaterials
+            pasteGet: e =>
+            {
+                Current.ApparelMaterialsBlacklist = e.ApparelMaterialsBlacklist;
+                return e.ApparelMaterials;
+            }
         );
         DrawMaterialSummary(ui, Current.ApparelMaterials, Current.ApparelMaterialsBlacklist);
     }
@@ -202,28 +206,29 @@ public class ApparelTab : EditTab
 
     private string RequiredApparelMaterialWarning(ThingDef item)
     {
-        if (item == null || !item.MadeFromStuff)
-            return null;
-        if (Current.ApparelMaterials == null || Current.ApparelMaterials.Count == 0)
-            return null;
-
-        HashSet<ThingDef> listed = new();
-        foreach (DefRef<ThingDef> r in Current.ApparelMaterials)
-        {
-            if (r.HasValue)
-                listed.Add(r.Def);
-        }
-        if (listed.Count == 0)
+        List<DefRef<ThingDef>> rule = Current.ApparelMaterials;
+        if (item == null || !item.MadeFromStuff || rule == null || rule.Count == 0)
             return null;
 
         bool blacklist = Current.ApparelMaterialsBlacklist;
         foreach (ThingDef stuff in GenStuff.AllowedStuffsFor(item))
         {
-            bool stuffAllowed = blacklist ? !listed.Contains(stuff) : listed.Contains(stuff);
-            if (stuffAllowed)
-                return null;
+            bool listed = RuleContains(rule, stuff);
+            if (blacklist ? !listed : listed)
+                return null; // at least one allowed material can make this item
         }
 
         return "FactionLoadout_Materials_NoValidStuff".Translate();
+    }
+
+    private static bool RuleContains(List<DefRef<ThingDef>> rule, ThingDef stuff)
+    {
+        for (int i = 0; i < rule.Count; i++)
+        {
+            if (rule[i].HasValue && rule[i].Def == stuff)
+                return true;
+        }
+
+        return false;
     }
 }

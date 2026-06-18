@@ -220,6 +220,13 @@ public static class WeaponGenPatch
             return;
 
         ThingStuffPair pair = cheapest.Value;
+
+        // Only act when price was genuinely the limiter: the cheapest matching weapon must exceed the
+        // budget. Otherwise the pawn went unarmed for another reason (RNG, another mod) and attributing
+        // it to budget — or "fixing" it — would be wrong.
+        if (pair.Price <= kind.weaponMoney.max)
+            return;
+
         if (MySettings.VerboseLogging)
         {
             string mat = pair.stuff != null ? $" ({pair.stuff.LabelCap})" : "";
