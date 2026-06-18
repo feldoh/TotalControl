@@ -252,17 +252,26 @@ public static class DefCache
     /// </summary>
     public static string MaterialCategorySummary(List<DefRef<ThingDef>> materials, bool isBlacklist)
     {
-        HashSet<ThingDef> listed = new();
-        if (materials != null)
+        IEnumerable<ThingDef> allowed;
+        if (isBlacklist)
         {
-            foreach (DefRef<ThingDef> r in materials)
+            // Blacklist: allowed = every stuff except the banned ones, so we need the set + full scan.
+            HashSet<ThingDef> banned = new();
+            if (materials != null)
             {
-                if (r.HasValue)
-                    listed.Add(r.Def);
+                foreach (DefRef<ThingDef> r in materials)
+                {
+                    if (r.HasValue)
+                        banned.Add(r.Def);
+                }
             }
+            allowed = GenStuff.StuffDefs.Where(s => !banned.Contains(s));
         }
-
-        IEnumerable<ThingDef> allowed = isBlacklist ? GenStuff.StuffDefs.Where(s => !listed.Contains(s)) : listed;
+        else
+        {
+            // Whitelist: allowed = exactly the selected materials — no set or full scan needed.
+            allowed = (materials ?? Enumerable.Empty<DefRef<ThingDef>>()).Where(r => r.HasValue).Select(r => r.Def);
+        }
 
         Dictionary<StuffCategoryDef, int> counts = new();
         foreach (ThingDef s in allowed)
