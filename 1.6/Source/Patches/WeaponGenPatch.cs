@@ -202,7 +202,13 @@ public static class WeaponGenPatch
         PawnKindDef kind = pawn.kindDef;
         if (kind.weaponTags == null || kind.weaponTags.Count == 0)
             return;
-        if (!pawn.RaceProps.ToolUser || !pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation) || pawn.WorkTagIsDisabled(WorkTags.Violent))
+        // Mirror Postfix's guards exactly so the fallback enforces the same restrictions: the tool-user
+        // and violent checks only apply when vanilla restrictions are enabled.
+        if (MySettings.VanillaRestrictions && !pawn.RaceProps.ToolUser)
+            return;
+        if (!pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation))
+            return;
+        if (MySettings.VanillaRestrictions && pawn.WorkTagIsDisabled(WorkTags.Violent))
             return;
 
         ThingStuffPair? cheapest = null;

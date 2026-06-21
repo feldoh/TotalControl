@@ -206,11 +206,27 @@ public class ApparelTab : EditTab
 
     private string RequiredApparelMaterialWarning(ThingDef item)
     {
-        List<DefRef<ThingDef>> rule = Current.ApparelMaterials;
-        if (item == null || !item.MadeFromStuff || rule == null || rule.Count == 0)
+        if (item == null || !item.MadeFromStuff)
             return null;
 
+        // Mirror generation-time resolution (DefCache.BuildBlacklistCaches): the per-kind list wins,
+        // otherwise the faction's global edit's list applies — so the warning must honour the global
+        // rule too, or it would miss required items the global material rule will actually skip.
+        List<DefRef<ThingDef>> rule = Current.ApparelMaterials;
         bool blacklist = Current.ApparelMaterialsBlacklist;
+        if ((rule == null || rule.Count == 0) && !Current.IsGlobal)
+        {
+            PawnKindEdit global = Find.WindowStack.WindowOfType<FactionEditUI>()?.Current?.GetGlobalEditor();
+            if (global != null)
+            {
+                rule = global.ApparelMaterials;
+                blacklist = global.ApparelMaterialsBlacklist;
+            }
+        }
+
+        if (rule == null || rule.Count == 0)
+            return null;
+
         foreach (ThingDef stuff in GenStuff.AllowedStuffsFor(item))
         {
             bool listed = RuleContains(rule, stuff);
