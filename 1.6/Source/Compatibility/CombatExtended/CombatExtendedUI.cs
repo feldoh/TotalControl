@@ -572,7 +572,7 @@ public static class CombatExtendedUI
         if (s.SidearmMoney == null || s.SidearmMoney.Value is { min: <= 0f, max: <= 0f })
             issues.Add("FactionLoadout_CE_Warn_NoMoney".Translate());
 
-        // Note: generate chance 0 is intentional (temporary disable) — not included here.
+        // Note: generate chance 0 is intentional (temporary disable) - not included here.
         // It is shown separately as a grey note in DrawSidearmDataFields.
 
         return issues;
@@ -580,7 +580,7 @@ public static class CombatExtendedUI
 
     /// <summary>
     /// Returns true when the entry is intentionally disabled via a 0% generate chance.
-    /// This is not an error — the user may be keeping the config for later use.
+    /// This is not an error - the user may be keeping the config for later use.
     /// </summary>
     private static bool IsSidearmDisabled(SidearmData s) => s.GenerateChance is <= 0f;
 

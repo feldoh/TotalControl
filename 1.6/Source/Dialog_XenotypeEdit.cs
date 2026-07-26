@@ -48,7 +48,7 @@ public class Dialog_XenotypeEdit : Window
             const float addButtonsHeight = 70f;
             float scrollH = Mathf.Max(30f, inRect.height - ui.CurHeight - addButtonsHeight);
             Rect scrollOutRect = ui.GetRect(scrollH);
-            // Compute inner height directly from item count — avoids feedback loops where
+            // Compute inner height directly from item count - avoids feedback loops where
             // Listing_Standard.CurHeight is clamped to the inner rect, preventing growth.
             const float ItemRowH = 32f; // SliderLabeledWithDelete: GetRect(30) + Gap(2)
             float contentH = _edit.xenotypeChances.Count * ItemRowH;

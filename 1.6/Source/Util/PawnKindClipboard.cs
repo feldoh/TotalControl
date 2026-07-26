@@ -23,7 +23,7 @@ public class PawnKindClipboardData
 /// <summary>
 /// Static clipboard for copy-paste operations on PawnKindEdit.
 /// Copy records a deep clone of the source. Paste-All calls <see cref="PawnKindEdit.CopyFrom"/>.
-/// Per-field paste is done directly in the UI — each DrawOverride row has a paste button
+/// Per-field paste is done directly in the UI - each DrawOverride row has a paste button
 /// that reads its specific field value from <see cref="Clipboard"/>.Clone.
 /// </summary>
 public static class PawnKindClipboard
