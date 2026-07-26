@@ -7,13 +7,13 @@ namespace FactionLoadout.Util
 {
     public static class Extensions
     {
-        private static HashSet<PawnKindDef> tempKinds = new HashSet<PawnKindDef>();
+        private static HashSet<PawnKindDef> tempKinds = [];
 
         public static Rect GetCentered(this Rect area, float width, float height) => new Rect(area.center.x - width * 0.5f, area.center.y - height * 0.5f, width, height);
 
         public static Rect GetCentered(this Rect area, string text)
         {
-            var size = Text.CalcSize(text);
+            Vector2 size = Text.CalcSize(text);
             return area.GetCentered(size.x, size.y);
         }
 
@@ -28,7 +28,7 @@ namespace FactionLoadout.Util
             {
                 if (list == null)
                     return;
-                foreach (var item in list)
+                foreach (PawnGenOption item in list)
                     tempKinds.Add(item.kind);
             }
 
@@ -37,13 +37,13 @@ namespace FactionLoadout.Util
                 if (list == null)
                     return;
 
-                foreach (var item in list)
+                foreach (PawnKindDef item in list)
                     tempKinds.Add(item);
             }
 
             if (def.pawnGroupMakers != null)
             {
-                foreach (var item in def.pawnGroupMakers)
+                foreach (PawnGroupMaker item in def.pawnGroupMakers)
                 {
                     Register(item.options);
                     Register(item.traders);
