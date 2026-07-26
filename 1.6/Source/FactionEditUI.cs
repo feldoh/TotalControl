@@ -127,7 +127,7 @@ public class FactionEditUI : Window
 
         // --- Scrollable overrides ---
         // Outer container fills available space (no content dependency = no feedback loop).
-        // Inner rect uses previous frame's measurement + buffer so content is never clipped.
+        // Inner rect uses previous frame's measurement and buffer so content is never clipped.
         const float minFooterHeight = 200f;
         float scrollOutH = Mathf.Max(60f, inRect.height - ui.CurHeight - minFooterHeight);
         Rect scrollOutRect = ui.GetRect(scrollOutH);
@@ -325,7 +325,7 @@ public class FactionEditUI : Window
                 // basicMemberKind and fixedLeaderKinds are NOT included in the
                 // PawnGroupMaker-based path of GetAllKindDefsForUI (those fields
                 // are not part of any group maker entry). When PawnGroupMakerEdits
-                // is null the GetAllPawnKinds path already covers them, so only
+                // is null, the GetAllPawnKinds path already covers them, so only
                 // add them here when group edits are active to avoid duplicates.
                 if (Current.PawnGroupMakerEdits != null)
                 {
