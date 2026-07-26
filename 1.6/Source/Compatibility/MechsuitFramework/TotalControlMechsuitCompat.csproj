@@ -72,7 +72,7 @@
         </ProjectReference>
     </ItemGroup>
 
-    <!-- Reference to MechsuitFramework (Exosuit) assembly — Steam workshop ID 3352894993 -->
+    <!-- Reference to MechsuitFramework (Exosuit) assembly - Steam workshop ID 3352894993 -->
     <ItemGroup>
         <Reference Include="Exosuit">
             <HintPath>$(ModPath)/3352894993/1.6/Assemblies/Exosuit.dll</HintPath>

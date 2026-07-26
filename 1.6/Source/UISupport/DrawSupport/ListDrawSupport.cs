@@ -24,7 +24,8 @@ public static class ListDrawSupport
         IEnumerable<T> allDefs,
         bool isGlobal,
         Func<T, MenuItemBase> makeItem = null,
-        Func<T, string> labelFunc = null
+        Func<T, string> labelFunc = null,
+        Func<T, string> warningFunc = null
     )
         where T : Def, new()
     {
@@ -74,6 +75,10 @@ public static class ListDrawSupport
             DefRef<T> toRemove = null;
             foreach (DefRef<T> defRef in current)
             {
+                string warning = defRef.HasValue ? warningFunc?.Invoke(defRef.Def) : null;
+                if (!string.IsNullOrEmpty(warning))
+                    Widgets.DrawBoxSolid(new Rect(1, curr.y - 1, rect.width - 6, 24), new Color(0.7f, 0.2f, 0.2f, 0.28f));
+
                 GUI.color = Color.red;
                 if (Widgets.ButtonText(currButton, " X"))
                     toRemove = defRef;
@@ -106,6 +111,9 @@ public static class ListDrawSupport
                         Widgets.DefLabelWithIcon(curr, def);
                     }
                 }
+
+                if (!string.IsNullOrEmpty(warning))
+                    TooltipHandler.TipRegion(new Rect(1, curr.y - 1, rect.width - 6, 24), warning);
 
                 curr.y += 26;
                 currButton.y += 26;

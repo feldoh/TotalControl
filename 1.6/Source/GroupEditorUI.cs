@@ -126,7 +126,7 @@ public class GroupEditorUI : Window
 
         GUI.color = Color.white;
 
-        // Scroll view — inner rect sized from data model to avoid feedback loops
+        // Scroll view - inner rect sized from data model to avoid feedback loops
         float scrollOutH = Mathf.Max(60f, inRect.height - ui.CurHeight - 8f);
         Rect scrollOutRect = ui.GetRect(scrollOutH);
         float contentH = CalcTotalContentHeight(displayGroups) + 20f; // 20f safety margin
@@ -250,7 +250,7 @@ public class GroupEditorUI : Window
             }
         }
 
-        // Delete button (right side) — edit mode only
+        // Delete button (right side) - edit mode only
         if (!readOnly)
         {
             int capturedIndex = index;

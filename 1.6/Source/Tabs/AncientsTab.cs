@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using FactionLoadout.Modules;
 using FactionLoadout.UISupport;
 using FactionLoadout.Util;
-using RimWorld;
 using UnityEngine;
 using Verse;
 

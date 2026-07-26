@@ -52,7 +52,7 @@ public class Dialog_PawnKindPicker : Window
         ui.Label("<b>" + "FactionLoadout_GroupEditor_PickerTitle".Translate(_roleName) + "</b>");
         ui.Gap(4f);
 
-        // Search field — reset scroll when query changes so results are always visible at top
+        // Search field - reset scroll when query changes so results are always visible at top
         string newSearch = ui.TextEntry(_search);
         if (newSearch != _search)
         {
@@ -92,7 +92,7 @@ public class Dialog_PawnKindPicker : Window
             Widgets.Label(
                 new Rect(4f, y + 2f, innerRect.width - 8f, itemH - 4f),
                 alreadyAdded
-                    ? $"{kind.LabelCap} <color=grey>({kind.defName}) — {"FactionLoadout_GroupEditor_PickerAlreadyAdded".Translate()}</color>"
+                    ? $"{kind.LabelCap} <color=grey>({kind.defName}) - {"FactionLoadout_GroupEditor_PickerAlreadyAdded".Translate()}</color>"
                     : $"{kind.LabelCap} <color=grey>({kind.defName})</color>"
             );
 

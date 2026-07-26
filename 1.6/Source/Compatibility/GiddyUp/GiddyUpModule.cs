@@ -121,7 +121,7 @@ public class GiddyUpModule : ITotalControlModule
         }
 
         // DisableMounts takes priority: writes -1 so GiddyUp always skips mount generation.
-        // MountChance 0 writes 0, which GiddyUp treats as "no pawnkind override" — falls through to faction defaults.
+        // MountChance 0 writes 0, which GiddyUp treats as "no pawnkind override" - falls through to faction defaults.
         // MountChance 1-100 writes that value as a direct override.
         if (disableMounts == true)
         {
@@ -289,7 +289,7 @@ public class GiddyUpModule : ITotalControlModule
             }
             else
             {
-                ModCore.Warn($"GiddyUp module: Could not resolve PawnKindDef '{defName}' for faction animal whitelist.");
+                ModCore.Warn($"GiddyUp module: Could not resolve PawnKindDef '{defName}' for faction animal allowlist.");
             }
         }
 

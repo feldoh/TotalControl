@@ -14,14 +14,14 @@ namespace FactionLoadout.Modules;
 /// don't lose configuration when temporarily disabling a dependency mod.
 ///
 /// Modules manage their own per-PawnKindEdit state internally (e.g. a static dictionary keyed by
-/// PawnKindEdit instance). Core does not hold module data — it only delegates serialization, UI, and
+/// PawnKindEdit instance). Core does not hold module data - it only delegates serialization, UI, and
 /// apply calls.
 /// </summary>
 public interface ITotalControlModule
 {
     /// <summary>
     /// Unique stable key used as the XML node name for this module's data (e.g. "vePsycasts").
-    /// Must be a valid XML element name. Once shipped, never change this value — it's the
+    /// Must be a valid XML element name. Once shipped, never change this value - it's the
     /// identity used to match saved data back to the module.
     /// </summary>
     string ModuleKey { get; }
@@ -57,7 +57,7 @@ public interface ITotalControlModule
     /// <summary>
     /// Serialize or deserialize module-specific data for a PawnKindEdit.
     /// Called inside a Scribe enter/exit node block for this module's <see cref="ModuleKey"/>.
-    /// Use standard Scribe_Values, Scribe_Collections, etc. — the Scribe cursor is already
+    /// Use standard Scribe_Values, Scribe_Collections, etc. - the Scribe cursor is already
     /// positioned inside this module's XML node.
     /// </summary>
     /// <param name="edit">The PawnKindEdit whose data is being serialized.</param>
