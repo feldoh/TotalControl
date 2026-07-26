@@ -167,9 +167,9 @@
     <GU_WeightDefault>Default</GU_WeightDefault>
     <GU_WeightDefault_Known>Default ({0})</GU_WeightDefault_Known>
     <GU_WeightDefault_Tip>No override set — GiddyUp will use its own global animal weight settings.</GU_WeightDefault_Tip>
-    <GU_AllowedWildAnimals>Wild Animal Whitelist</GU_AllowedWildAnimals>
+    <GU_AllowedWildAnimals>Wild Animal Allowlist</GU_AllowedWildAnimals>
     <GU_AllowedWildAnimals_Note>When set, only these wild animals can be chosen as mounts for this faction. Leave empty to allow all wild animals.</GU_AllowedWildAnimals_Note>
-    <GU_AllowedNonWildAnimals>Domestic Animal Whitelist</GU_AllowedNonWildAnimals>
+    <GU_AllowedNonWildAnimals>Domestic Animal Allowlist</GU_AllowedNonWildAnimals>
     <GU_AllowedNonWildAnimals_Note>When set, only these domestic animals can be chosen as mounts for this faction. Leave empty to allow all domestic animals.</GU_AllowedNonWildAnimals_Note>
     <GU_AddWildAnimal>Add wild animal...</GU_AddWildAnimal>
     <GU_AddNonWildAnimal>Add domestic animal...</GU_AddNonWildAnimal>
@@ -278,12 +278,12 @@
     <FactionLoadout_RightClickToInspect>Right-click to inspect</FactionLoadout_RightClickToInspect>
     <FactionLoadout_Apparel_Layers>Layers: {0}</FactionLoadout_Apparel_Layers>
     <FactionLoadout_Apparel_Coverage>Coverage: {0}</FactionLoadout_Apparel_Coverage>
-    <FactionLoadout_ApparelBlacklist>Apparel Blacklist</FactionLoadout_ApparelBlacklist>
-    <FactionLoadout_WeaponBlacklist>Weapon Blacklist</FactionLoadout_WeaponBlacklist>
+    <FactionLoadout_ApparelBlacklist>Apparel Blocklist</FactionLoadout_ApparelBlacklist>
+    <FactionLoadout_WeaponBlacklist>Weapon Blocklist</FactionLoadout_WeaponBlacklist>
     <FactionLoadout_ApparelMaterials>Apparel Materials</FactionLoadout_ApparelMaterials>
     <FactionLoadout_WeaponMaterials>Weapon Materials</FactionLoadout_WeaponMaterials>
-    <FactionLoadout_Materials_ModeWhitelist>Mode: Whitelist (only these)</FactionLoadout_Materials_ModeWhitelist>
-    <FactionLoadout_Materials_ModeBlacklist>Mode: Blacklist (all except these)</FactionLoadout_Materials_ModeBlacklist>
+    <FactionLoadout_Materials_ModeWhitelist>Mode: Allowlist (only these)</FactionLoadout_Materials_ModeWhitelist>
+    <FactionLoadout_Materials_ModeBlacklist>Mode: Blocklist (all except these)</FactionLoadout_Materials_ModeBlacklist>
     <FactionLoadout_Materials_AllowedSummary>Allowed: {0}</FactionLoadout_Materials_AllowedSummary>
     <FactionLoadout_Materials_NoValidStuff>No material allowed by this kind's material rule can make this item — it will be skipped when the pawn is generated.</FactionLoadout_Materials_NoValidStuff>
 

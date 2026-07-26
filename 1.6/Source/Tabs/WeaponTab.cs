@@ -69,11 +69,11 @@ public class WeaponTab : EditTab
             false,
             pasteGet: e =>
             {
-                Current.WeaponMaterialsBlacklist = e.WeaponMaterialsBlacklist;
+                Current.WeaponMaterialsBlocklist = e.WeaponMaterialsBlocklist;
                 return e.WeaponMaterials;
             }
         );
-        DrawMaterialSummary(ui, Current.WeaponMaterials, Current.WeaponMaterialsBlacklist);
+        DrawMaterialSummary(ui, Current.WeaponMaterials, Current.WeaponMaterialsBlocklist);
     }
 
     private void DrawWeaponQuality(Rect rect, bool active, QualityCategory _)
@@ -103,7 +103,7 @@ public class WeaponTab : EditTab
 
     private void DrawWeaponMaterials(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> defaultList)
     {
-        Rect listRect = DrawMaterialModeToggle(rect, ref Current.WeaponMaterialsBlacklist);
+        Rect listRect = DrawMaterialModeToggle(rect, ref Current.WeaponMaterialsBlocklist);
         DrawDefRefList(listRect, active, ref scrolls[scrollIndex++], Current.WeaponMaterials, null, GenStuff.StuffDefs);
     }
 }

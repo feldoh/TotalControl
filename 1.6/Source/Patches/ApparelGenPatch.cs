@@ -323,7 +323,7 @@ public static class ApparelGenPatch
             if (groups == null || !groups.Contains(BodyPartGroupDefOf.Torso))
                 continue;
             // CanUsePair (with unlimited money) applies all of vanilla's filters plus our own
-            // blacklist/material postfix, so we reuse it rather than duplicating that logic.
+            // blocklist/material postfix, so we reuse it rather than duplicating that logic.
             if (!PawnApparelGenerator.CanUsePair(p, pawn, float.MaxValue, true, pawn.thingIDNumber))
                 continue;
             if (best == null || p.Price < best.Value.Price)
@@ -369,7 +369,7 @@ public static class CanUsePairBlacklistPatch
             return;
         }
 
-        // Material rule (whitelist or blacklist) — keeps disallowed materials out of the candidate pool.
+        // Material rule (allowlist or blocklist) — keeps disallowed materials out of the candidate pool.
         if (!DefCache.ApparelMaterialAllows(pawn.kindDef, pair.stuff))
             __result = false;
     }

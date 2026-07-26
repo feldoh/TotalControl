@@ -289,7 +289,7 @@ public class GiddyUpModule : ITotalControlModule
             }
             else
             {
-                ModCore.Warn($"GiddyUp module: Could not resolve PawnKindDef '{defName}' for faction animal whitelist.");
+                ModCore.Warn($"GiddyUp module: Could not resolve PawnKindDef '{defName}' for faction animal allowlist.");
             }
         }
 

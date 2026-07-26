@@ -146,17 +146,17 @@ public abstract class EditTab : Tab
         SpecificGearDrawer.Draw(ui, ref edits, label, thingFilter, defaultThing, ref scrolls[scrollIndex++]);
 
     /// <summary>
-    /// Draws the whitelist/blacklist mode toggle for a material list at the top of <paramref name="rect"/>
+    /// Draws the allowlist/blocklist mode toggle for a material list at the top of <paramref name="rect"/>
     /// and returns the remaining rect below it for the def-list picker.
     /// </summary>
-    protected Rect DrawMaterialModeToggle(Rect rect, ref bool isBlacklist)
+    protected Rect DrawMaterialModeToggle(Rect rect, ref bool isBlocklist)
     {
-        string label = isBlacklist ? "FactionLoadout_Materials_ModeBlacklist".Translate() : "FactionLoadout_Materials_ModeWhitelist".Translate();
+        string label = isBlocklist ? "FactionLoadout_Materials_ModeBlacklist".Translate() : "FactionLoadout_Materials_ModeWhitelist".Translate();
         Rect modeRow = rect;
         modeRow.height = 24f;
         modeRow.width = Mathf.Min(rect.width, Mathf.Max(180f, Text.CalcSize(label).x + 24f));
         if (Widgets.ButtonText(modeRow, label))
-            isBlacklist = !isBlacklist;
+            isBlocklist = !isBlocklist;
 
         Rect listRect = rect;
         listRect.yMin += 26f;
@@ -167,11 +167,11 @@ public abstract class EditTab : Tab
     /// Draws a one-line "Allowed: Leathery 13, Metallic 4, …" summary of what a material list+mode permits.
     /// No-op when the field is inactive (null list) or nothing is permitted.
     /// </summary>
-    protected void DrawMaterialSummary(Listing_Standard ui, List<DefRef<ThingDef>> materials, bool isBlacklist)
+    protected void DrawMaterialSummary(Listing_Standard ui, List<DefRef<ThingDef>> materials, bool isBlocklist)
     {
         if (materials == null)
             return;
-        string summary = DefCache.MaterialCategorySummary(materials, isBlacklist);
+        string summary = DefCache.MaterialCategorySummary(materials, isBlocklist);
         if (string.IsNullOrEmpty(summary))
             return;
         GUI.color = new Color(0.62f, 0.78f, 1f);

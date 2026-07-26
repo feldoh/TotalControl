@@ -218,7 +218,7 @@ public static class WeaponGenPatch
             ThingStuffPair w = pairs[i];
             if (!WeaponMatchesKind(w, pawn, kind))
                 continue;
-            // GetCommonality already includes our blacklist/material zeroing, so a positive value means TC allows it.
+            // GetCommonality already includes our blocklist/material zeroing, so a positive value means TC allows it.
             if (PawnWeaponGenerator.GetCommonality(pawn, w) <= 0f)
                 continue;
             if (cheapest == null || w.Price < cheapest.Value.Price)
@@ -312,7 +312,7 @@ public static class WeaponGetCommonalityBlacklistPatch
             return;
         }
 
-        // Material rule (whitelist or blacklist): zero out stuff-based weapons the kind's rule disallows.
+        // Material rule (allowlist or blocklist): zero out stuff-based weapons the kind's rule disallows.
         if (!DefCache.WeaponMaterialAllows(pawn.kindDef, pair.stuff))
             __result = 0f;
     }

@@ -87,11 +87,11 @@ public class ApparelTab : EditTab
             false,
             pasteGet: e =>
             {
-                Current.ApparelMaterialsBlacklist = e.ApparelMaterialsBlacklist;
+                Current.ApparelMaterialsBlocklist = e.ApparelMaterialsBlocklist;
                 return e.ApparelMaterials;
             }
         );
-        DrawMaterialSummary(ui, Current.ApparelMaterials, Current.ApparelMaterialsBlacklist);
+        DrawMaterialSummary(ui, Current.ApparelMaterials, Current.ApparelMaterialsBlocklist);
     }
 
     private void DrawForceOnlySelected(Listing_Standard ui)
@@ -187,7 +187,7 @@ public class ApparelTab : EditTab
 
     private void DrawApparelMaterials(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> defaultList)
     {
-        Rect listRect = DrawMaterialModeToggle(rect, ref Current.ApparelMaterialsBlacklist);
+        Rect listRect = DrawMaterialModeToggle(rect, ref Current.ApparelMaterialsBlocklist);
         DrawDefRefList(listRect, active, ref scrolls[scrollIndex++], Current.ApparelMaterials, null, GenStuff.StuffDefs);
     }
 
@@ -213,14 +213,14 @@ public class ApparelTab : EditTab
         // otherwise the faction's global edit's list applies — so the warning must honour the global
         // rule too, or it would miss required items the global material rule will actually skip.
         List<DefRef<ThingDef>> rule = Current.ApparelMaterials;
-        bool blacklist = Current.ApparelMaterialsBlacklist;
+        bool blocklist = Current.ApparelMaterialsBlocklist;
         if ((rule == null || rule.Count == 0) && !Current.IsGlobal)
         {
             PawnKindEdit global = Find.WindowStack.WindowOfType<FactionEditUI>()?.Current?.GetGlobalEditor();
             if (global != null)
             {
                 rule = global.ApparelMaterials;
-                blacklist = global.ApparelMaterialsBlacklist;
+                blocklist = global.ApparelMaterialsBlocklist;
             }
         }
 
@@ -230,7 +230,7 @@ public class ApparelTab : EditTab
         foreach (ThingDef stuff in GenStuff.AllowedStuffsFor(item))
         {
             bool listed = RuleContains(rule, stuff);
-            if (blacklist ? !listed : listed)
+            if (blocklist ? !listed : listed)
                 return null; // at least one allowed material can make this item
         }
 
