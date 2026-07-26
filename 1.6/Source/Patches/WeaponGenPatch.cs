@@ -192,7 +192,7 @@ public static class WeaponGenPatch
     /// </summary>
     static void HandleWeaponPriceLimit(Pawn pawn)
     {
-        // Nothing to log or fix when both toggles are off — skip the allWeaponPairs scan entirely.
+        // Nothing to log or fix when both toggles are off - skip the allWeaponPairs scan entirely.
         if (!MySettings.VerboseLogging && !MySettings.IgnorePriceLimits)
             return;
 
@@ -233,7 +233,7 @@ public static class WeaponGenPatch
 
         // Only act when price was genuinely the limiter: the cheapest matching weapon must exceed the
         // budget. Otherwise the pawn went unarmed for another reason (RNG, another mod) and attributing
-        // it to budget — or "fixing" it — would be wrong.
+        // it to budget - or "fixing" it - would be wrong.
         if (pair.Price <= kind.weaponMoney.max)
             return;
 
@@ -242,7 +242,7 @@ public static class WeaponGenPatch
             string mat = pair.stuff != null ? $" ({pair.stuff.LabelCap})" : "";
             ModCore.Warn(
                 $"Weapon slot left empty by price for '{pawn.kindDef.LabelCap}': nothing affordable within weaponMoney {kind.weaponMoney}. "
-                    + $"Cheapest matching option is {pair.thing.LabelCap}{mat} at ${pair.Price:F0} — raise weaponMoney or relax the weapon/material filters."
+                    + $"Cheapest matching option is {pair.thing.LabelCap}{mat} at ${pair.Price:F0} - raise weaponMoney or relax the weapon/material filters."
             );
         }
 
@@ -296,7 +296,7 @@ public static class WeaponGenPatch
 /// Prevents blacklisted ThingDefs from being selected during vanilla weapon generation
 /// by zeroing their commonality weight. Vanilla then naturally picks the next best
 /// alternative. Uses <see cref="DefCache.WeaponBlacklistCache"/> populated at
-/// Apply() time for O(1) lookup per pair — no per-pawn edit iteration at patch time.
+/// Apply() time for O(1) lookup per pair - no per-pawn edit iteration at patch time.
 /// </summary>
 [HarmonyPatch(typeof(PawnWeaponGenerator), nameof(PawnWeaponGenerator.GetCommonality))]
 public static class WeaponGetCommonalityBlacklistPatch

@@ -153,7 +153,7 @@ public static class DefCache
         AllGeneDefs = [.. allGeneDefs];
         AllGeneDefs.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, StringComparison.InvariantCulture));
 
-        // Backstory categories and defs — discovered from DefDatabase so modded content is included.
+        // Backstory categories and defs - discovered from DefDatabase so modded content is included.
         HashSet<string> backstoryCategories = new(64);
         List<BackstoryDef> childBackstories = new(256);
         List<BackstoryDef> adultBackstories = new(256);
@@ -269,7 +269,7 @@ public static class DefCache
         }
         else
         {
-            // Allowlist: allowed = exactly the selected materials — no set or full scan needed.
+            // Allowlist: allowed = exactly the selected materials - no set or full scan needed.
             allowed = (materials ?? Enumerable.Empty<DefRef<ThingDef>>()).Where(r => r.HasValue).Select(r => r.Def);
         }
 

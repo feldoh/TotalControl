@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using FactionLoadout.UISupport;
 using FactionLoadout.Util;
 using RimWorld;
@@ -206,11 +207,11 @@ public class ApparelTab : EditTab
 
     private string RequiredApparelMaterialWarning(ThingDef item)
     {
-        if (item == null || !item.MadeFromStuff)
+        if (item is not { MadeFromStuff: true })
             return null;
 
         // Mirror generation-time resolution (DefCache.BuildBlacklistCaches): the per-kind list wins,
-        // otherwise the faction's global edit's list applies — so the warning must honour the global
+        // otherwise the faction's global edit's list applies - so the warning must honour the global
         // rule too, or it would miss required items the global material rule will actually skip.
         List<DefRef<ThingDef>> rule = Current.ApparelMaterials;
         bool blocklist = Current.ApparelMaterialsBlocklist;
@@ -237,14 +238,5 @@ public class ApparelTab : EditTab
         return "FactionLoadout_Materials_NoValidStuff".Translate();
     }
 
-    private static bool RuleContains(List<DefRef<ThingDef>> rule, ThingDef stuff)
-    {
-        for (int i = 0; i < rule.Count; i++)
-        {
-            if (rule[i].HasValue && rule[i].Def == stuff)
-                return true;
-        }
-
-        return false;
-    }
+    private static bool RuleContains(List<DefRef<ThingDef>> rule, ThingDef stuff) => Enumerable.Any(rule, t => t.HasValue && t.Def == stuff);
 }

@@ -266,11 +266,11 @@ public static class ApparelGenPatch
     /// </summary>
     private static void HandleApparelPriceLimit(Pawn pawn)
     {
-        // Nothing to log or fix when both toggles are off — skip the allApparelPairs scan entirely.
+        // Nothing to log or fix when both toggles are off - skip the allApparelPairs scan entirely.
         if (!MySettings.VerboseLogging && !MySettings.IgnorePriceLimits)
             return;
 
-        if (pawn.apparel == null || !pawn.RaceProps.ToolUser || !pawn.RaceProps.IsFlesh|| CoversTorso(pawn))
+        if (pawn.apparel == null || !pawn.RaceProps.ToolUser || !pawn.RaceProps.IsFlesh || !BodyHasTorso(pawn) || CoversTorso(pawn))
             return;
 
         ThingStuffPair? cheapest = CheapestEligibleTorsoApparel(pawn);
@@ -279,38 +279,46 @@ public static class ApparelGenPatch
 
         ThingStuffPair pair = cheapest.Value;
 
-        // Only act when price was genuinely the limiter: the cheapest allowed torso item must exceed the
-        // budget. If it was affordable, the bare torso came from something else and isn't ours to "fix".
-        if (pair.Price <= pawn.kindDef.apparelMoney.max)
+        // Only act when price was genuinely the limiter. Vanilla draws a random budget in apparelMoney and
+        // spends it down as it adds items then prunes anything pricier than what's left.
+        // Subtract what was actually spent on the pawn's other apparel and only bail when even the best-case can't cover it.
+        // Prices use the same abstract MarketValue as vanilla's budget math; free warmth/vacuum layers are
+        // not budget-charged, so spent is a slight over-estimate - hence the clamp.
+        float spent = pawn.apparel.WornApparel.Sum(a => a.def.GetStatValueAbstract(StatDefOf.MarketValue, a.Stuff));
+        float budgetLeft = Mathf.Max(0f, pawn.kindDef.apparelMoney.max - spent);
+        if (pair.Price <= budgetLeft)
             return;
 
         if (MySettings.VerboseLogging)
         {
             string mat = pair.stuff != null ? $" ({pair.stuff.LabelCap})" : "";
+            string spentNote = spent > 0f ? $" (${spent:F0} already spent on other apparel)" : "";
             ModCore.Warn(
-                $"Apparel slot left empty by price for '{pawn.kindDef.LabelCap}': no torso apparel within apparelMoney {pawn.kindDef.apparelMoney}. "
-                    + $"Cheapest matching option is {pair.thing.LabelCap}{mat} at ${pair.Price:F0} — raise apparelMoney or relax the apparel/material filters."
+                $"Apparel slot left empty by price for '{pawn.kindDef.LabelCap}': no torso apparel affordable within apparelMoney {pawn.kindDef.apparelMoney}{spentNote}. "
+                    + $"Cheapest matching option is {pair.thing.LabelCap}{mat} at ${pair.Price:F0} - raise apparelMoney or relax the apparel/material filters."
             );
         }
 
-        if (MySettings.IgnorePriceLimits)
-            WearFallbackApparel(pawn, pair);
+        if (MySettings.IgnorePriceLimits) WearFallbackApparel(pawn, pair);
     }
 
-    private static bool CoversTorso(Pawn pawn)
-    {
-        return pawn.apparel?.WornApparel
+    /// <summary>
+    /// True if the pawn's body has any part in the Torso group. Non-humanlike ToolUsers (some modded
+    /// races/mechs) can lack a torso entirely, in which case a "bare torso" is normal, not a price failure.
+    /// </summary>
+    private static bool BodyHasTorso(Pawn pawn) => Enumerable.Any(pawn.RaceProps?.body?.AllParts ?? [], t => t.IsInGroup(BodyPartGroupDefOf.Torso));
+
+    private static bool CoversTorso(Pawn pawn) =>
+        pawn.apparel?.WornApparel
             ?.Select(t => t.def.apparel?.bodyPartGroups)
             .Any(groups => groups != null && groups.Contains(BodyPartGroupDefOf.Torso)) ?? false;
-    }
 
     private static ThingStuffPair? CheapestEligibleTorsoApparel(Pawn pawn)
     {
         ThingStuffPair? best = null;
         List<ThingStuffPair> pairs = PawnApparelGenerator.allApparelPairs;
-        for (int i = 0; i < pairs.Count; i++)
+        foreach (ThingStuffPair p in pairs)
         {
-            ThingStuffPair p = pairs[i];
             List<BodyPartGroupDef> groups = p.thing.apparel?.bodyPartGroups;
             if (groups == null || !groups.Contains(BodyPartGroupDefOf.Torso))
                 continue;
@@ -343,9 +351,9 @@ public static class ApparelGenPatch
 }
 
 /// <summary>
-/// Prevents blacklisted ThingDefs from entering vanilla's apparel candidate pool.
+/// Prevents blocklisted ThingDefs from entering vanilla's apparel candidate pool.
 /// Uses <see cref="DefCache.ApparelBlacklistCache"/> populated at Apply() time
-/// for O(1) lookup per pair — no per-pawn edit iteration at patch time.
+/// for O(1) lookup per pair - no per-pawn edit iteration at patch time.
 /// </summary>
 [HarmonyPatch(typeof(PawnApparelGenerator), "CanUsePair")]
 public static class CanUsePairBlacklistPatch
@@ -361,7 +369,7 @@ public static class CanUsePairBlacklistPatch
             return;
         }
 
-        // Material rule (allowlist or blocklist) — keeps disallowed materials out of the candidate pool.
+        // Material rule (allowlist or blocklist) - keeps disallowed materials out of the candidate pool.
         if (!DefCache.ApparelMaterialAllows(pawn.kindDef, pair.stuff))
             __result = false;
     }

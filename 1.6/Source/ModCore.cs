@@ -160,7 +160,7 @@ public class ModCore : Mod
 
     public static void ReapplyAfterHotReload()
     {
-        Log("Hot reload detected — reapplying Total Control preset...");
+        Log("Hot reload detected - reapplying Total Control preset...");
         RemoveTCClonesFromDefDatabase();
         FactionEdit.ClearState();
         PawnKindEdit.ClearState();

@@ -349,7 +349,7 @@ public class PawnKindEdit : IExposable
                 }
                 else
                 {
-                    // Module not registered or not active — preserve the raw XML for re-saving.
+                    // Module not registered or not active - preserve the raw XML for re-saving.
                     preservedModuleXml ??= new Dictionary<string, string>();
                     preservedModuleXml[child.Name] = child.InnerXml;
                     ModCore.Debug($"Preserving module data for absent module '{child.Name}'");

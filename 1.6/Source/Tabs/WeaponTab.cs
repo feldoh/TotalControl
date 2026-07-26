@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using FactionLoadout.UISupport;
 using RimWorld;
 using UnityEngine;

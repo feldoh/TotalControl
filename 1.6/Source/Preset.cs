@@ -36,7 +36,7 @@ namespace FactionLoadout
             {
                 if (packageDef.modContentPack == null)
                 {
-                    ModCore.Warn($"TCPresetPackageDef '{packageDef.defName}' has no modContentPack — skipping.");
+                    ModCore.Warn($"TCPresetPackageDef '{packageDef.defName}' has no modContentPack - skipping.");
                     continue;
                 }
                 string fullPath = Path.Combine(packageDef.modContentPack.RootDir, packageDef.presetPath);

@@ -20,7 +20,7 @@ public abstract class EditTab : Tab
     public readonly PawnKindEdit Current;
     public readonly PawnKindDef DefaultKind;
 
-    // Per-instance buffer state — each tab keeps its own, so switching tabs preserves state.
+    // Per-instance buffer state - each tab keeps its own, so switching tabs preserves state.
     protected Vector2[] scrolls = new Vector2[64];
     protected string[] buffers = new string[64];
     protected List<(string x, string y)>[] curvePointBuffers = new List<(string x, string y)>[64];
@@ -151,7 +151,7 @@ public abstract class EditTab : Tab
     /// </summary>
     protected Rect DrawMaterialModeToggle(Rect rect, ref bool isBlocklist)
     {
-        string label = isBlocklist ? "FactionLoadout_Materials_ModeBlacklist".Translate() : "FactionLoadout_Materials_ModeWhitelist".Translate();
+        string label = isBlocklist ? "FactionLoadout_Materials_ModeBlocklist".Translate() : "FactionLoadout_Materials_ModeAllowlist".Translate();
         Rect modeRow = rect;
         modeRow.height = 24f;
         modeRow.width = Mathf.Min(rect.width, Mathf.Max(180f, Text.CalcSize(label).x + 24f));

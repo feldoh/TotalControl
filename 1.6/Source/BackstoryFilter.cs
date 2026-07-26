@@ -9,7 +9,7 @@ namespace FactionLoadout;
 /// <summary>
 /// Extends RimWorld's <see cref="BackstoryCategoryFilter"/> with <see cref="IExposable"/> support
 /// so it can be serialised in presets. Since it inherits directly, instances can be used anywhere
-/// a <see cref="BackstoryCategoryFilter"/> is expected — no conversion needed.
+/// a <see cref="BackstoryCategoryFilter"/> is expected - no conversion needed.
 /// </summary>
 public class BackstoryFilter : BackstoryCategoryFilter, IExposable, IDeepCopyable<BackstoryFilter>
 {
