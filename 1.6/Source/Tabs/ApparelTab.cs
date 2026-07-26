@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using FactionLoadout.UISupport;
 using FactionLoadout.Util;
 using RimWorld;
@@ -65,7 +66,8 @@ public class ApparelTab : EditTab
             true,
             pasteGet: e => e.ApparelRequired
         );
-        DrawSpecificGear(ui, ref Current.SpecificApparel, "FactionLoadout_Apparel_RequiredAdvanced".Translate().ToString(), t => t.IsApparel, ThingDefOf.Apparel_Parka);
+        ThingDef defaultApparel = DefCache.AllApparel?.Count > 0 ? DefCache.AllApparel[0] : null;
+        DrawSpecificGear(ui, ref Current.SpecificApparel, "FactionLoadout_Apparel_RequiredAdvanced".Translate().ToString(), t => t.IsApparel, defaultApparel);
         DrawOverride(
             ui,
             null,
@@ -76,6 +78,21 @@ public class ApparelTab : EditTab
             false,
             pasteGet: e => e.ApparelBlacklist
         );
+        DrawOverride(
+            ui,
+            null,
+            ref Current.ApparelMaterials,
+            "FactionLoadout_ApparelMaterials".Translate(),
+            DrawApparelMaterials,
+            GetHeightFor(Current.ApparelMaterials) + 26f,
+            false,
+            pasteGet: e =>
+            {
+                Current.ApparelMaterialsBlocklist = e.ApparelMaterialsBlocklist;
+                return e.ApparelMaterials;
+            }
+        );
+        DrawMaterialSummary(ui, Current.ApparelMaterials, Current.ApparelMaterialsBlocklist);
     }
 
     private void DrawForceOnlySelected(Listing_Standard ui)
@@ -169,8 +186,57 @@ public class ApparelTab : EditTab
         DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.ApparelBlacklist, null, DefCache.AllApparel);
     }
 
+    private void DrawApparelMaterials(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> defaultList)
+    {
+        Rect listRect = DrawMaterialModeToggle(rect, ref Current.ApparelMaterialsBlocklist);
+        DrawDefRefList(listRect, active, ref scrolls[scrollIndex++], Current.ApparelMaterials, null, GenStuff.StuffDefs);
+    }
+
     private void DrawRequiredApparel(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> _)
     {
-        DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.ApparelRequired, DefaultKind.apparelRequired, DefCache.AllApparel);
+        DrawDefRefList(
+            rect,
+            active,
+            ref scrolls[scrollIndex++],
+            Current.ApparelRequired,
+            DefaultKind.apparelRequired,
+            DefCache.AllApparel,
+            warningFunc: RequiredApparelMaterialWarning
+        );
     }
+
+    private string RequiredApparelMaterialWarning(ThingDef item)
+    {
+        if (item is not { MadeFromStuff: true })
+            return null;
+
+        // Mirror generation-time resolution (DefCache.BuildBlacklistCaches): the per-kind list wins,
+        // otherwise the faction's global edit's list applies - so the warning must honour the global
+        // rule too, or it would miss required items the global material rule will actually skip.
+        List<DefRef<ThingDef>> rule = Current.ApparelMaterials;
+        bool blocklist = Current.ApparelMaterialsBlocklist;
+        if ((rule == null || rule.Count == 0) && !Current.IsGlobal)
+        {
+            PawnKindEdit global = Find.WindowStack.WindowOfType<FactionEditUI>()?.Current?.GetGlobalEditor();
+            if (global != null)
+            {
+                rule = global.ApparelMaterials;
+                blocklist = global.ApparelMaterialsBlocklist;
+            }
+        }
+
+        if (rule == null || rule.Count == 0)
+            return null;
+
+        foreach (ThingDef stuff in GenStuff.AllowedStuffsFor(item))
+        {
+            bool listed = RuleContains(rule, stuff);
+            if (blocklist ? !listed : listed)
+                return null; // at least one allowed material can make this item
+        }
+
+        return "FactionLoadout_Materials_NoValidStuff".Translate();
+    }
+
+    private static bool RuleContains(List<DefRef<ThingDef>> rule, ThingDef stuff) => Enumerable.Any(rule, t => t.HasValue && t.Def == stuff);
 }

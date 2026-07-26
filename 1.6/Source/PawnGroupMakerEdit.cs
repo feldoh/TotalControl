@@ -15,7 +15,7 @@ public class PawnGroupMakerEdit : IExposable
 {
     /// <summary>
     /// True when this group was created by the user rather than loaded from the original
-    /// faction def. Purely informational — the full-replacement apply logic does not use
+    /// faction def. Purely informational - the full-replacement apply logic does not use
     /// it for matching.
     /// </summary>
     public bool IsUserAdded;

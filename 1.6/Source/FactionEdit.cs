@@ -327,7 +327,7 @@ public class FactionEdit : IExposable
     /// </summary>
     public HashSet<PawnKindDef> GetOrphanedKinds()
     {
-        // Normalise clone defs back to originals before comparing — after Apply(),
+        // Normalise clone defs back to originals before comparing - after Apply(),
         // faction def group makers contain cloned PawnKindDefs (e.g. Archer_TCCln_Gentle)
         // while edit.Def references the original (Archer).
         HashSet<string> inGroups = GetAllKindDefsForUI().Select(k => PawnKindEdit.NormaliseDef(k).defName).ToHashSet();
@@ -462,7 +462,7 @@ public class FactionEdit : IExposable
         OverrideFactionXenotypes = source.OverrideFactionXenotypes;
         xenotypeChances = source.xenotypeChances != null ? new Dictionary<string, float>(source.xenotypeChances) : [];
         xenotypeChancesByDef = source.xenotypeChancesByDef != null ? new Dictionary<XenotypeDef, float>(source.xenotypeChancesByDef) : [];
-        // Group edits are not copied by the faction-level clipboard — they are
+        // Group edits are not copied by the faction-level clipboard - they are
         // structural changes that should not be blindly overwritten.
     }
 
