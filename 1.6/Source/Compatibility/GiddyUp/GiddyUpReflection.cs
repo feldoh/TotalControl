@@ -46,7 +46,7 @@ public static class GiddyUpReflection
         FactionRestrictionsType = AccessTools.TypeByName("GiddyUp.FactionRestrictions");
         if (FactionRestrictionsType == null)
         {
-            ModCore.Warn("GiddyUp module: Could not find GiddyUp.FactionRestrictions type — faction-level mount settings will be unavailable.");
+            ModCore.Warn("GiddyUp module: Could not find GiddyUp.FactionRestrictions type - faction-level mount settings will be unavailable.");
             return;
         }
 

@@ -211,7 +211,7 @@ public class FactionEditUI : Window
             if (Widgets.ButtonText(editGroupsBtn, "FactionLoadout_SpawnGroups_EditButton".Translate()))
                 GroupEditorUI.OpenEditor(Current);
 
-            // Orphan warning (conditional) — lists which pawnkinds are missing from groups
+            // Orphan warning (conditional) - lists which pawnkinds are missing from groups
             HashSet<PawnKindDef> orphaned = Current?.GetOrphanedKinds() ?? [];
             if (orphaned.Count > 0)
             {

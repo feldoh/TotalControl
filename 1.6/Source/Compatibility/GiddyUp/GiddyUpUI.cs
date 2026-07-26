@@ -109,7 +109,7 @@ public static class GiddyUpUI
 
         GUI.color = prevColor;
 
-        // Informational note when slider is at 0 (not an error — 0 inherits faction defaults in GiddyUp)
+        // Informational note when slider is at 0 (not an error - 0 inherits faction defaults in GiddyUp)
         if (hasChance && data.MountChance == 0)
         {
             string noteText = "GU_ZeroMountChanceNote".Translate().ToString();

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using FactionLoadout.UISupport;
 using RimWorld;
 using UnityEngine;
@@ -47,7 +46,8 @@ public class WeaponTab : EditTab
             true,
             pasteGet: e => e.WeaponTags
         );
-        DrawSpecificGear(ui, ref Current.SpecificWeapons, "FactionLoadout_Weapon_RequiredAdvanced".Translate(), t => t.IsWeapon, ThingDef.Named("Gun_AssaultRifle"));
+        ThingDef defaultWeapon = DefCache.AllWeapons?.Count > 0 ? DefCache.AllWeapons[0] : null;
+        DrawSpecificGear(ui, ref Current.SpecificWeapons, "FactionLoadout_Weapon_RequiredAdvanced".Translate(), t => t.IsWeapon, defaultWeapon);
         DrawOverride(
             ui,
             null,
@@ -58,6 +58,21 @@ public class WeaponTab : EditTab
             false,
             pasteGet: e => e.WeaponBlacklist
         );
+        DrawOverride(
+            ui,
+            null,
+            ref Current.WeaponMaterials,
+            "FactionLoadout_WeaponMaterials".Translate(),
+            DrawWeaponMaterials,
+            GetHeightFor(Current.WeaponMaterials) + 26f,
+            false,
+            pasteGet: e =>
+            {
+                Current.WeaponMaterialsBlocklist = e.WeaponMaterialsBlocklist;
+                return e.WeaponMaterials;
+            }
+        );
+        DrawMaterialSummary(ui, Current.WeaponMaterials, Current.WeaponMaterialsBlocklist);
     }
 
     private void DrawWeaponQuality(Rect rect, bool active, QualityCategory _)
@@ -83,5 +98,11 @@ public class WeaponTab : EditTab
     private void DrawWeaponBlacklist(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> defaultList)
     {
         DrawDefRefList(rect, active, ref scrolls[scrollIndex++], Current.WeaponBlacklist, null, DefCache.AllWeapons);
+    }
+
+    private void DrawWeaponMaterials(Rect rect, bool active, System.Collections.Generic.List<DefRef<ThingDef>> defaultList)
+    {
+        Rect listRect = DrawMaterialModeToggle(rect, ref Current.WeaponMaterialsBlocklist);
+        DrawDefRefList(listRect, active, ref scrolls[scrollIndex++], Current.WeaponMaterials, null, GenStuff.StuffDefs);
     }
 }
