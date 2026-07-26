@@ -17,9 +17,9 @@ public class GiddyUpFactionData
     /// <summary>Weight multiplier for domestic animal selection (0+). Null = use GiddyUp default.</summary>
     public int? NonWildAnimalWeight;
 
-    /// <summary>Whitelist of wild animal defNames this faction can mount. Null/empty = no restriction.</summary>
+    /// <summary>Allowlist of wild animal defNames this faction can mount. Null/empty = no restriction.</summary>
     public List<string> AllowedWildAnimals;
 
-    /// <summary>Whitelist of domestic animal defNames this faction can mount. Null/empty = no restriction.</summary>
+    /// <summary>Allowlist of domestic animal defNames this faction can mount. Null/empty = no restriction.</summary>
     public List<string> AllowedNonWildAnimals;
 }

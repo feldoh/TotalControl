@@ -126,6 +126,10 @@ public class PawnKindEdit : IExposable
     public List<string> ApparelDisallowedTags = null;
     public List<DefRef<ThingDef>> ApparelBlacklist = null;
     public List<DefRef<ThingDef>> WeaponBlacklist = null;
+    public List<DefRef<ThingDef>> ApparelMaterials = null;
+    public bool ApparelMaterialsBlocklist = false;
+    public List<DefRef<ThingDef>> WeaponMaterials = null;
+    public bool WeaponMaterialsBlocklist = false;
     public List<DefRef<ThingDef>> ApparelRequired = null;
     public List<DefRef<ThingDef>> TechRequired = null;
     public List<SpecRequirementEdit> SpecificApparel = null;
@@ -234,6 +238,10 @@ public class PawnKindEdit : IExposable
         Scribe_Collections.Look(ref ApparelDisallowedTags, "apparelDisallowedTags");
         Scribe_Collections.Look(ref ApparelBlacklist, "apparelBlacklist", LookMode.Deep);
         Scribe_Collections.Look(ref WeaponBlacklist, "weaponBlacklist", LookMode.Deep);
+        Scribe_Collections.Look(ref ApparelMaterials, "apparelMaterials", LookMode.Deep);
+        Scribe_Collections.Look(ref WeaponMaterials, "weaponMaterials", LookMode.Deep);
+        Scribe_Values.Look(ref ApparelMaterialsBlocklist, "apparelMaterialsBlocklist", false);
+        Scribe_Values.Look(ref WeaponMaterialsBlocklist, "weaponMaterialsBlocklist", false);
         ScribeMigrateDefRefList(ref ApparelRequired, "apparelRequired");
         ScribeMigrateDefRefList(ref TechRequired, "techRequired");
         Scribe_Collections.Look(ref SpecificApparel, "specificApparel", LookMode.Deep);
@@ -343,7 +351,7 @@ public class PawnKindEdit : IExposable
                 }
                 else
                 {
-                    // Module not registered or not active — preserve the raw XML for re-saving.
+                    // Module not registered or not active - preserve the raw XML for re-saving.
                     preservedModuleXml ??= new Dictionary<string, string>();
                     preservedModuleXml[child.Name] = child.InnerXml;
                     ModCore.Debug($"Preserving module data for absent module '{child.Name}'");

@@ -26,13 +26,13 @@ public static class DeepCopy
         if (value is SimpleCurve curve)
             return new SimpleCurve(curve);
 
-        // Primitives, enums, strings, Def references — safe to assign directly.
+        // Primitives, enums, strings, Def references - safe to assign directly.
         if (type.IsPrimitive || type.IsEnum || type == typeof(string))
             return value;
         if (typeof(Def).IsAssignableFrom(type))
             return value;
 
-        // Nullable<T> — the boxed struct is safe for simple value types.
+        // Nullable<T> - the boxed struct is safe for simple value types.
         if (Nullable.GetUnderlyingType(type) != null)
             return value;
 
@@ -50,7 +50,7 @@ public static class DeepCopy
             return dest;
         }
 
-        // Dictionary<K,V> — shallow copy (keys/values are strings, Defs, or primitives).
+        // Dictionary<K,V> - shallow copy (keys/values are strings, Defs, or primitives).
         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
         {
             IDictionary src = (IDictionary)value;
@@ -61,7 +61,7 @@ public static class DeepCopy
         }
 
         // Fallback: shared reference. Log so we can catch missed types during dev.
-        ModCore.Warn($"[DeepCopy] Unhandled field type {type.FullName} — using shared reference. Implement IDeepCopyable<T> if deep copy is needed.");
+        ModCore.Warn($"[DeepCopy] Unhandled field type {type.FullName} - using shared reference. Implement IDeepCopyable<T> if deep copy is needed.");
         return value;
     }
 }
