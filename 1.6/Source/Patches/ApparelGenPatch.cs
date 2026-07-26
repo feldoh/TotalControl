@@ -270,9 +270,7 @@ public static class ApparelGenPatch
         if (!MySettings.VerboseLogging && !MySettings.IgnorePriceLimits)
             return;
 
-        if (pawn.apparel == null || !pawn.RaceProps.ToolUser || !pawn.RaceProps.IsFlesh)
-            return;
-        if (CoversTorso(pawn))
+        if (pawn.apparel == null || !pawn.RaceProps.ToolUser || !pawn.RaceProps.IsFlesh|| CoversTorso(pawn))
             return;
 
         ThingStuffPair? cheapest = CheapestEligibleTorsoApparel(pawn);
@@ -301,15 +299,9 @@ public static class ApparelGenPatch
 
     private static bool CoversTorso(Pawn pawn)
     {
-        List<Apparel> worn = pawn.apparel.WornApparel;
-        for (int i = 0; i < worn.Count; i++)
-        {
-            List<BodyPartGroupDef> groups = worn[i].def.apparel?.bodyPartGroups;
-            if (groups != null && groups.Contains(BodyPartGroupDefOf.Torso))
-                return true;
-        }
-
-        return false;
+        return pawn.apparel?.WornApparel
+            ?.Select(t => t.def.apparel?.bodyPartGroups)
+            .Any(groups => groups != null && groups.Contains(BodyPartGroupDefOf.Torso)) ?? false;
     }
 
     private static ThingStuffPair? CheapestEligibleTorsoApparel(Pawn pawn)

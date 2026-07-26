@@ -256,7 +256,7 @@ public static class DefCache
         if (isBlocklist)
         {
             // Blocklist: allowed = every stuff except the banned ones, so we need the set + full scan.
-            HashSet<ThingDef> banned = new();
+            HashSet<ThingDef> banned = [];
             if (materials != null)
             {
                 foreach (DefRef<ThingDef> r in materials)
@@ -285,10 +285,7 @@ public static class DefCache
             }
         }
 
-        if (counts.Count == 0)
-            return null;
-
-        return string.Join("   ", counts.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key.LabelCap}: {kv.Value}"));
+        return counts.Count == 0 ? null : string.Join("   ", counts.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key.LabelCap}: {kv.Value}"));
     }
 
     public static void BuildBlacklistCaches(PawnKindEdit edit, PawnKindDef def, PawnKindEdit global)
@@ -301,11 +298,11 @@ public static class DefCache
 
         if (apparelBl.Count > 0)
         {
-            DefCache.ApparelBlacklistCache[def] = apparelBl;
+            ApparelBlacklistCache[def] = apparelBl;
         }
         else
         {
-            DefCache.ApparelBlacklistCache.Remove(def);
+            ApparelBlacklistCache.Remove(def);
         }
 
         HashSet<ThingDef> weaponBl = (global?.WeaponBlacklist ?? Enumerable.Empty<DefRef<ThingDef>>())
@@ -316,11 +313,11 @@ public static class DefCache
 
         if (weaponBl.Count > 0)
         {
-            DefCache.WeaponBlacklistCache[def] = weaponBl;
+            WeaponBlacklistCache[def] = weaponBl;
         }
         else
         {
-            DefCache.WeaponBlacklistCache.Remove(def);
+            WeaponBlacklistCache.Remove(def);
         }
 
         // Material rules: specific edit's list (and its mode) wins, else the faction's global edit's.
@@ -331,11 +328,11 @@ public static class DefCache
         HashSet<ThingDef> apparelMat = apparelMatList?.Where(r => r.HasValue).Select(r => r.Def).ToHashSet();
         if (apparelMat is { Count: > 0 })
         {
-            DefCache.ApparelMaterialCache[def] = (apparelMat, apparelMatBlocklist);
+            ApparelMaterialCache[def] = (apparelMat, apparelMatBlocklist);
         }
         else
         {
-            DefCache.ApparelMaterialCache.Remove(def);
+            ApparelMaterialCache.Remove(def);
         }
 
         List<DefRef<ThingDef>> weaponMatList = edit.WeaponMaterials ?? global?.WeaponMaterials;
@@ -343,11 +340,11 @@ public static class DefCache
         HashSet<ThingDef> weaponMat = weaponMatList?.Where(r => r.HasValue).Select(r => r.Def).ToHashSet();
         if (weaponMat is { Count: > 0 })
         {
-            DefCache.WeaponMaterialCache[def] = (weaponMat, weaponMatBlocklist);
+            WeaponMaterialCache[def] = (weaponMat, weaponMatBlocklist);
         }
         else
         {
-            DefCache.WeaponMaterialCache.Remove(def);
+            WeaponMaterialCache.Remove(def);
         }
     }
 }
