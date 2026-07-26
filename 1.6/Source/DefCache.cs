@@ -11,7 +11,7 @@ namespace FactionLoadout;
 /// <summary>
 /// Lazily populated caches of def lists used throughout the editor UI.
 /// Call <see cref="ScanDefs"/> once (guarded by a null-check) before accessing any list.
-/// that are needed by multiple draw-support classes.
+/// Needed for multiple draw-support classes.
 /// </summary>
 public static class DefCache
 {
@@ -27,6 +27,7 @@ public static class DefCache
     public static List<PawnKindDef> AllAnimalKindDefs;
     public static List<RulePackDef> AllRulePackDefs;
     public static List<GeneDef> AllGeneDefs;
+    public static Dictionary<FactionDef, List<PawnKindDef>> DefaultFactionKinds;
 
     public static List<string> AllBackstoryCategories;
     public static List<BackstoryDef> AllChildhoodBackstories;
@@ -55,11 +56,25 @@ public static class DefCache
         HashSet<BodyTypeDef> allBodyTypeDefs = new(32);
         HashSet<GeneDef> allGeneDefs = new(1024);
 
+        Dictionary<FactionDef, List<PawnKindDef>> defaultFactionKinds = new(64);
+
         foreach (PawnKindDef def in DefDatabase<PawnKindDef>.AllDefsListForReading)
         {
             if (def.RaceProps is { Animal: true, packAnimal: true })
                 allAnimalKindDefs.Add(def);
+
+            if (def.defaultFactionDef != null)
+            {
+                if (!defaultFactionKinds.TryGetValue(def.defaultFactionDef, out List<PawnKindDef> factionKinds))
+                {
+                    factionKinds = [];
+                    defaultFactionKinds[def.defaultFactionDef] = factionKinds;
+                }
+                factionKinds.Add(def);
+            }
         }
+
+        DefaultFactionKinds = defaultFactionKinds;
 
         foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
         {
@@ -215,7 +230,7 @@ public static class DefCache
     }
 
     /// <summary>
-    /// Pre-cached blacklists built at apply time: cloned PawnKindDef → blacklisted ThingDefs.
+    /// Pre-cached blocklists built at apply time: cloned PawnKindDef → blocklisted ThingDefs.
     /// Includes both global and specific edits merged. Keyed by cloned def for O(1) lookup at generation time.
     /// </summary>
     public static Dictionary<PawnKindDef, HashSet<ThingDef>> ApparelBlacklistCache = new();
@@ -225,7 +240,7 @@ public static class DefCache
     /// <summary>
     /// Pre-cached material rules built at apply time: cloned PawnKindDef → (stuff set, isBlocklist).
     /// Allowlist (isBlocklist false) allows only the set; blocklist bans the set. Specific edit's list
-    /// (and its mode) wins; otherwise the faction's global edit's. Absent (or empty) key = no restriction.
+    /// (and its mode) wins; otherwise, the faction's global edit's. Absent (or empty) key = no restriction.
     /// </summary>
     public static Dictionary<PawnKindDef, (HashSet<ThingDef> defs, bool blocklist)> ApparelMaterialCache = new();
 
@@ -255,7 +270,7 @@ public static class DefCache
         IEnumerable<ThingDef> allowed;
         if (isBlocklist)
         {
-            // Blocklist: allowed = every stuff except the banned ones, so we need the set + full scan.
+            // Blocklist: allowed = every stuff except the banned ones, so we need the set and full scan.
             HashSet<ThingDef> banned = [];
             if (materials != null)
             {
@@ -321,8 +336,8 @@ public static class DefCache
         }
 
         // Material rules: specific edit's list (and its mode) wins, else the faction's global edit's.
-        // Resolve to currently-present stuff defs; missing-mod entries stay in the saved DefRef list
-        // but simply don't constrain generation until their mod returns.
+        // Resolve to currently present stuff defs; missing-mod entries stay in the saved DefRef list
+        // but don't constrain generation until their mod returns.
         List<DefRef<ThingDef>> apparelMatList = edit.ApparelMaterials ?? global?.ApparelMaterials;
         bool apparelMatBlocklist = edit.ApparelMaterials != null ? edit.ApparelMaterialsBlocklist : global?.ApparelMaterialsBlocklist ?? false;
         HashSet<ThingDef> apparelMat = apparelMatList?.Where(r => r.HasValue).Select(r => r.Def).ToHashSet();

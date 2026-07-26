@@ -237,7 +237,7 @@ public static class ApparelGenPatch
             float healthFactor = pawn.kindDef.gearHealthRange.RandomInRange;
             if (healthFactor < 1f)
             {
-                int hitPoints = Mathf.Max(1, Mathf.RoundToInt(healthFactor * (float)thing.MaxHitPoints));
+                int hitPoints = Mathf.Max(1, Mathf.RoundToInt(healthFactor * thing.MaxHitPoints));
                 thing.HitPoints = hitPoints;
             }
         }
@@ -312,7 +312,7 @@ public static class ApparelGenPatch
         // spends it down as it adds items then prunes anything pricier than what's left.
         // Subtract what was actually spent on the pawn's other apparel and only bail when even the best-case can't cover it.
         // Prices use the same abstract MarketValue as vanilla's budget math; free warmth/vacuum layers are
-        // not budget-charged, so spent is a slight over-estimate - hence the clamp.
+        // not budget-charged, so spent is a slight overestimate - hence the clamp.
         float spent = pawn.apparel.WornApparel.Sum(a => a.def.GetStatValueAbstract(StatDefOf.MarketValue, a.Stuff));
         float budgetLeft = Mathf.Max(0f, pawn.kindDef.apparelMoney.max - spent);
         if (pair.Price <= budgetLeft)
@@ -407,7 +407,7 @@ public static class CanUsePairBlacklistPatch
 /// <summary>
 /// Applies the per-kind apparel material rule to vanilla's stuff gate. REQUIRED apparel
 /// (PawnKindDef.apparelRequired) picks its stuff via CanUseStuff and never touches CanUsePair,
-/// so without this a required item could spawn in a disallowed material.
+/// so without this, a required item could spawn in a disallowed material.
 /// </summary>
 [HarmonyPatch(typeof(PawnApparelGenerator), "CanUseStuff")]
 public static class CanUseStuffMaterialPatch

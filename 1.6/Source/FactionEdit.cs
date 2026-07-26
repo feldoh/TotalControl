@@ -256,6 +256,11 @@ public class FactionEdit : IExposable
         if (def.fixedLeaderKinds != null)
             kinds.AddRange(def.fixedLeaderKinds);
 
+        if (DefCache.DefaultFactionKinds != null && DefCache.DefaultFactionKinds.TryGetValue(def, out List<PawnKindDef> defaultKinds))
+        {
+            kinds.AddRange(defaultKinds);
+        }
+
         return kinds.ToArray();
     }
 
