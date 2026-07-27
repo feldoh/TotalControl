@@ -321,9 +321,14 @@
 
     <!-- Ideology (General Tab) -->
     <FactionLoadout_General_ForcedIdeo>Forced Ideology</FactionLoadout_General_ForcedIdeo>
-    <FactionLoadout_General_ForcedIdeoTooltip>Forces pawns of this kind to follow a specific ideology instead of their faction's default. Requires the Ideology DLC and a loaded save to select from available ideologies.</FactionLoadout_General_ForcedIdeoTooltip>
+    <FactionLoadout_General_ForcedIdeoTooltip>Forces pawns of this kind to follow a specific ideology instead of their faction's default. Requires the Ideology DLC. Choose the faction's primary ideology, an ideology preset (from the base game or mods), or an ideology you have saved to file (in-game, via the Ideoligion tab's Save button). Presets and saved files are created once per faction per save and reused, so the choice works across different saves and stays consistent within each faction. Note: presets are generators, so each faction produces a themed-but-different ideology; saved files reproduce an exact ideology.</FactionLoadout_General_ForcedIdeoTooltip>
     <FactionLoadout_General_IdeoNoneSelected>(none selected)</FactionLoadout_General_IdeoNoneSelected>
-    <FactionLoadout_General_IdeoNoWorld>(load a save to change)</FactionLoadout_General_IdeoNoWorld>
+    <FactionLoadout_General_IdeoFactionPrimary>Faction's primary ideology</FactionLoadout_General_IdeoFactionPrimary>
+    <FactionLoadout_General_IdeoPresetSuffix>(preset)</FactionLoadout_General_IdeoPresetSuffix>
+    <FactionLoadout_General_IdeoNoTemplates>No ideology presets or saved ideology files found.</FactionLoadout_General_IdeoNoTemplates>
+    <FactionLoadout_Faction_PrimaryIdeo>Primary Ideology</FactionLoadout_Faction_PrimaryIdeo>
+    <FactionLoadout_Faction_PrimaryIdeoNotOverridden>Not overridden (game decides)</FactionLoadout_Faction_PrimaryIdeoNotOverridden>
+    <FactionLoadout_Faction_PrimaryIdeoTooltip>Forces this faction's primary ideology. Each faction in a game realises this choice once and keeps it, so the ideology listing matches what the faction's pawns actually believe. Pawnkind edits that pick the same ideology automatically share it; pawnkinds picking a different one become minority believers within the faction. Does not affect the player's own faction.</FactionLoadout_Faction_PrimaryIdeoTooltip>
     <FactionLoadout_General_FactionDefault>Use faction ideology</FactionLoadout_General_FactionDefault>
     <FactionLoadout_OverrideOn>Override: On</FactionLoadout_OverrideOn>
     <FactionLoadout_OverrideOff>Override: Off</FactionLoadout_OverrideOff>

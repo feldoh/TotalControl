@@ -155,7 +155,16 @@ public class PawnKindEdit : IExposable
     public Dictionary<string, float> ForcedXenotypeChances = new();
     public Dictionary<XenotypeDef, float> ForcedXenotypeChanceDefs = new();
     public Gender? ForcedGender = null;
-    public string ForcedIdeoName = null;
+
+    /// <summary>
+    /// Portable forced-ideology reference: a <c>.rid</c> filename (when
+    /// <see cref="ForcedIdeoSourceKind"/> is <see cref="ForcedIdeoSource.SavedFile"/>) or an
+    /// <see cref="IdeoPresetDef"/> defName (when <see cref="ForcedIdeoSource.Preset"/>). null =
+    /// override off. At pawn generation this is realised once per save and reused via
+    /// <see cref="ForcedIdeoGameComponent"/>.
+    /// </summary>
+    public string ForcedIdeoKey = null;
+    public ForcedIdeoSource ForcedIdeoSourceKind = ForcedIdeoSource.SavedFile;
     public SimpleCurve RaidCommonalityFromPointsCurve = null;
     public SimpleCurve RaidLootValueFromPointsCurve = null;
     public SimpleCurve MaxPawnCostPerTotalPointsCurve = null;
@@ -254,7 +263,8 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref Label, "label");
         Scribe_Defs.Look(ref Race, "race");
         Scribe_Values.Look(ref ForcedGender, "forcedGender");
-        Scribe_Values.Look(ref ForcedIdeoName, "forcedIdeoName");
+        Scribe_Values.Look(ref ForcedIdeoKey, "forcedIdeoKey");
+        Scribe_Values.Look(ref ForcedIdeoSourceKind, "forcedIdeoSourceKind", ForcedIdeoSource.SavedFile);
         ScribeMigrateDefRefList(ref BodyTypes, "bodyTypes");
         ScribeMigrateDefRefList(ref CustomBeards, "customBeards");
         ScribeMigrateDefRefList(ref CustomHair, "customHair");

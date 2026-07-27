@@ -179,32 +179,36 @@ public static class PawnGenPatchIdeo
     [HarmonyPostfix]
     public static void Postfix(Pawn __result, PawnGenerationRequest request)
     {
-        if (!ModsConfig.IdeologyActive)
-            return;
-        if (__result?.ideo == null || __result.kindDef == null)
+        if (!ModsConfig.IdeologyActive || __result?.ideo == null || __result.kindDef == null)
             return;
 
-        string forcedName = null;
+        ForcedIdeoGameComponent comp = ForcedIdeoGameComponent.Current;
+        if (comp == null)
+            return;
+
+        // Faction-level forced primary applies to every pawn of the faction, including kinds
+        // without their own ideology override (they follow the primary via vanilla weighting).
+        // Idempotent; also covers factions that appeared after FinalizeInit.
+        comp.EnsurePrimaryIdeo(__result.Faction);
+
+        string key = null;
+        ForcedIdeoSource source = ForcedIdeoSource.SavedFile;
         foreach (PawnKindEdit edit in PawnKindEdit.GetEditsFor(__result.kindDef, __result.Faction?.def))
         {
-            if (edit.ForcedIdeoName != null && (!edit.IsGlobal || forcedName == null))
-                forcedName = edit.ForcedIdeoName;
-        }
-
-        if (string.IsNullOrEmpty(forcedName))
-            return;
-
-        Ideo matched = null;
-        foreach (Ideo ideo in Find.IdeoManager.IdeosListForReading)
-        {
-            if (ideo.name == forcedName)
+            if (edit.ForcedIdeoKey != null && (!edit.IsGlobal || key == null))
             {
-                matched = ideo;
-                break;
+                key = edit.ForcedIdeoKey;
+                source = edit.ForcedIdeoSourceKind;
             }
         }
 
-        if (matched != null)
-            __result.ideo.SetIdeo(matched);
+        if (string.IsNullOrEmpty(key))
+            return;
+
+        // Realise the referenced ideology once per faction instance and reuse it on every
+        // subsequent pawn and across save/load (see ForcedIdeoGameComponent).
+        Ideo forced = comp.GetOrInjectIdeo(__result.Faction, source, key);
+        if (forced != null)
+            __result.ideo.SetIdeo(forced);
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using FactionLoadout.UISupport;
 using FactionLoadout.Util;
 using RimWorld;
@@ -241,64 +242,44 @@ public class GeneralTab : EditTab
         TooltipHandler.TipRegion(headerRect, "FactionLoadout_General_ForcedIdeoTooltip".Translate());
 
         Rect row = ui.GetRect(32);
-        bool active = Current.ForcedIdeoName != null;
+        bool active = Current.ForcedIdeoKey != null;
 
         Rect toggleRect = new Rect(row.x, row.y, 120, 32);
         string toggleLabel = active ? "FactionLoadout_OverrideOn".Translate().ToString() : "FactionLoadout_OverrideOff".Translate().ToString();
         if (Widgets.ButtonText(toggleRect, toggleLabel))
         {
-            if (active)
-            {
-                Current.ForcedIdeoName = null;
-            }
-            else
-            {
-                Current.ForcedIdeoName = "";
-            }
+            Current.ForcedIdeoKey = active ? null : "";
             active = !active;
         }
 
-        Rect contentRect = new Rect(row.x + 124, row.y, row.width - 126, 32);
+        Rect contentRect = new(row.x + 124, row.y, row.width - 126, 32);
 
         if (!active)
         {
             string txt = Current.IsGlobal ? "---" : "FactionLoadout_General_FactionDefault".Translate().ToString();
             Widgets.Label(contentRect.GetCentered(txt), txt);
+            ui.Gap();
+            return;
         }
-        else
-        {
-            bool worldLoaded = Verse.Current.Game != null && Find.IdeoManager != null;
-            string displayName = string.IsNullOrEmpty(Current.ForcedIdeoName) ? "FactionLoadout_General_IdeoNoneSelected".Translate().ToString() : Current.ForcedIdeoName;
 
-            if (worldLoaded)
-            {
-                if (Widgets.ButtonText(contentRect, displayName))
+        if (Widgets.ButtonText(contentRect, ForcedIdeoRefUI.DisplayName(Current.ForcedIdeoSourceKind, Current.ForcedIdeoKey)))
+        {
+            List<FloatMenuOption> options = ForcedIdeoRefUI.BuildOptions(
+                includeFactionPrimary: true,
+                (source, key) =>
                 {
-                    List<FloatMenuOption> options = new List<FloatMenuOption>();
-                    foreach (Ideo ideo in Find.IdeoManager.IdeosListForReading)
-                    {
-                        if (ideo.hidden)
-                            continue;
-                        Ideo localIdeo = ideo;
-                        options.Add(
-                            new FloatMenuOption(
-                                localIdeo.name,
-                                () =>
-                                {
-                                    Current.ForcedIdeoName = localIdeo.name;
-                                }
-                            )
-                        );
-                    }
-                    if (options.Count > 0)
-                    {
-                        Find.WindowStack.Add(new FloatMenu(options));
-                    }
+                    Current.ForcedIdeoSourceKind = source;
+                    Current.ForcedIdeoKey = key;
                 }
+            );
+
+            if (options.Count > 0)
+            {
+                Find.WindowStack.Add(new FloatMenu(options));
             }
             else
             {
-                Widgets.Label(contentRect, displayName + " " + "FactionLoadout_General_IdeoNoWorld".Translate());
+                Messages.Message("FactionLoadout_General_IdeoNoTemplates".Translate(), MessageTypeDefOf.RejectInput, historical: false);
             }
         }
 

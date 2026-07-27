@@ -110,6 +110,10 @@ public class ModCore : Mod
             postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchCore), nameof(PawnGenPatchCore.Postfix)))
         );
         harmony.Patch(
+            AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
+            postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchIdeo), nameof(PawnGenPatchIdeo.Postfix)))
+        );
+        harmony.Patch(
             AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GenerateRandomAge)),
             prefix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenAgePatchCore), nameof(PawnGenAgePatchCore.Prefix)))
         );
