@@ -75,6 +75,9 @@ public class FactionEdit : IExposable
         if (Scribe.mode != LoadSaveMode.PostLoadInit)
             return;
 
+        // A missing <xenotypeChances> node leaves the dict null (hand-edited preset XML) —
+        // restore the field's default; the UI and MaterializeXenotypeChances expect non-null.
+        xenotypeChances ??= [];
         MaterializeXenotypeChances();
         if (!(xenotypeChances.NullOrEmpty() && xenotypeChancesByDef.NullOrEmpty()))
             OverrideFactionXenotypes = true;

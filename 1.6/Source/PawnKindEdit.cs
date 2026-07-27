@@ -283,6 +283,9 @@ public class PawnKindEdit : IExposable
 
         if (Scribe.mode == LoadSaveMode.PostLoadInit)
         {
+            // A missing <forcedXenotypeChances> node leaves the dict null (hand-edited or
+            // third-party-generated preset XML) — restore the field's default instead of NREing.
+            ForcedXenotypeChances ??= new Dictionary<string, float>();
             ForcedXenotypeChanceDefs = ForcedXenotypeChances
                 .Select(kvp => (Def: DefDatabase<XenotypeDef>.GetNamedSilentFail(kvp.Key), Value: kvp.Value))
                 .Where(c => c.Def != null)
