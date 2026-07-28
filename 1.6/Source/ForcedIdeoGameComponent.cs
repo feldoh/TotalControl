@@ -338,10 +338,12 @@ public class ForcedIdeoGameComponent : GameComponent
 
         // Mirror Page_ChooseIdeoPreset.DoPreset: ensure a structure meme is present before generating.
         List<MemeDef> memes = preset.memes.ToList();
-        if (!memes.Any(m => m.category == MemeCategory.Structure)
+        if (
+            !memes.Any(m => m.category == MemeCategory.Structure)
             && DefDatabase<MemeDef>
                 .AllDefsListForReading.Where(m => m.category == MemeCategory.Structure && IdeoUtility.IsMemeAllowedFor(m, fac))
-                .TryRandomElement(out MemeDef structure))
+                .TryRandomElement(out MemeDef structure)
+        )
         {
             memes.Add(structure);
         }
@@ -444,7 +446,9 @@ public class ForcedIdeoGameComponent : GameComponent
         }
 
         if (missing != null)
-            ModCore.Warn($"Forced ideology saved file(s) not found on this machine: {string.Join(", ", missing)}. Affected pawns keep their faction's ideology until the file(s) exist in the Ideos folder.");
+            ModCore.Warn(
+                $"Forced ideology saved file(s) not found on this machine: {string.Join(", ", missing)}. Affected pawns keep their faction's ideology until the file(s) exist in the Ideos folder."
+            );
     }
 
     /// <summary>

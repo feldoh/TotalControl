@@ -20,7 +20,11 @@ public class FactionEdit : IExposable
     public static readonly Dictionary<string, FactionEdit> ActiveFactionEdits = new();
 
     /// <summary>Returns the active <see cref="FactionEdit"/> for a runtime faction's def, or null.</summary>
-    public static FactionEdit GetActiveEditFor(FactionDef def) => def == null ? null : ActiveFactionEdits.TryGetValue(def.defName, out FactionEdit edit) ? edit : null;
+    public static FactionEdit GetActiveEditFor(FactionDef def) =>
+        def == null ? null
+        : ActiveFactionEdits.TryGetValue(def.defName, out FactionEdit edit) ? edit
+        : null;
+
     public bool Active = true;
     public ThingFilter ApparelStuffFilter;
     public TechLevel? TechLevel = null;

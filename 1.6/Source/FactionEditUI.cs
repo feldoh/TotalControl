@@ -166,11 +166,10 @@ public class FactionEditUI : Window
         )
         {
             inner.GapLine();
-            string primaryLabel = ForcedIdeoRefUI.DisabledByClassicMode
-                ? "FactionLoadout_General_IdeoClassicDisabled".Translate().ToString()
-                : string.IsNullOrEmpty(Current.ForcedPrimaryIdeoKey)
-                    ? "FactionLoadout_Faction_PrimaryIdeoNotOverridden".Translate().ToString()
-                    : ForcedIdeoRefUI.DisplayName(Current.ForcedPrimaryIdeoSourceKind, Current.ForcedPrimaryIdeoKey);
+            string primaryLabel =
+                ForcedIdeoRefUI.DisabledByClassicMode ? "FactionLoadout_General_IdeoClassicDisabled".Translate().ToString()
+                : string.IsNullOrEmpty(Current.ForcedPrimaryIdeoKey) ? "FactionLoadout_Faction_PrimaryIdeoNotOverridden".Translate().ToString()
+                : ForcedIdeoRefUI.DisplayName(Current.ForcedPrimaryIdeoSourceKind, Current.ForcedPrimaryIdeoKey);
             if (
                 inner.ButtonTextLabeled("FactionLoadout_Faction_PrimaryIdeo".Translate(), primaryLabel, tooltip: "FactionLoadout_Faction_PrimaryIdeoTooltip".Translate())
                 && !ForcedIdeoRefUI.DisabledByClassicMode
