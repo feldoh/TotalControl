@@ -173,42 +173,64 @@ public static class PawnGenPatchRecruitable
     }
 }
 
-[HarmonyPatch(typeof(PawnGenerator), "GenerateNewPawnInternal")]
+/// <summary>
+/// Forces per-pawnkind ideologies by setting <see cref="PawnGenerationRequest.FixedIdeo"/> in a
+/// PREFIX, so vanilla assigns the belief before it rolls ideology-styled hair, tattoos, and
+/// precept apparel — a post-generation SetIdeo would leave pawns visually contradicting their
+/// forced ideoligion. Registered in ModCore only when the Ideology DLC is active.
+/// </summary>
 public static class PawnGenPatchIdeo
 {
-    [HarmonyPostfix]
-    public static void Postfix(Pawn __result, PawnGenerationRequest request)
+    [HarmonyPrefix]
+    public static void Prefix(ref PawnGenerationRequest request)
     {
-        if (!ModsConfig.IdeologyActive || __result?.ideo == null || __result.kindDef == null)
+        // Static-flag fast exit: users who never force an ideology pay a single bool check.
+        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive)
+            return;
+        // Respect deliberate caller choices (traders pass parms.ideo; newborn requests null it).
+        if (request.ForceNoIdeo || request.FixedIdeo != null || request.KindDef == null)
             return;
 
         ForcedIdeoGameComponent comp = ForcedIdeoGameComponent.Current;
         if (comp == null)
             return;
 
-        // Faction-level forced primary applies to every pawn of the faction, including kinds
-        // without their own ideology override (they follow the primary via vanilla weighting).
-        // Idempotent; also covers factions that appeared after FinalizeInit.
-        comp.EnsurePrimaryIdeo(__result.Faction);
-
         string key = null;
         ForcedIdeoSource source = ForcedIdeoSource.SavedFile;
-        foreach (PawnKindEdit edit in PawnKindEdit.GetEditsFor(__result.kindDef, __result.Faction?.def))
+        foreach (PawnKindEdit edit in PawnKindEdit.GetEditsFor(request.KindDef, request.Faction?.def))
         {
-            if (edit.ForcedIdeoKey != null && (!edit.IsGlobal || key == null))
+            // Empty key = override toggled on but nothing selected = no opinion; must not
+            // shadow a global edit's real selection.
+            if (!string.IsNullOrEmpty(edit.ForcedIdeoKey) && (!edit.IsGlobal || key == null))
             {
                 key = edit.ForcedIdeoKey;
                 source = edit.ForcedIdeoSourceKind;
             }
         }
 
-        if (string.IsNullOrEmpty(key))
+        if (key == null)
             return;
 
-        // Realise the referenced ideology once per faction instance and reuse it on every
-        // subsequent pawn and across save/load (see ForcedIdeoGameComponent).
-        Ideo forced = comp.GetOrInjectIdeo(__result.Faction, source, key);
+        // Realised once per faction (see ForcedIdeoGameComponent binding rules) and reused for
+        // every subsequent pawn and across save/load.
+        Ideo forced = comp.GetOrInjectIdeo(request.Faction, source, key);
         if (forced != null)
-            __result.ideo.SetIdeo(forced);
+            request.FixedIdeo = forced;
+    }
+}
+
+/// <summary>
+/// Applies faction-level forced primary ideologies the moment a faction enters the game —
+/// covers world generation and mid-game factions (quests) without any per-pawn work.
+/// Registered in ModCore only when the Ideology DLC is active.
+/// </summary>
+public static class FactionAddIdeoPatch
+{
+    [HarmonyPostfix]
+    public static void Postfix(Faction faction)
+    {
+        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive)
+            return;
+        ForcedIdeoGameComponent.Current?.EnsurePrimaryIdeo(faction);
     }
 }

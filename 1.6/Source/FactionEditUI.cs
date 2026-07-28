@@ -166,29 +166,26 @@ public class FactionEditUI : Window
         )
         {
             inner.GapLine();
-            string primaryLabel = string.IsNullOrEmpty(Current.ForcedPrimaryIdeoKey)
-                ? "FactionLoadout_Faction_PrimaryIdeoNotOverridden".Translate().ToString()
-                : ForcedIdeoRefUI.DisplayName(Current.ForcedPrimaryIdeoSourceKind, Current.ForcedPrimaryIdeoKey);
-            if (inner.ButtonTextLabeled("FactionLoadout_Faction_PrimaryIdeo".Translate(), primaryLabel, tooltip: "FactionLoadout_Faction_PrimaryIdeoTooltip".Translate()))
+            string primaryLabel = ForcedIdeoRefUI.DisabledByClassicMode
+                ? "FactionLoadout_General_IdeoClassicDisabled".Translate().ToString()
+                : string.IsNullOrEmpty(Current.ForcedPrimaryIdeoKey)
+                    ? "FactionLoadout_Faction_PrimaryIdeoNotOverridden".Translate().ToString()
+                    : ForcedIdeoRefUI.DisplayName(Current.ForcedPrimaryIdeoSourceKind, Current.ForcedPrimaryIdeoKey);
+            if (
+                inner.ButtonTextLabeled("FactionLoadout_Faction_PrimaryIdeo".Translate(), primaryLabel, tooltip: "FactionLoadout_Faction_PrimaryIdeoTooltip".Translate())
+                && !ForcedIdeoRefUI.DisabledByClassicMode
+            )
             {
-                List<FloatMenuOption> primaryOptions =
-                [
-                    new FloatMenuOption(
-                        "FactionLoadout_Faction_PrimaryIdeoNotOverridden".Translate(),
-                        () => Current.ForcedPrimaryIdeoKey = null
-                    ),
-                ];
-                primaryOptions.AddRange(
-                    ForcedIdeoRefUI.BuildOptions(
-                        includeFactionPrimary: false,
-                        (source, key) =>
-                        {
-                            Current.ForcedPrimaryIdeoSourceKind = source;
-                            Current.ForcedPrimaryIdeoKey = key;
-                        }
-                    )
+                ForcedIdeoRefUI.OpenPicker(
+                    includeFactionPrimary: false,
+                    (source, key) =>
+                    {
+                        Current.ForcedPrimaryIdeoSourceKind = source;
+                        Current.ForcedPrimaryIdeoKey = key;
+                    },
+                    onClear: () => Current.ForcedPrimaryIdeoKey = null,
+                    clearLabel: "FactionLoadout_Faction_PrimaryIdeoNotOverridden".Translate().ToString()
                 );
-                Find.WindowStack.Add(new FloatMenu(primaryOptions));
             }
         }
 

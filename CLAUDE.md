@@ -125,6 +125,9 @@ Two runtime-created factions (`SpecialWildManFaction`, `SpecialCreepjoinerFactio
       field = null;  // ← not allowed
   ```
 
+### UI Pickers
+- **Never use vanilla `FloatMenu` for def/item selection lists** — with mods installed these lists grow unbounded and a FloatMenu fills the whole screen with no filtering. Use the in-house **`CustomFloatMenu`** (`UISupport/CustomFloatMenu.cs`): searchable, scrollable, virtualized, multi-column, supports icons and tooltips. Build entries with `MenuItemText`/`MenuItemIcon` and open via `CustomFloatMenu.Open(items, onSelected)` (see `Dialog_XenotypeEdit` and `ForcedIdeoRefUI.OpenPicker` for examples). Plain `FloatMenu` is acceptable only for short fixed lists (a handful of enum-like choices).
+
 ### Translations
 - **All user-facing strings must use translation keys**, never hardcoded English text. Add keys to `Common/Languages/English/Keyed/FactionLoadout_Keys.xml` and reference them via `"KeyName".Translate()`.
 - This includes UI labels, button text, tooltips, section headers, and default/placeholder text.

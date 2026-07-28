@@ -241,18 +241,29 @@ public class GeneralTab : EditTab
         Widgets.Label(headerRect, "<b>" + "FactionLoadout_General_ForcedIdeo".Translate() + "</b>");
         TooltipHandler.TipRegion(headerRect, "FactionLoadout_General_ForcedIdeoTooltip".Translate());
 
+        if (ForcedIdeoRefUI.DisabledByClassicMode)
+        {
+            Rect disabledRow = ui.GetRect(32);
+            GUI.color = Color.grey;
+            Widgets.Label(disabledRow, "FactionLoadout_General_IdeoClassicDisabled".Translate());
+            GUI.color = Color.white;
+            ui.Gap();
+            return;
+        }
+
         Rect row = ui.GetRect(32);
         bool active = Current.ForcedIdeoKey != null;
 
-        Rect toggleRect = new Rect(row.x, row.y, 120, 32);
         string toggleLabel = active ? "FactionLoadout_OverrideOn".Translate().ToString() : "FactionLoadout_OverrideOff".Translate().ToString();
+        float toggleW = Mathf.Max(120f, Text.CalcSize(toggleLabel).x + 24f);
+        Rect toggleRect = new Rect(row.x, row.y, toggleW, 32);
         if (Widgets.ButtonText(toggleRect, toggleLabel))
         {
             Current.ForcedIdeoKey = active ? null : "";
             active = !active;
         }
 
-        Rect contentRect = new(row.x + 124, row.y, row.width - 126, 32);
+        Rect contentRect = new(row.x + toggleW + 4, row.y, row.width - toggleW - 6, 32);
 
         if (!active)
         {
@@ -264,7 +275,7 @@ public class GeneralTab : EditTab
 
         if (Widgets.ButtonText(contentRect, ForcedIdeoRefUI.DisplayName(Current.ForcedIdeoSourceKind, Current.ForcedIdeoKey)))
         {
-            List<FloatMenuOption> options = ForcedIdeoRefUI.BuildOptions(
+            ForcedIdeoRefUI.OpenPicker(
                 includeFactionPrimary: true,
                 (source, key) =>
                 {
@@ -272,15 +283,6 @@ public class GeneralTab : EditTab
                     Current.ForcedIdeoKey = key;
                 }
             );
-
-            if (options.Count > 0)
-            {
-                Find.WindowStack.Add(new FloatMenu(options));
-            }
-            else
-            {
-                Messages.Message("FactionLoadout_General_IdeoNoTemplates".Translate(), MessageTypeDefOf.RejectInput, historical: false);
-            }
         }
 
         ui.Gap();

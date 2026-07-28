@@ -7,13 +7,14 @@ namespace FactionLoadout.UISupport;
 
 public class CustomFloatMenu : Window
 {
-    public static CustomFloatMenu Open(List<MenuItemBase> items, Action<MenuItemBase> onSelected, int columns = 2)
+    public static CustomFloatMenu Open(List<MenuItemBase> items, Action<MenuItemBase> onSelected, int columns = 2, bool stretchItems = false)
     {
         CustomFloatMenu created = new()
         {
             Items = items,
             OnSelected = onSelected,
             Columns = columns,
+            StretchItems = stretchItems,
             closeOnAccept = false,
             closeOnCancel = true,
             closeOnClickedOutside = true,
@@ -54,6 +55,9 @@ public class CustomFloatMenu : Window
     public Color Tint = Color.white;
     public bool AllowChangeTint;
 
+    /// <summary>Stretch item widths so the columns fill the window instead of leaving dead space.</summary>
+    public bool StretchItems;
+
     private readonly List<MenuItemBase> preRenderItems = [];
 
     private float lastHeight,
@@ -92,6 +96,14 @@ public class CustomFloatMenu : Window
         preRenderItems.Clear();
         preRenderItems.AddRange(FilteredItems(SearchString));
         int perColumnTarget = Mathf.CeilToInt((float)preRenderItems.Count / Columns);
+
+        if (StretchItems)
+        {
+            // 16 for the scrollbar, minus inter-column padding, split evenly.
+            float columnWidth = (inRect.width - 16f - (Columns - 1) * 12f) / Columns;
+            foreach (MenuItemBase item in preRenderItems)
+                item.SetWidth(columnWidth);
+        }
 
         float padding = 6;
         float x = 0;
@@ -184,6 +196,9 @@ public abstract class MenuItemBase : IComparable<MenuItemBase>
 
     /// <summary>Returns the item's layout size without drawing. Used for virtual scrolling.</summary>
     public abstract Vector2 GetSize();
+
+    /// <summary>Adjust the item's layout width (used by <see cref="CustomFloatMenu.StretchItems"/>). No-op by default.</summary>
+    public virtual void SetWidth(float width) { }
 }
 
 public class MenuItemText : MenuItemBase
@@ -214,6 +229,8 @@ public class MenuItemText : MenuItemBase
         consumedSearch = false;
         return drawLabel != null;
     }
+
+    public override void SetWidth(float width) => Size.x = width;
 
     public override int CompareTo(MenuItemBase other)
     {
