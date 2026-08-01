@@ -17,12 +17,7 @@ public static class ForcedIdeoRefUI
     public const float PickerItemWidth = 270f;
 
     /// <summary>
-    /// Opens the searchable, scrollable ideology picker (same <see cref="CustomFloatMenu"/> style
-    /// as the xenotype editor — a plain FloatMenu overflows the screen once mods add presets).
-    /// Sections: optional clear entry, optional faction-primary entry, then ideology presets
-    /// (base game + mods, with their icons, labelled as randomized generators), then user-saved
-    /// .rid files (exact, machine-local). Any selection immediately arms the pawn-generation
-    /// fast-exit flag.
+    /// Opens ideology picker with def-based ones, with their icons, then user-saved .rid files.
     /// </summary>
     public static void OpenPicker(bool includeFactionPrimary, Action<ForcedIdeoSource, string> onPick, Action onClear = null, string clearLabel = null)
     {
@@ -73,8 +68,6 @@ public static class ForcedIdeoRefUI
             return;
         }
 
-        // Single column, stretched to the window width: two columns clip at the window
-        // edge, and fixed-width rows leave awkward dead space beside the scrollbar.
         CustomFloatMenu.Open(
             items,
             item =>
@@ -97,8 +90,7 @@ public static class ForcedIdeoRefUI
         new(payload, label, icon, tooltip: tooltip) { Size = new Vector2(PickerItemWidth, 28f) };
 
     /// <summary>
-    /// Human-readable label for a stored reference. SavedFile references whose .rid is absent on
-    /// this machine get a red warning marker — a dangling reference must never look healthy.
+    /// Label for a stored reference. SavedFile references whose .rid is absent get a red warning.
     /// </summary>
     public static string DisplayName(ForcedIdeoSource source, string key)
     {
