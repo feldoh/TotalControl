@@ -157,6 +157,38 @@ public class FactionEditUI : Window
             );
         }
 
+        // Because this is faction level and these aren't real factions skip
+        if (
+            ModsConfig.IdeologyActive
+            && Current.Faction is { IsMissing: false }
+            && Current.Faction?.Def != Preset.SpecialWildManFaction
+            && Current.Faction?.Def != Preset.SpecialCreepjoinerFaction
+            && Current.Faction?.Def != Preset.SpecialFactionlessPawnsFaction
+        )
+        {
+            inner.GapLine();
+            string primaryLabel =
+                ForcedIdeoRefUI.DisabledByClassicMode ? "FactionLoadout_General_IdeoClassicDisabled".Translate().ToString()
+                : string.IsNullOrEmpty(Current.ForcedPrimaryIdeoKey) ? "FactionLoadout_Faction_PrimaryIdeoNotOverridden".Translate().ToString()
+                : ForcedIdeoRefUI.DisplayName(Current.ForcedPrimaryIdeoSourceKind, Current.ForcedPrimaryIdeoKey);
+            if (
+                inner.ButtonTextLabeled("FactionLoadout_Faction_PrimaryIdeo".Translate(), primaryLabel, tooltip: "FactionLoadout_Faction_PrimaryIdeoTooltip".Translate())
+                && !ForcedIdeoRefUI.DisabledByClassicMode
+            )
+            {
+                ForcedIdeoRefUI.OpenPicker(
+                    includeFactionPrimary: false,
+                    (source, key) =>
+                    {
+                        Current.ForcedPrimaryIdeoSourceKind = source;
+                        Current.ForcedPrimaryIdeoKey = key;
+                    },
+                    onClear: () => Current.ForcedPrimaryIdeoKey = null,
+                    clearLabel: "FactionLoadout_Faction_PrimaryIdeoNotOverridden".Translate().ToString()
+                );
+            }
+        }
+
         if (
             ModsConfig.BiotechActive
             && Current.Faction is { IsMissing: false }

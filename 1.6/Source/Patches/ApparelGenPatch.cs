@@ -328,7 +328,8 @@ public static class ApparelGenPatch
             );
         }
 
-        if (MySettings.IgnorePriceLimits) WearFallbackApparel(pawn, pair);
+        if (MySettings.IgnorePriceLimits)
+            WearFallbackApparel(pawn, pair);
     }
 
     /// <summary>
@@ -338,9 +339,7 @@ public static class ApparelGenPatch
     private static bool BodyHasTorso(Pawn pawn) => Enumerable.Any(pawn.RaceProps?.body?.AllParts ?? [], t => t.IsInGroup(BodyPartGroupDefOf.Torso));
 
     private static bool CoversTorso(Pawn pawn) =>
-        pawn.apparel?.WornApparel
-            ?.Select(t => t.def.apparel?.bodyPartGroups)
-            .Any(groups => groups != null && groups.Contains(BodyPartGroupDefOf.Torso)) ?? false;
+        pawn.apparel?.WornApparel?.Select(t => t.def.apparel?.bodyPartGroups).Any(groups => groups != null && groups.Contains(BodyPartGroupDefOf.Torso)) ?? false;
 
     private static ThingStuffPair? CheapestEligibleTorsoApparel(Pawn pawn)
     {

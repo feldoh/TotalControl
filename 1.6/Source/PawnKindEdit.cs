@@ -155,6 +155,15 @@ public class PawnKindEdit : IExposable
     public Dictionary<string, float> ForcedXenotypeChances = new();
     public Dictionary<XenotypeDef, float> ForcedXenotypeChanceDefs = new();
     public Gender? ForcedGender = null;
+
+    /// <summary>
+    /// Portable forced-ideology reference: a <c>.rid</c> filename (when
+    /// <see cref="ForcedIdeoSourceKind"/> is <see cref="ForcedIdeoSource.SavedFile"/>) or an
+    /// <see cref="IdeoPresetDef"/> defName (when <see cref="ForcedIdeoSource.Preset"/>).
+    /// At pawn generation this is realised once per save and reused via <see cref="ForcedIdeoGameComponent"/>.
+    /// </summary>
+    public string ForcedIdeoKey = null;
+    public ForcedIdeoSource ForcedIdeoSourceKind = ForcedIdeoSource.SavedFile;
     public SimpleCurve RaidCommonalityFromPointsCurve = null;
     public SimpleCurve RaidLootValueFromPointsCurve = null;
     public SimpleCurve MaxPawnCostPerTotalPointsCurve = null;
@@ -253,6 +262,8 @@ public class PawnKindEdit : IExposable
         Scribe_Values.Look(ref Label, "label");
         Scribe_Defs.Look(ref Race, "race");
         Scribe_Values.Look(ref ForcedGender, "forcedGender");
+        Scribe_Values.Look(ref ForcedIdeoKey, "forcedIdeoKey");
+        Scribe_Values.Look(ref ForcedIdeoSourceKind, "forcedIdeoSourceKind", ForcedIdeoSource.SavedFile);
         ScribeMigrateDefRefList(ref BodyTypes, "bodyTypes");
         ScribeMigrateDefRefList(ref CustomBeards, "customBeards");
         ScribeMigrateDefRefList(ref CustomHair, "customHair");
@@ -271,6 +282,9 @@ public class PawnKindEdit : IExposable
 
         if (Scribe.mode == LoadSaveMode.PostLoadInit)
         {
+            // A missing <forcedXenotypeChances> node leaves the dict null (hand-edited or
+            // third-party-generated preset XML) — restore the field's default instead of NREing.
+            ForcedXenotypeChances ??= new Dictionary<string, float>();
             ForcedXenotypeChanceDefs = ForcedXenotypeChances
                 .Select(kvp => (Def: DefDatabase<XenotypeDef>.GetNamedSilentFail(kvp.Key), Value: kvp.Value))
                 .Where(c => c.Def != null)
@@ -488,8 +502,7 @@ public class PawnKindEdit : IExposable
         }
     }
 
-    private static bool IsDefListOldFormat(XmlNode collectionNode) =>
-        collectionNode != null && collectionNode.HasChildNodes && collectionNode.SelectSingleNode("li/defName") == null;
+    private static bool IsDefListOldFormat(XmlNode collectionNode) => collectionNode is { HasChildNodes: true } && collectionNode.SelectSingleNode("li/defName") == null;
 
     // ==================== Queries ====================
 

@@ -172,3 +172,56 @@ public static class PawnGenPatchRecruitable
         return false;
     }
 }
+
+/// <summary>
+/// Forces per-pawnkind ideologies by setting <see cref="PawnGenerationRequest.FixedIdeo"/> in a
+/// PREFIX, so vanilla assigns the belief before it rolls ideology-styled hair, tattoos, and
+/// precept apparel — a post-generation SetIdeo would leave pawns visually contradicting their
+/// forced ideoligion. Registered in ModCore only when the Ideology DLC is active.
+/// </summary>
+public static class PawnGenPatchIdeo
+{
+    [HarmonyPrefix]
+    public static void Prefix(ref PawnGenerationRequest request)
+    {
+        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive || request.ForceNoIdeo || request.KindDef == null || (request.FixedIdeo != null && !MySettings.OverrideForcedIdeos))
+            return;
+
+        ForcedIdeoGameComponent forcedIdeoGameComponent = ForcedIdeoGameComponent.Current;
+        if (forcedIdeoGameComponent == null)
+            return;
+
+        string key = null;
+        ForcedIdeoSource source = ForcedIdeoSource.SavedFile;
+        foreach (PawnKindEdit edit in PawnKindEdit.GetEditsFor(request.KindDef, request.Faction?.def))
+        {
+            if (!string.IsNullOrEmpty(edit.ForcedIdeoKey) && (!edit.IsGlobal || key == null))
+            {
+                key = edit.ForcedIdeoKey;
+                source = edit.ForcedIdeoSourceKind;
+            }
+        }
+
+        if (key == null)
+            return;
+
+        Ideo forced = forcedIdeoGameComponent.GetOrInjectIdeo(request.Faction, source, key);
+        if (forced != null)
+            request.FixedIdeo = forced;
+    }
+}
+
+/// <summary>
+/// Applies faction-level forced primary ideologies the moment a faction enters the game —
+/// covers world generation and mid-game factions (quests) without any per-pawn work.
+/// </summary>
+public static class FactionAddIdeoPatch
+{
+    [HarmonyPostfix]
+    public static void Postfix(Faction faction)
+    {
+        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive)
+            return;
+        ForcedIdeoGameComponent.Current?.EnsurePrimaryIdeo(faction);
+    }
+}

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.IO;
 using FactionLoadout.UISupport;
 using FactionLoadout.Util;
 using RimWorld;
@@ -37,6 +39,12 @@ public class GeneralTab : EditTab
         );
 
         DrawOverride(ui, Gender.None, ref Current.ForcedGender, "FactionLoadout_General_ForcedGender".Translate().ToString(), DrawGender, pasteGet: e => e.ForcedGender);
+
+        if (ModsConfig.IdeologyActive && !isAnimal)
+        {
+            DrawIdeoOverride(ui);
+        }
+
         DrawOverride(ui, DefaultKind.label, ref Current.Label, "FactionLoadout_General_CustomName".Translate().ToString(), DrawCustomName, pasteGet: e => e.Label);
         DrawOverride(
             ui,
@@ -225,5 +233,58 @@ public class GeneralTab : EditTab
     private void DrawUnwaveringlyLoyalChance(Rect rect, bool active, float def)
     {
         DrawChance(ref Current.UnwaveringlyLoyalChance, def, rect, active);
+    }
+
+    private void DrawIdeoOverride(Listing_Standard ui)
+    {
+        Rect headerRect = ui.GetRect(Text.LineHeight);
+        Widgets.Label(headerRect, "<b>" + "FactionLoadout_General_ForcedIdeo".Translate() + "</b>");
+        TooltipHandler.TipRegion(headerRect, "FactionLoadout_General_ForcedIdeoTooltip".Translate());
+
+        if (ForcedIdeoRefUI.DisabledByClassicMode)
+        {
+            Rect disabledRow = ui.GetRect(32);
+            GUI.color = Color.grey;
+            Widgets.Label(disabledRow, "FactionLoadout_General_IdeoClassicDisabled".Translate());
+            GUI.color = Color.white;
+            ui.Gap();
+            return;
+        }
+
+        Rect row = ui.GetRect(32);
+        bool active = Current.ForcedIdeoKey != null;
+
+        string toggleLabel = "FactionLoadout_OverrideYesNo".Translate(active ? "#81f542" : "#ff4d4d", active ? "Yes".Translate() : "No".Translate());
+        const float toggleW = 120f;
+        Rect toggleRect = new Rect(row.x, row.y, toggleW, 32);
+        if (Widgets.ButtonText(toggleRect, toggleLabel))
+        {
+            Current.ForcedIdeoKey = active ? null : "";
+            active = !active;
+        }
+
+        Rect contentRect = new(row.x + toggleW + 4, row.y, row.width - toggleW - 6, 32);
+
+        if (!active)
+        {
+            string txt = Current.IsGlobal ? "---" : "FactionLoadout_General_FactionDefault".Translate().ToString();
+            Widgets.Label(contentRect.GetCentered(txt), txt);
+            ui.Gap();
+            return;
+        }
+
+        if (Widgets.ButtonText(contentRect, ForcedIdeoRefUI.DisplayName(Current.ForcedIdeoSourceKind, Current.ForcedIdeoKey)))
+        {
+            ForcedIdeoRefUI.OpenPicker(
+                includeFactionPrimary: true,
+                (source, key) =>
+                {
+                    Current.ForcedIdeoSourceKind = source;
+                    Current.ForcedIdeoKey = key;
+                }
+            );
+        }
+
+        ui.Gap();
     }
 }

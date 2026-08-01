@@ -109,6 +109,18 @@ public class ModCore : Mod
             AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
             postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchCore), nameof(PawnGenPatchCore.Postfix)))
         );
+        // Forced-ideology hooks are meaningless without the DLC
+        if (ModsConfig.IdeologyActive)
+        {
+            harmony.Patch(
+                AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchIdeo), nameof(PawnGenPatchIdeo.Prefix)))
+            );
+            harmony.Patch(
+                AccessTools.Method(typeof(FactionManager), nameof(FactionManager.Add)),
+                postfix: new HarmonyMethod(AccessTools.Method(typeof(FactionAddIdeoPatch), nameof(FactionAddIdeoPatch.Postfix)))
+            );
+        }
         harmony.Patch(
             AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GenerateRandomAge)),
             prefix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenAgePatchCore), nameof(PawnGenAgePatchCore.Prefix)))
@@ -143,6 +155,7 @@ public class ModCore : Mod
 
         Preset.AddMissingSpecialFactionsIfNeeded();
         RewarmVEFactionCache();
+        ForcedIdeoGameComponent.RecomputeAnyEditsActive();
         Log($"Game comp finalized init, applied {count} presets that affected {edits} factions.");
     }
 
@@ -178,6 +191,7 @@ public class ModCore : Mod
 
         Preset.AddMissingSpecialFactionsIfNeeded();
         RewarmVEFactionCache();
+        ForcedIdeoGameComponent.RecomputeAnyEditsActive();
         Log($"Reapply after hot reload complete: applied {count} presets affecting {edits} factions.");
     }
 

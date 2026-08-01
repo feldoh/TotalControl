@@ -9,6 +9,7 @@ public class MySettings : ModSettings
     public static bool VerboseLogging = false;
     public static bool PatchKindInRequests = false;
     public static bool IgnorePriceLimits = false;
+    public static bool OverrideForcedIdeos = false;
 
     public override void ExposeData()
     {
@@ -19,5 +20,6 @@ public class MySettings : ModSettings
         Scribe_Values.Look(ref VerboseLogging, "verboseLogging", false);
         Scribe_Values.Look(ref PatchKindInRequests, "patchKindInRequests", false);
         Scribe_Values.Look(ref IgnorePriceLimits, "ignorePriceLimits", false);
+        Scribe_Values.Look(ref OverrideForcedIdeos, "overrideForcedIdeos", false);
     }
 }
