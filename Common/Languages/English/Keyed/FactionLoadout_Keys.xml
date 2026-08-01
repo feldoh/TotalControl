@@ -431,4 +431,32 @@
     <FactionLoadout_Preset_AddFactionEdit>Add new faction edit...</FactionLoadout_Preset_AddFactionEdit>
     <FactionLoadout_Preset_MissingWarning>WARNING: This preset has missing factions, probably because they are added by a mod that is not loaded:</FactionLoadout_Preset_MissingWarning>
     <FactionLoadout_Preset_MissingHeader>Missing factions</FactionLoadout_Preset_MissingHeader>
+
+    <!-- Total Control fullscreen UI (overhaul) -->
+    <FactionLoadout_TC_Title>Total Control</FactionLoadout_TC_Title>
+    <FactionLoadout_TC_PresetLabel>Preset: {0}</FactionLoadout_TC_PresetLabel>
+    <FactionLoadout_TC_NoPreset>(no preset selected)</FactionLoadout_TC_NoPreset>
+    <FactionLoadout_TC_FactionHeader>Faction</FactionLoadout_TC_FactionHeader>
+    <FactionLoadout_TC_PawnHeader>Pawn: {0}</FactionLoadout_TC_PawnHeader>
+    <FactionLoadout_Preview_Placeholder>Generating preview...</FactionLoadout_Preview_Placeholder>
+    <FactionLoadout_Preview_Failed>Preview failed to generate. Click Regenerate to retry.</FactionLoadout_Preview_Failed>
+    <FactionLoadout_Preview_Regenerate>Regenerate</FactionLoadout_Preview_Regenerate>
+    <FactionLoadout_Preview_ShowHeadgear>Headgear</FactionLoadout_Preview_ShowHeadgear>
+    <FactionLoadout_Preview_ShowClothes>Clothes</FactionLoadout_Preview_ShowClothes>
+    <FactionLoadout_Tab_FactionView>Faction View</FactionLoadout_Tab_FactionView>
+    <FactionLoadout_Tab_FactionEdit>Faction Edit</FactionLoadout_Tab_FactionEdit>
+    <FactionLoadout_Tab_PawnEdit>Pawn Edit</FactionLoadout_Tab_PawnEdit>
+    <FactionLoadout_Breadcrumb_Home>Home</FactionLoadout_Breadcrumb_Home>
+    <FactionLoadout_TC_PresetNone>None (no preset)</FactionLoadout_TC_PresetNone>
+    <FactionLoadout_FactionView_RowSummary>Edited: {0}/{1}, Global: {2}</FactionLoadout_FactionView_RowSummary>
+    <FactionLoadout_FactionEdit_ModeSettings>Settings</FactionLoadout_FactionEdit_ModeSettings>
+    <FactionLoadout_FactionEdit_ModeRoster>Faction Render</FactionLoadout_FactionEdit_ModeRoster>
+    <FactionLoadout_Roster_RegenerateAll>Regenerate all</FactionLoadout_Roster_RegenerateAll>
+    <FactionLoadout_Roster_NotInGame>The faction render is only available while a game is loaded.</FactionLoadout_Roster_NotInGame>
+    <FactionLoadout_Roster_Empty>This faction has no pawnkinds to render.</FactionLoadout_Roster_Empty>
+    <FactionLoadout_Roster_Loading>Generating...</FactionLoadout_Roster_Loading>
+    <FactionLoadout_Roster_CellTooltip>Click to edit this pawnkind.</FactionLoadout_Roster_CellTooltip>
+    <FactionLoadout_Roster_Truncated>Showing the first {0} of {1} pawnkinds.</FactionLoadout_Roster_Truncated>
+    <FactionLoadout_Open>Open Total Control</FactionLoadout_Open>
+    <FactionLoadout_Settings_LauncherBlurb>Total Control opens in a fullscreen editor where you can manage presets, edit factions, and customise pawns with a live preview.</FactionLoadout_Settings_LauncherBlurb>
 </LanguageData>

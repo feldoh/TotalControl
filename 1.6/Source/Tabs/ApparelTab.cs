@@ -217,7 +217,7 @@ public class ApparelTab : EditTab
         bool blocklist = Current.ApparelMaterialsBlocklist;
         if ((rule == null || rule.Count == 0) && !Current.IsGlobal)
         {
-            PawnKindEdit global = Find.WindowStack.WindowOfType<FactionEditUI>()?.Current?.GetGlobalEditor();
+            PawnKindEdit global = TCEditContext.CurrentFaction?.GetGlobalEditor();
             if (global != null)
             {
                 rule = global.ApparelMaterials;
