@@ -184,23 +184,15 @@ public static class PawnGenPatchIdeo
     [HarmonyPrefix]
     public static void Prefix(ref PawnGenerationRequest request)
     {
-        // Static-flag fast exit: users who never force an ideology pay a single bool check.
-        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive)
-            return;
-        // Respect deliberate caller choices (traders pass parms.ideo; newborn requests null it).
-        if (request.ForceNoIdeo || request.FixedIdeo != null || request.KindDef == null)
-            return;
+        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive || request.ForceNoIdeo || request.KindDef == null || (request.FixedIdeo != null && !MySettings.OverrideForcedIdeos)) return;
 
-        ForcedIdeoGameComponent comp = ForcedIdeoGameComponent.Current;
-        if (comp == null)
-            return;
+        ForcedIdeoGameComponent forcedIdeoGameComponent = ForcedIdeoGameComponent.Current;
+        if (forcedIdeoGameComponent == null) return;
 
         string key = null;
         ForcedIdeoSource source = ForcedIdeoSource.SavedFile;
         foreach (PawnKindEdit edit in PawnKindEdit.GetEditsFor(request.KindDef, request.Faction?.def))
         {
-            // Empty key = override toggled on but nothing selected = no opinion; must not
-            // shadow a global edit's real selection.
             if (!string.IsNullOrEmpty(edit.ForcedIdeoKey) && (!edit.IsGlobal || key == null))
             {
                 key = edit.ForcedIdeoKey;
@@ -211,9 +203,7 @@ public static class PawnGenPatchIdeo
         if (key == null)
             return;
 
-        // Realised once per faction (see ForcedIdeoGameComponent binding rules) and reused for
-        // every subsequent pawn and across save/load.
-        Ideo forced = comp.GetOrInjectIdeo(request.Faction, source, key);
+        Ideo forced = forcedIdeoGameComponent.GetOrInjectIdeo(request.Faction, source, key);
         if (forced != null)
             request.FixedIdeo = forced;
     }
@@ -222,15 +212,13 @@ public static class PawnGenPatchIdeo
 /// <summary>
 /// Applies faction-level forced primary ideologies the moment a faction enters the game —
 /// covers world generation and mid-game factions (quests) without any per-pawn work.
-/// Registered in ModCore only when the Ideology DLC is active.
 /// </summary>
 public static class FactionAddIdeoPatch
 {
     [HarmonyPostfix]
     public static void Postfix(Faction faction)
     {
-        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive)
-            return;
+        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive) return;
         ForcedIdeoGameComponent.Current?.EnsurePrimaryIdeo(faction);
     }
 }
