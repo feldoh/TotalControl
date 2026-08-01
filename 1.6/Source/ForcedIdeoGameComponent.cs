@@ -43,8 +43,8 @@ public class ForcedIdeoGameComponent : GameComponent
     public const int NoFactionBucket = -1;
 
     /// <summary>
-    /// Session-only set of references that resolve to something on disk / in the DefDatabase but
-    /// then fail to realise, so we don't retry (and re-log) on every generated pawn.
+    /// Session-only set of references that fail to realise — a missing .rid file, or a def/file
+    /// present but unloadable — so we don't retry (and re-log) on every generated pawn.
     /// </summary>
     [Unsaved(false)]
     public HashSet<string> failedRefs = [];
@@ -52,19 +52,6 @@ public class ForcedIdeoGameComponent : GameComponent
     [Unsaved(false)]
     public Dictionary<(int loadId, int defIndex, ForcedIdeoSource source, string key), Ideo> resolvedCache = new();
 
-    /// <summary>
-    /// Negative cache for SavedFile refs whose .rid is absent: refKey → realtime after which to
-    /// re-probe. Keeps the "file saved mid-session gets picked up" self-healing without paying a
-    /// disk probe per generated pawn.
-    /// </summary>
-    [Unsaved(false)]
-    public Dictionary<string, float> missingFileRecheckAt = new();
-
-    public const float MissingFileRecheckSeconds = 10f;
-
-    /// <summary>
-    /// Session-wide fast exit for the pawn-generation prefix: true if any active edit forces an ideo.
-    /// </summary>
     public static bool AnyIdeologyEditsActive;
 
     public ForcedIdeoGameComponent(Game game) { }
@@ -97,8 +84,7 @@ public class ForcedIdeoGameComponent : GameComponent
     /// <summary>
     /// Runs on new game and on load: refreshes the fast-exit flag, prunes orphaned bindings,
     /// applies faction-level forced primaries, pre-realises kind-level references (so the
-    /// generation cost lands on the loading screen, not mid-raid), and emits one consolidated
-    /// warning for saved-file references missing on this machine.
+    /// generation cost lands on the loading screen, not mid-raid)
     /// </summary>
     public override void FinalizeInit()
     {
@@ -169,49 +155,68 @@ public class ForcedIdeoGameComponent : GameComponent
         if (string.IsNullOrEmpty(key))
             return null;
 
-        // 1. Fast path: allocation-free tuple cache, hit on every pawn after the first.
+        // Three stages, cheapest first: tuple cache -> persistent id binding -> realise from disk/def.
         (int, int, ForcedIdeoSource, string) cacheKey = CacheKeyFor(faction, source, key);
-        if (resolvedCache.TryGetValue(cacheKey, out Ideo cached))
-        {
-            if (cached != null && Find.IdeoManager.IdeosListForReading.Contains(cached))
-            {
-                EnsureRegisteredWith(faction, cached);
-                return cached;
-            }
-            resolvedCache.Remove(cacheKey); // ideo was removed from the game; fall through and re-resolve
-        }
+        Ideo cached = ResolveFromCache(cacheKey, faction);
+        if (cached != null)
+            return cached;
 
-        // 2. Persistent binding (string key built only on cache misses — once per ref per session).
         string refKey = RefKeyFor(faction, source, key);
-        if (refToIdeoId.TryGetValue(refKey, out int existingId))
+        Ideo bound = ResolveFromBinding(refKey, cacheKey, faction);
+        if (bound != null)
+            return bound;
+
+        return failedRefs.Contains(refKey) ? null : RealiseNewIdeo(faction, source, key, refKey, cacheKey);
+    }
+
+    /// <summary>
+    /// Returns the cached ideo, or null if there's no usable entry; a stale entry whose ideo has left the game is evicted so the caller re-resolves.
+    /// </summary>
+    public Ideo ResolveFromCache((int, int, ForcedIdeoSource, string) cacheKey, Faction faction)
+    {
+        if (!resolvedCache.TryGetValue(cacheKey, out Ideo cached))
+            return null;
+        if (cached != null && Find.IdeoManager.IdeosListForReading.Contains(cached))
         {
-            Ideo existing = FindById(existingId);
-            if (existing != null)
-            {
-                resolvedCache[cacheKey] = existing;
-                EnsureRegisteredWith(faction, existing);
-                return existing;
-            }
-            // The ideo was garbage-collected (no holders left); drop the stale id and re-realise.
-            refToIdeoId.Remove(refKey);
+            EnsureRegisteredWith(faction, cached);
+            return cached;
         }
+        resolvedCache.Remove(cacheKey); // ideo was removed from the game; re-resolve
+        return null;
+    }
 
-        if (failedRefs.Contains(refKey))
+    /// <summary>
+    /// Returns the bound ideo and warms the cache, or null if unbound using the id binding that survives save/load.
+    /// </summary>
+    public Ideo ResolveFromBinding(string refKey, (int, int, ForcedIdeoSource, string) cacheKey, Faction faction)
+    {
+        if (!refToIdeoId.TryGetValue(refKey, out int existingId))
             return null;
+        Ideo existing = FindById(existingId);
+        if (existing != null)
+        {
+            resolvedCache[cacheKey] = existing;
+            EnsureRegisteredWith(faction, existing);
+            return existing;
+        }
+        refToIdeoId.Remove(refKey); // garbage-collected (no holders left); re-realise
+        return null;
+    }
 
-        if (source == ForcedIdeoSource.SavedFile && missingFileRecheckAt.TryGetValue(refKey, out float recheckAt) && Time.realtimeSinceStartup < recheckAt)
-            return null;
-
-        // 3. Never drive the disk-based Scribe loader while another scribe operation is active —
-        //    doing so would corrupt the in-progress save/load. (Only matters for SavedFile, but
-        //    generation also runs safest outside a scribe pass.)
+    /// <summary>
+    /// Realise a brand-new ideo from disk/def, register it, and bind it for this save.
+    /// Deferred while a Scribe pass is active because using the disk-based loader then
+    /// would corrupt the in-progress save/load.
+    /// </summary>
+    public Ideo RealiseNewIdeo(Faction faction, ForcedIdeoSource source, string key, string refKey, (int, int, ForcedIdeoSource, string) cacheKey)
+    {
         if (Scribe.mode != LoadSaveMode.Inactive)
         {
             ModCore.Debug($"Deferring forced ideology realisation for '{refKey}': Scribe is {Scribe.mode}.");
             return null;
         }
 
-        // Isolate the realisation's RNG so we don't perturb the generating pawn's own sequence.
+        // Isolate the realisation's RNG so we don't mess with the generating pawn's own sequence.
         Rand.PushState();
         try
         {
@@ -251,13 +256,8 @@ public class ForcedIdeoGameComponent : GameComponent
         faction.ideos.IdeosMinorListForReading.Add(ideo);
     }
 
-    public static (int, int, ForcedIdeoSource, string) CacheKeyFor(Faction faction, ForcedIdeoSource source, string key)
-    {
-        // SavedFile is deterministic → share one realisation across instances of a faction def.
-        if (source == ForcedIdeoSource.SavedFile)
-            return (NoFactionBucket, faction?.def?.index ?? -1, source, key);
-        return (faction?.loadID ?? NoFactionBucket, -1, source, key);
-    }
+    public static (int, int, ForcedIdeoSource, string) CacheKeyFor(Faction faction, ForcedIdeoSource source, string key) =>
+        source == ForcedIdeoSource.SavedFile ? (NoFactionBucket, faction?.def?.index ?? -1, source, key) : (faction?.loadID ?? NoFactionBucket, -1, source, key);
 
     public static string RefKeyFor(Faction faction, ForcedIdeoSource source, string key)
     {
@@ -266,19 +266,17 @@ public class ForcedIdeoGameComponent : GameComponent
         return (faction?.loadID ?? NoFactionBucket) + ":" + source + ":" + key;
     }
 
-    /// <summary>Loads a fully-specified ideology from a <c>.rid</c> file. Deterministic.</summary>
+    /// <summary>Loads an ideology from a <c>.rid</c> file.</summary>
     public Ideo LoadFromFile(string fileName, string refKey)
     {
         string path = GenFilePaths.AbsPathForIdeo(fileName);
         if (!File.Exists(path))
         {
-            // Stay quiet (a file created later is picked up on the next probe), but don't
-            // re-probe the disk for every generated pawn in the meantime.
-            missingFileRecheckAt[refKey] = Time.realtimeSinceStartup + MissingFileRecheckSeconds;
+            // Missing on this machine, mark the ref failed so we don't retry for every generated pawn.
+            failedRefs.Add(refKey);
             return null;
         }
 
-        missingFileRecheckAt.Remove(refKey);
         if (!GameDataSaveLoader.TryLoadIdeo(path, out Ideo ideo) || ideo == null)
         {
             failedRefs.Add(refKey);
@@ -307,8 +305,7 @@ public class ForcedIdeoGameComponent : GameComponent
 
         FactionDef fac = forFaction ?? Faction.OfPlayerSilentFail?.def ?? DefDatabase<FactionDef>.AllDefsListForReading.FirstOrDefault();
 
-        // The user opted in, so meme restrictions don't block generation — but other mods can
-        // read a faction's requiredMemes/allowed memes as a contract, so leave a breadcrumb.
+        // We don't let faction meme restrictions block generation, log any conflicts and move on
         foreach (MemeDef meme in preset.memes)
         {
             if (!IdeoUtility.IsMemeAllowedFor(meme, fac))
@@ -330,28 +327,24 @@ public class ForcedIdeoGameComponent : GameComponent
         return IdeoGenerator.GenerateIdeo(new IdeoGenerationParms(fac, forcedMemes: memes, classicExtra: preset.classicPlus, forceNoWeaponPreference: true));
     }
 
-    public static Ideo FindById(int id)
-    {
-        List<Ideo> ideos = Find.IdeoManager.IdeosListForReading;
-        for (int i = 0; i < ideos.Count; i++)
-        {
-            if (ideos[i].id == id)
-                return ideos[i];
-        }
-        return null;
-    }
+    public static Ideo FindById(int id) => Enumerable.FirstOrDefault(Find.IdeoManager.IdeosListForReading, t => t.id == id);
 
     // ==================== Init-time passes ====================
 
     /// <summary>All refKeys the active preset can currently produce, across live factions.</summary>
     public HashSet<string> BuildValidRefKeys()
     {
-        HashSet<string> valid = new();
+        HashSet<string> valid = [];
         List<Faction> factions = Find.FactionManager.AllFactionsListForReading;
         foreach (KeyValuePair<string, FactionEdit> pair in FactionEdit.ActiveFactionEdits)
         {
             List<Faction> instances = factions.Where(f => f.def.defName == pair.Key).ToList();
             bool synthetic = instances.Count == 0; // special editor-only factions (wild men etc.)
+
+            AddRef(pair.Value.ForcedPrimaryIdeoSourceKind, pair.Value.ForcedPrimaryIdeoKey);
+            foreach (PawnKindEdit kindEdit in pair.Value.KindEdits)
+                AddRef(kindEdit.ForcedIdeoSourceKind, kindEdit.ForcedIdeoKey);
+            continue;
 
             void AddRef(ForcedIdeoSource source, string key)
             {
@@ -365,19 +358,10 @@ public class ForcedIdeoGameComponent : GameComponent
                 foreach (Faction f in instances)
                     valid.Add(RefKeyFor(f, source, key));
             }
-
-            AddRef(pair.Value.ForcedPrimaryIdeoSourceKind, pair.Value.ForcedPrimaryIdeoKey);
-            foreach (PawnKindEdit kindEdit in pair.Value.KindEdits)
-                AddRef(kindEdit.ForcedIdeoSourceKind, kindEdit.ForcedIdeoKey);
         }
         return valid;
     }
 
-    /// <summary>
-    /// Drops bindings whose reference the active preset no longer produces, and unregisters their
-    /// ideos from faction minor lists so vanilla GC can reclaim them once memberless. Primaries
-    /// are left in place (see class doc).
-    /// </summary>
     public void CleanupOrphanedBindings()
     {
         if (refToIdeoId.Count == 0)
@@ -405,35 +389,34 @@ public class ForcedIdeoGameComponent : GameComponent
     /// <summary>One consolidated warning for SavedFile references whose .rid is absent here.</summary>
     public void WarnMissingSavedFiles()
     {
-        List<string> missing = null;
+        List<string> missing = [];
         foreach (FactionEdit edit in FactionEdit.ActiveFactionEdits.Values)
         {
+            Check(edit.ForcedPrimaryIdeoSourceKind, edit.ForcedPrimaryIdeoKey);
+            foreach (PawnKindEdit kindEdit in edit.KindEdits)
+                Check(kindEdit.ForcedIdeoSourceKind, kindEdit.ForcedIdeoKey);
+            continue;
+
             void Check(ForcedIdeoSource source, string key)
             {
                 if (source != ForcedIdeoSource.SavedFile || string.IsNullOrEmpty(key))
                     return;
                 if (File.Exists(GenFilePaths.AbsPathForIdeo(key)))
                     return;
-                missing ??= new List<string>();
                 if (!missing.Contains(key))
                     missing.Add(key);
             }
-
-            Check(edit.ForcedPrimaryIdeoSourceKind, edit.ForcedPrimaryIdeoKey);
-            foreach (PawnKindEdit kindEdit in edit.KindEdits)
-                Check(kindEdit.ForcedIdeoSourceKind, kindEdit.ForcedIdeoKey);
         }
 
-        if (missing != null)
+        if (missing.NullOrEmpty())
             ModCore.Warn(
                 $"Forced ideology saved file(s) not found on this machine: {string.Join(", ", missing)}. Affected pawns keep their faction's ideology until the file(s) exist in the Ideos folder."
             );
     }
 
     /// <summary>
-    /// Realises every kind-level reference for existing factions up front, so ideology generation
-    /// (10-100ms for presets) happens on the loading screen instead of mid-raid on the first
-    /// forced pawn. Faction primaries are already realised by EnsurePrimaryIdeo.
+    /// Realises every kind-level reference for existing factions up front, so ideology generation happens on the loading screen instead of mid-raid.
+    /// Faction primaries are already realised by EnsurePrimaryIdeo.
     /// </summary>
     public void PreRealizeKindRefs()
     {
