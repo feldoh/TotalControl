@@ -7,7 +7,7 @@ using Verse;
 
 namespace FactionLoadout;
 
-/// <summary>Where a forced ideology reference resolves from. Append-only — never reorder.</summary>
+/// <summary>Where a forced ideology reference resolves from.</summary>
 public enum ForcedIdeoSource
 {
     /// <summary>A user-saved ideology file (<c>.rid</c>) in RimWorld's Ideos folder; key = filename (no extension).</summary>
@@ -24,31 +24,19 @@ public enum ForcedIdeoSource
 /// Per-save binding between a portable forced-ideology reference (source + key, stored in a
 /// <see cref="Preset"/>) and the concrete <see cref="Ideo"/> instance realised into THIS game.
 ///
-/// Presets stay portable — they only carry the source and key. The link to a game-specific
+/// Presets stay portable, they carry the source and key. The link to a game-specific
 /// <see cref="Ideo"/> lives here because it must survive save/load and must not produce duplicate
-/// ideos on reload. <see cref="Ideo.fileName"/> is NOT serialized by vanilla, so it can't be the
-/// key; <see cref="Ideo.id"/> is serialized, so we bind by id.
+/// ideos on reload. <see cref="Ideo.fileName"/> is NOT serialised by vanilla, so it can't be the
+/// key; <see cref="Ideo.id"/> is serialised, so we bind by id.
 ///
-/// Binding granularity:
-/// - <see cref="ForcedIdeoSource.Preset"/> refs bind per faction INSTANCE (loadID) — presets are
-///   randomised generators, and each faction rolling its own themed ideology is the point.
-/// - <see cref="ForcedIdeoSource.SavedFile"/> refs bind per faction DEF — the file is
-///   deterministic, so instances of one def share a single realised ideo (caps ideo-count bloat).
 /// Realised ideos are registered as minor ideoligions of every faction that uses them, so the
 /// ideology listing, vanilla's 4:1 pawn-belief weighting, and GC protection all agree with what
 /// raiders actually believe.
 ///
-/// Cleanup policy (<see cref="CleanupOrphanedBindings"/>): when a binding's reference is no longer
-/// produced by the active preset, the ideo is unregistered from faction minor lists and the
-/// binding dropped, letting vanilla GC collect it once memberless. A formerly forced PRIMARY is
-/// left in place — yanking a faction's live primary mid-save would be more disruptive than the
-/// stale config.
-///
-/// The whole feature no-ops in classic ideology mode (single hidden ideo, ideology UI off).
 /// </summary>
 public class ForcedIdeoGameComponent : GameComponent
 {
-    /// <summary>Persistent composite reference key → the realised <see cref="Ideo.id"/> in this game.</summary>
+    /// <summary>Persistent composite reference key -> the realised <see cref="Ideo.id"/> in this game.</summary>
     public Dictionary<string, int> refToIdeoId = new();
 
     /// <summary>Bucket used in place of a faction for faction-less pawns (wild men, creepjoiners).</summary>
@@ -59,13 +47,8 @@ public class ForcedIdeoGameComponent : GameComponent
     /// then fail to realise, so we don't retry (and re-log) on every generated pawn.
     /// </summary>
     [Unsaved(false)]
-    public HashSet<string> failedRefs = new();
+    public HashSet<string> failedRefs = [];
 
-    /// <summary>
-    /// Session fast cache: resolved reference → live Ideo. Avoids the per-pawn composite-string
-    /// build and id scan on the generation hot path. Key: (faction loadID or -1, faction def
-    /// index or -1, source, key) — allocation-free to construct and hash.
-    /// </summary>
     [Unsaved(false)]
     public Dictionary<(int loadId, int defIndex, ForcedIdeoSource source, string key), Ideo> resolvedCache = new();
 
