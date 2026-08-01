@@ -61,6 +61,8 @@ public class ModCore : Mod
             Find.WindowStack.Add(new Dialog_TotalControl());
             Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
             Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
+            // Also close the in-game ESC menu (WindowLayer.Super) so it can't draw over TC.
+            Find.WindowStack.WindowOfType<MainTabWindow_Menu>()?.Close();
         }
         ui.End();
     }
