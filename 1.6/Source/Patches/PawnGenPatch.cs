@@ -184,10 +184,12 @@ public static class PawnGenPatchIdeo
     [HarmonyPrefix]
     public static void Prefix(ref PawnGenerationRequest request)
     {
-        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive || request.ForceNoIdeo || request.KindDef == null || (request.FixedIdeo != null && !MySettings.OverrideForcedIdeos)) return;
+        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive || request.ForceNoIdeo || request.KindDef == null || (request.FixedIdeo != null && !MySettings.OverrideForcedIdeos))
+            return;
 
         ForcedIdeoGameComponent forcedIdeoGameComponent = ForcedIdeoGameComponent.Current;
-        if (forcedIdeoGameComponent == null) return;
+        if (forcedIdeoGameComponent == null)
+            return;
 
         string key = null;
         ForcedIdeoSource source = ForcedIdeoSource.SavedFile;
@@ -218,7 +220,8 @@ public static class FactionAddIdeoPatch
     [HarmonyPostfix]
     public static void Postfix(Faction faction)
     {
-        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive) return;
+        if (!ForcedIdeoGameComponent.AnyIdeologyEditsActive)
+            return;
         ForcedIdeoGameComponent.Current?.EnsurePrimaryIdeo(faction);
     }
 }

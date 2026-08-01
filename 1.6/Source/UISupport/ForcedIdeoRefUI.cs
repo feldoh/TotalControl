@@ -30,7 +30,7 @@ public static class ForcedIdeoRefUI
 
         if (onClear != null)
         {
-            items.Add(MakeItem(null, clearLabel ?? "FactionLoadout_General_IdeoNoneSelected".Translate().ToString(), null, null));
+            items.Add(MakeItem(null, clearLabel ?? "FactionLoadout_None".Translate().ToString(), null, null));
         }
 
         if (includeFactionPrimary)
@@ -48,7 +48,7 @@ public static class ForcedIdeoRefUI
         List<MenuItemBase> presets = [];
         foreach (IdeoPresetDef preset in DefDatabase<IdeoPresetDef>.AllDefsListForReading)
         {
-            string label = preset.LabelCap + " " + "FactionLoadout_General_IdeoPresetSuffix".Translate();
+            string label = BuildPresetLabel(preset.LabelCap.ToString());
             string tip = "FactionLoadout_General_IdeoPresetPickTooltip".Translate().ToString();
             if (!preset.description.NullOrEmpty())
                 tip += "\n\n" + preset.description;
@@ -61,7 +61,7 @@ public static class ForcedIdeoRefUI
         foreach (FileInfo file in GenFilePaths.AllCustomIdeoFiles)
         {
             string fileName = Path.GetFileNameWithoutExtension(file.Name);
-            string label = fileName + " " + "FactionLoadout_General_IdeoSavedSuffix".Translate();
+            string label = BuildSavedFileLabel(fileName, isMissing: false);
             files.Add(MakeItem((ForcedIdeoSource.SavedFile, fileName), label, "FactionLoadout_General_IdeoSavedPickTooltip".Translate().ToString(), null));
         }
         files.Sort();
@@ -103,7 +103,7 @@ public static class ForcedIdeoRefUI
     public static string DisplayName(ForcedIdeoSource source, string key)
     {
         if (string.IsNullOrEmpty(key))
-            return "FactionLoadout_General_IdeoNoneSelected".Translate().ToString();
+            return "FactionLoadout_None".Translate().ToString();
 
         switch (source)
         {
@@ -112,18 +112,25 @@ public static class ForcedIdeoRefUI
             case ForcedIdeoSource.Preset:
                 IdeoPresetDef preset = DefDatabase<IdeoPresetDef>.GetNamedSilentFail(key);
                 string label = preset != null ? preset.LabelCap.ToString() : key;
-                return label + " " + "FactionLoadout_General_IdeoPresetSuffix".Translate().ToString();
+                return BuildPresetLabel(label);
+            case ForcedIdeoSource.SavedFile:
             default:
-                // .ToString() everywhere: mixing TaggedString into string concatenation triggers
-                // the implicit TaggedString→string conversion, which calls StripTags() and would
-                // silently delete the <color> markup below.
-                string display = key + " " + "FactionLoadout_General_IdeoSavedSuffix".Translate().ToString();
-                if (!File.Exists(GenFilePaths.AbsPathForIdeo(key)))
-                    display += " <color=red>" + "FactionLoadout_General_IdeoFileMissing".Translate().ToString() + "</color>";
-                return display;
+                return BuildSavedFileLabel(key, isMissing: !File.Exists(GenFilePaths.AbsPathForIdeo(key)));
         }
     }
 
+    private static string BuildPresetLabel(string presetName) =>
+        "FactionLoadout_General_IdeoPresetLabel".Translate(presetName).ToString();
+
+    private static string BuildSavedFileLabel(string fileName, bool isMissing)
+    {
+        if (!isMissing)
+            return "FactionLoadout_General_IdeoSavedLabel".Translate(fileName).ToString();
+
+        string missingMarker = "FactionLoadout_General_IdeoFileMissing".Translate().ToString();
+        return "FactionLoadout_General_IdeoSavedLabelMissing".Translate(fileName, missingMarker).ToString();
+    }
+
     /// <summary>Whether ideology overrides are unavailable in the current game (classic mode).</summary>
-    public static bool DisabledByClassicMode => Verse.Current.Game != null && ForcedIdeoGameComponent.ClassicMode;
+    public static bool DisabledByClassicMode => Current.Game != null && ForcedIdeoGameComponent.ClassicMode;
 }
