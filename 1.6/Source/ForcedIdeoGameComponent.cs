@@ -63,10 +63,7 @@ public class ForcedIdeoGameComponent : GameComponent
     public const float MissingFileRecheckSeconds = 10f;
 
     /// <summary>
-    /// Session-wide fast exit for the pawn-generation prefix: true iff any active edit forces an
-    /// ideology. Recomputed on preset apply and game init; flipped true directly by the pickers so
-    /// live in-game edits take effect immediately. Never needs to flip false mid-session — a stale
-    /// true only costs the normal lookup path, not correctness.
+    /// Session-wide fast exit for the pawn-generation prefix: true if any active edit forces an ideo.
     /// </summary>
     public static bool AnyIdeologyEditsActive;
 
@@ -76,7 +73,6 @@ public class ForcedIdeoGameComponent : GameComponent
 
     public static bool ClassicMode => Find.IdeoManager?.classicMode ?? false;
 
-    /// <summary>Scans the active faction edits for any forced-ideology configuration.</summary>
     public static void RecomputeAnyEditsActive()
     {
         foreach (FactionEdit edit in FactionEdit.ActiveFactionEdits.Values)
