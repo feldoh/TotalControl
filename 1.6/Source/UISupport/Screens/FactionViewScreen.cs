@@ -101,10 +101,20 @@ public class FactionViewScreen
         ui.End();
     }
 
+    /// <summary>
+    /// Maximum width used for a faction row's contents. On a widescreen the full window is
+    /// ~1800px, which strands the label on the far left and the controls on the far right;
+    /// capping keeps them readable as one unit.
+    /// </summary>
+    private const float MaxRowWidth = 1150f;
+
     /// <summary>Returns true if this faction was marked for deletion.</summary>
-    private bool DrawFactionRow(Rect row, FactionEdit item)
+    private bool DrawFactionRow(Rect fullRow, FactionEdit item)
     {
         bool delete = false;
+
+        // Constrain the interactive content to a sane width, left-aligned within the row.
+        Rect row = new(fullRow.x, fullRow.y, Mathf.Min(fullRow.width, MaxRowWidth), fullRow.height);
         float rightX = row.xMax;
 
         // Delete (far right, red).
@@ -147,13 +157,22 @@ public class FactionViewScreen
         Widgets.CheckboxLabeled(enabledRect, "Enabled".Translate(), ref item.Active, placeCheckboxNearText: true);
         rightX -= 116f;
 
-        // Label (fills remaining space on the left).
+        // Label (fills remaining space on the left) + at-a-glance edit summary.
         Rect nameRect = new(row.x + 4f, row.y, rightX - row.x - 4f, row.height);
         Text.Anchor = TextAnchor.MiddleLeft;
-        Widgets.Label(nameRect, $"<b>{item.Faction.LabelCap}</b> <color=#888888><i>({item.Faction.DefName})</i></color>");
+        Widgets.Label(nameRect, $"<b>{item.Faction.LabelCap}</b> <color=#888888><i>({item.Faction.DefName})</i></color>   <color=#9fb4c9>{BuildRowSummary(item)}</color>");
         Text.Anchor = TextAnchor.UpperLeft;
 
         return delete;
+    }
+
+    /// <summary>"(Edited: X/Y, Global: Yes)" — a quick overview of how much of the faction is customised.</summary>
+    private static string BuildRowSummary(FactionEdit item)
+    {
+        int total = item.GetAllKindDefsForUI().Count();
+        int edited = item.KindEdits.Count(k => !k.IsGlobal);
+        string global = (item.HasGlobalEditor() ? "Yes" : "No").Translate();
+        return $"({"FactionLoadout_FactionView_RowSummary".Translate(edited, total, global)})";
     }
 
     private void DrawPresetHeader(Listing_Standard ui, Preset preset)

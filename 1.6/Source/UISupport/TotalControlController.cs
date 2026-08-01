@@ -64,7 +64,7 @@ public class TotalControlController
         SelectedPreset = p;
         SelectedFaction = null;
         SelectedKind = null;
-        factionEdit = null;
+        DisposeFactionEdit();
         DisposePawnEdit();
         TCEditContext.CurrentFaction = null;
         Screen = TCScreen.FactionView;
@@ -79,6 +79,7 @@ public class TotalControlController
         {
             SelectedFaction = fe;
             SelectedKind = null;
+            DisposeFactionEdit();
             factionEdit = new FactionEditScreen(this, fe);
             DisposePawnEdit();
         }
@@ -134,6 +135,7 @@ public class TotalControlController
 
     public void Dispose()
     {
+        DisposeFactionEdit();
         DisposePawnEdit();
         TCEditContext.CurrentFaction = null;
     }
@@ -142,6 +144,12 @@ public class TotalControlController
     {
         pawnEdit?.Dispose();
         pawnEdit = null;
+    }
+
+    private void DisposeFactionEdit()
+    {
+        factionEdit?.Dispose();
+        factionEdit = null;
     }
 
     // ------------------------------------------------------------------- drawing
@@ -159,7 +167,7 @@ public class TotalControlController
         {
             SelectedFaction = null;
             SelectedKind = null;
-            factionEdit = null;
+            DisposeFactionEdit();
             DisposePawnEdit();
             Screen = TCScreen.FactionView;
         }
@@ -205,6 +213,10 @@ public class TotalControlController
     private void OpenPresetDropdown()
     {
         List<FloatMenuOption> options = new();
+
+        // "None" clears the viewed preset (the Faction View then offers to create one).
+        options.Add(new FloatMenuOption("FactionLoadout_TC_PresetNone".Translate(), () => SelectPreset(null)));
+
         foreach (Preset p in Preset.LoadedPresets)
         {
             Preset captured = p;
@@ -212,9 +224,6 @@ public class TotalControlController
             string label = active ? $"{p.Name}  <color=#81f542>({"FactionLoadout_Active".Translate()})</color>" : p.Name;
             options.Add(new FloatMenuOption(label, () => SelectPreset(captured)));
         }
-
-        if (options.Count == 0)
-            options.Add(new FloatMenuOption("FactionLoadout_NothingHere".Translate(), null));
 
         Find.WindowStack.Add(new FloatMenu(options));
     }

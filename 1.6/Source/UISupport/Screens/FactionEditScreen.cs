@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FactionLoadout.Modules;
+using FactionLoadout.UISupport.DrawSupport;
 using FactionLoadout.Util;
 using RimWorld;
 using UnityEngine;
@@ -28,10 +29,26 @@ public class FactionEditScreen
     private Vector2 settingsScroll;
     private float settingsContentHeight = 10000f; // measured after first frame; large so nothing clips
 
+    /// <summary>Right-column mode: the faction settings form, or the live roster gallery.</summary>
+    public enum RightMode
+    {
+        Settings,
+        Roster,
+    }
+
+    private RightMode rightMode = RightMode.Settings;
+    private FactionRosterWidget roster;
+
     public FactionEditScreen(TotalControlController controller, FactionEdit fac)
     {
         Controller = controller;
         Current = fac;
+    }
+
+    public void Dispose()
+    {
+        roster?.Dispose();
+        roster = null;
     }
 
     public void Draw(Rect inRect)
@@ -73,7 +90,48 @@ public class FactionEditScreen
         Rect rightRect = new(inRect.x + leftW + gap, colsY, inRect.width - leftW - gap, colsH);
 
         DrawKindList(leftRect);
-        DrawFactionSettings(rightRect);
+        DrawRightColumn(rightRect);
+    }
+
+    // ---------------------------------------------- right column: settings / roster toggle
+
+    private void DrawRightColumn(Rect rect)
+    {
+        // The roster render needs a concrete faction def to clone + generate against; for
+        // missing factions there's nothing to render, so show settings only (no toggle).
+        bool canRender = !Current.Faction.IsMissing && Current.Faction.Def != null;
+        if (!canRender)
+        {
+            DrawFactionSettings(rect);
+            return;
+        }
+
+        Rect toggleRow = new(rect.x, rect.y, rect.width, 30f);
+        float half = (toggleRow.width - 6f) / 2f;
+        Rect settingsBtn = new(toggleRow.x, toggleRow.y, half, toggleRow.height);
+        Rect rosterBtn = new(toggleRow.x + half + 6f, toggleRow.y, half, toggleRow.height);
+        DrawModeButton(settingsBtn, RightMode.Settings, "FactionLoadout_FactionEdit_ModeSettings".Translate());
+        DrawModeButton(rosterBtn, RightMode.Roster, "FactionLoadout_FactionEdit_ModeRoster".Translate());
+
+        Rect body = new(rect.x, toggleRow.yMax + 6f, rect.width, rect.yMax - (toggleRow.yMax + 6f));
+        if (rightMode == RightMode.Settings)
+        {
+            DrawFactionSettings(body);
+        }
+        else
+        {
+            roster ??= new FactionRosterWidget(Current);
+            roster.Draw(body, Controller);
+        }
+    }
+
+    private void DrawModeButton(Rect rect, RightMode mode, string label)
+    {
+        bool selected = rightMode == mode;
+        Color bg = selected ? new Color32(49, 82, 133, 255) : new Color(0.2f, 0.2f, 0.2f, 1f);
+        Rect r = rect;
+        if (Widgets.CustomButtonText(ref r, $"<b>{label}</b>", bg, Color.white, Color.white))
+            rightMode = mode;
     }
 
     // ----------------------------------------------------------- left: pawnkinds
