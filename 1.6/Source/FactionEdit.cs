@@ -28,6 +28,7 @@ public class FactionEdit : IExposable
     public bool Active = true;
     public ThingFilter ApparelStuffFilter;
     public TechLevel? TechLevel = null;
+    public DefRef<PawnKindDef> BasicMemberKind = new();
     public bool DeletedOrClosed;
 
     /// <summary>Raw XML preserved for faction-level module data belonging to inactive modules.</summary>
@@ -66,6 +67,7 @@ public class FactionEdit : IExposable
         Scribe_Deep.Look(ref ApparelStuffFilter, "apparelStuffFilter");
         Scribe_Deep.Look(ref Faction, "faction");
         Scribe_Values.Look(ref TechLevel, "techLevel");
+        Scribe_Deep.Look(ref BasicMemberKind, "basicMemberKind");
         Scribe_Values.Look(ref ForcedPrimaryIdeoKey, "forcedPrimaryIdeoKey");
         Scribe_Values.Look(ref ForcedPrimaryIdeoSourceKind, "forcedPrimaryIdeoSourceKind", ForcedIdeoSource.SavedFile);
         Scribe_Collections.Look(ref KindEdits, "kindEdits", LookMode.Deep);
@@ -79,6 +81,8 @@ public class FactionEdit : IExposable
         if (Scribe.mode != LoadSaveMode.PostLoadInit)
             return;
 
+        // Old presets predate this field; Scribe_Deep leaves it null when the node is absent.
+        BasicMemberKind ??= new DefRef<PawnKindDef>();
         xenotypeChances ??= [];
         MaterializeXenotypeChances();
         if (!(xenotypeChances.NullOrEmpty() && xenotypeChancesByDef.NullOrEmpty()))
@@ -431,6 +435,12 @@ public class FactionEdit : IExposable
         if (TechLevel != null)
             def.techLevel = TechLevel.Value;
 
+        // Override the faction's basicMemberKind before discovering kinds so the chosen kind
+        // flows through the normal clone/edit/xenotype pipeline below (and, if it isn't otherwise
+        // referenced by a spawn group, still gets picked up by GetAllPawnKinds).
+        if (BasicMemberKind is { HasValue: true })
+            def.basicMemberKind = BasicMemberKind.Def;
+
         IReadOnlyList<PawnKindDef> kinds = GetAllPawnKinds(def);
 
         foreach (PawnKindDef fkind in kinds)
@@ -490,6 +500,7 @@ public class FactionEdit : IExposable
     public void CopyFrom(FactionEdit source)
     {
         TechLevel = source.TechLevel;
+        BasicMemberKind = source.BasicMemberKind?.DeepClone() ?? new DefRef<PawnKindDef>();
         ForcedPrimaryIdeoKey = source.ForcedPrimaryIdeoKey;
         ForcedPrimaryIdeoSourceKind = source.ForcedPrimaryIdeoSourceKind;
         OverrideFactionXenotypes = source.OverrideFactionXenotypes;

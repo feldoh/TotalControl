@@ -51,6 +51,8 @@
 
     <FactionLoadout_Faction_Techlevel>Tech Level</FactionLoadout_Faction_Techlevel>
     <FactionLoadout_NotOverriden_WithDefault>Not Overriden ({0})</FactionLoadout_NotOverriden_WithDefault>
+    <FactionLoadout_Faction_BasicMemberKind>Basic Member Kind</FactionLoadout_Faction_BasicMemberKind>
+    <FactionLoadout_Faction_BasicMemberKindTooltip>The faction's representative pawn kind. This does NOT control who shows up in normal raids or trade caravans (those are drawn from the faction's spawn groups).</FactionLoadout_Faction_BasicMemberKindTooltip>
     <Undefined>Undefined</Undefined>
 
     <FactionLoadout_EditXenoSpawnRates>Edit Xenotype spawn rates</FactionLoadout_EditXenoSpawnRates>
