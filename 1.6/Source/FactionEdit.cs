@@ -347,12 +347,27 @@ public class FactionEdit : IExposable
     }
 
     /// <summary>
+    /// The basicMemberKind this faction will actually use once the edit is applied: the
+    /// <see cref="BasicMemberKind"/> override when set, otherwise the live def's value. The editor
+    /// needs this because the override isn't written onto the real <see cref="FactionDef"/> until
+    /// <see cref="Apply"/> runs at game load.
+    /// </summary>
+    public PawnKindDef EffectiveBasicMemberKind => BasicMemberKind is { HasValue: true } ? BasicMemberKind.Def : Faction.Def?.basicMemberKind;
+
+    /// <summary>
     /// Returns all pawnkind defs known to TC for the "Add new…" discovery.
     /// When <see cref="PawnGroupMakerEdits"/> is set, reads from it; otherwise reads
-    /// from the live <see cref="FactionDef"/>.
+    /// from the live <see cref="FactionDef"/>. The effective basicMemberKind is always included:
+    /// it isn't part of any spawn group, and when overridden it isn't on the live def yet either.
     /// </summary>
-    public IEnumerable<PawnKindDef> GetAllKindDefsForUI() =>
-        PawnGroupMakerEdits != null ? PawnGroupMakerEdits.SelectMany(g => g.GetAllKinds()).Distinct() : GetAllPawnKinds(Faction.Def);
+    public IEnumerable<PawnKindDef> GetAllKindDefsForUI()
+    {
+        IEnumerable<PawnKindDef> kinds =
+            PawnGroupMakerEdits != null ? PawnGroupMakerEdits.SelectMany(g => g.GetAllKinds()).Distinct() : GetAllPawnKinds(Faction.Def);
+        if (EffectiveBasicMemberKind != null)
+            kinds = kinds.Append(EffectiveBasicMemberKind).Distinct();
+        return kinds;
+    }
 
     /// <summary>
     /// Returns the set of pawnkinds that have a <see cref="PawnKindEdit"/> in

@@ -377,22 +377,17 @@ public class FactionEditUI : Window
                         tempKinds.Add(kind);
                 }
 
-                // basicMemberKind and fixedLeaderKinds are NOT included in the
-                // PawnGroupMaker-based path of GetAllKindDefsForUI (those fields
-                // are not part of any group maker entry). When PawnGroupMakerEdits
-                // is null, the GetAllPawnKinds path already covers them, so only
-                // add them here when group edits are active to avoid duplicates.
-                if (Current.PawnGroupMakerEdits != null)
+                // fixedLeaderKinds are NOT included in the PawnGroupMaker-based path of
+                // GetAllKindDefsForUI (they aren't part of any group maker entry). When
+                // PawnGroupMakerEdits is null, the GetAllPawnKinds path already covers them, so
+                // only add them here when group edits are active to avoid duplicates.
+                // (basicMemberKind, including any override, is handled by GetAllKindDefsForUI.)
+                if (Current.PawnGroupMakerEdits != null && Current.Faction.Def?.fixedLeaderKinds != null)
                 {
-                    if (Current.Faction.Def?.basicMemberKind != null && !Current.HasEditFor(Current.Faction.Def.basicMemberKind))
-                        tempKinds.Add(Current.Faction.Def.basicMemberKind);
-                    if (Current.Faction.Def?.fixedLeaderKinds != null)
+                    foreach (PawnKindDef item in Current.Faction.Def.fixedLeaderKinds)
                     {
-                        foreach (PawnKindDef item in Current.Faction.Def.fixedLeaderKinds)
-                        {
-                            if (!Current.HasEditFor(item))
-                                tempKinds.Add(item);
-                        }
+                        if (!Current.HasEditFor(item))
+                            tempKinds.Add(item);
                     }
                 }
 
