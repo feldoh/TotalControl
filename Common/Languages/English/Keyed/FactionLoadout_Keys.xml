@@ -322,24 +322,22 @@
     <FactionLoadout_General_RenameTooltip>This will give the cloned pawn kind a new name\nThis may have unintended consequences and may break existing pawns spawned for this faction.</FactionLoadout_General_RenameTooltip>
 
     <!-- Ideology (General Tab) -->
-    <FactionLoadout_General_ForcedIdeo>Forced Ideology</FactionLoadout_General_ForcedIdeo>
-    <FactionLoadout_General_ForcedIdeoTooltip>Forces pawns of this kind to follow a specific ideoligion instead of their faction's default.\n\n- Presets create a NEW random ideoligion in that style — the name and details will differ in every save.\n- Saved files reproduce your exact ideoligion (save one in-game via the Ideoligion tab's Save button). Files live on this computer and are not carried inside a shared preset.\n- A forced ideoligion becomes a minor belief of the whole faction, so a few pawns of other kinds may adopt it too.\n\nEach choice is created once per faction per save and then reused. Requires the Ideology DLC; disabled in classic ideology mode.</FactionLoadout_General_ForcedIdeoTooltip>
-    <FactionLoadout_General_IdeoFactionPrimary>Faction's primary ideology</FactionLoadout_General_IdeoFactionPrimary>
-    <FactionLoadout_General_IdeoFactionPrimaryPickTooltip>Pawns of this kind always follow whatever primary ideoligion their faction actually has in the current game. Use this for ruling-class pawnkinds that must never stray.</FactionLoadout_General_IdeoFactionPrimaryPickTooltip>
+    <FactionLoadout_General_ForcedIdeo>Forced Ideo</FactionLoadout_General_ForcedIdeo>
+    <FactionLoadout_General_ForcedIdeoTooltip>Forces pawns of this kind to follow a specific ideo instead of their faction's default.\n\n- Presets create a NEW random ideo in that style, the name and details will differ in every save.\n- Saved files reproduce your exact ideo, (save one in-game via the Ideoligion tab's Save button). Files live on this computer and are not carried inside a shared preset.\n- A forced ideo becomes a minor belief of the whole faction, so a few pawns of other kinds may adopt it too unless forced.\n\nEach choice is created once per faction per save and then reused. Disabled in classic ideo mode.</FactionLoadout_General_ForcedIdeoTooltip>
+    <FactionLoadout_General_IdeoFactionPrimary>Faction's primary ideo</FactionLoadout_General_IdeoFactionPrimary>
+    <FactionLoadout_General_IdeoFactionPrimaryPickTooltip>Pin to the faction's current primary ideology, never a minor one. Use this to lock out minor-ideo assignment while still tracking whatever ideo the faction ends up with</FactionLoadout_General_IdeoFactionPrimaryPickTooltip>
     <FactionLoadout_General_IdeoPresetLabel>{0} (preset)</FactionLoadout_General_IdeoPresetLabel>
     <FactionLoadout_General_IdeoSavedLabel>{0} (saved file)</FactionLoadout_General_IdeoSavedLabel>
     <FactionLoadout_General_IdeoSavedLabelMissing>{0} (saved file) &lt;color=red&gt;{1}&lt;/color&gt;</FactionLoadout_General_IdeoSavedLabelMissing>
-    <FactionLoadout_General_IdeoPresetPickTooltip>Generates a NEW random ideoligion in this style. Each faction and each save rolls its own — the name and precepts will differ, but the theme stays. Stable within one save.</FactionLoadout_General_IdeoPresetPickTooltip>
-    <FactionLoadout_General_IdeoSavedPickTooltip>Reproduces this exact saved ideoligion. The file lives on this computer only — sharing a preset does not include it; the recipient needs the same file in their Ideos folder.</FactionLoadout_General_IdeoSavedPickTooltip>
+    <FactionLoadout_General_IdeoPresetPickTooltip>Generates a NEW random ideo in this style. Each faction and each save rolls its own, the name and precepts will differ.</FactionLoadout_General_IdeoPresetPickTooltip>
+    <FactionLoadout_General_IdeoSavedPickTooltip>Reproduces this exact saved ideo. The file lives on this computer only, sharing a preset does not include it; the recipient needs the same file in their Ideos folder.</FactionLoadout_General_IdeoSavedPickTooltip>
     <FactionLoadout_General_IdeoFileMissing>(file missing!)</FactionLoadout_General_IdeoFileMissing>
-    <FactionLoadout_General_IdeoClassicDisabled>Ideology overrides are disabled in classic ideology mode.</FactionLoadout_General_IdeoClassicDisabled>
-    <FactionLoadout_General_IdeoNoTemplates>No ideology presets or saved ideology files found. Save an ideoligion in-game via the Ideoligion tab's Save button.</FactionLoadout_General_IdeoNoTemplates>
-    <FactionLoadout_Faction_PrimaryIdeo>Primary Ideology</FactionLoadout_Faction_PrimaryIdeo>
+    <FactionLoadout_General_IdeoClassicDisabled>Ideo overrides are disabled in classic ideo mode.</FactionLoadout_General_IdeoClassicDisabled>
+    <FactionLoadout_General_IdeoNoTemplates>No ideo presets or saved ideo files found. Save an ideo in-game via the Ideoligion tab's Save button.</FactionLoadout_General_IdeoNoTemplates>
+    <FactionLoadout_Faction_PrimaryIdeo>Primary Ideo</FactionLoadout_Faction_PrimaryIdeo>
     <FactionLoadout_Faction_PrimaryIdeoNotOverridden>Not overridden (game decides)</FactionLoadout_Faction_PrimaryIdeoNotOverridden>
-    <FactionLoadout_Faction_PrimaryIdeoTooltip>Forces this faction's primary ideoligion. Each faction in a game realises this choice once and keeps it, so the ideology listing, the faction leader, and raiders all agree. Pawnkind edits that pick the same ideology automatically share it; pawnkinds picking a different one become minority believers within the faction. Does not affect the player's own faction. Disabled in classic ideology mode.</FactionLoadout_Faction_PrimaryIdeoTooltip>
+    <FactionLoadout_Faction_PrimaryIdeoTooltip>Forces this faction's primary ideo. Each faction in a game realises this choice once and keeps it. Pawnkind edits that pick the same ideology automatically share it; pawnkinds picking a different one become minority believers within the faction. Does not affect the player faction.</FactionLoadout_Faction_PrimaryIdeoTooltip>
     <FactionLoadout_General_FactionDefault>Use faction ideology</FactionLoadout_General_FactionDefault>
-    <FactionLoadout_OverrideOn>Override: On</FactionLoadout_OverrideOn>
-    <FactionLoadout_OverrideOff>Override: Off</FactionLoadout_OverrideOff>
 
     <!-- Appearance Tab -->
     <FactionLoadout_Appearance_Beards>Forced Beard Styles</FactionLoadout_Appearance_Beards>

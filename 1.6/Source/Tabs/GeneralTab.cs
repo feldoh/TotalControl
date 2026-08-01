@@ -254,8 +254,8 @@ public class GeneralTab : EditTab
         Rect row = ui.GetRect(32);
         bool active = Current.ForcedIdeoKey != null;
 
-        string toggleLabel = active ? "FactionLoadout_OverrideOn".Translate().ToString() : "FactionLoadout_OverrideOff".Translate().ToString();
-        float toggleW = Mathf.Max(120f, Text.CalcSize(toggleLabel).x + 24f);
+        string toggleLabel = "FactionLoadout_OverrideYesNo".Translate(active ? "#81f542" : "#ff4d4d", active ? "Yes".Translate() : "No".Translate());
+        const float toggleW = 120f;
         Rect toggleRect = new Rect(row.x, row.y, toggleW, 32);
         if (Widgets.ButtonText(toggleRect, toggleLabel))
         {

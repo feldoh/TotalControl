@@ -111,8 +111,7 @@ public static class ForcedIdeoRefUI
         }
     }
 
-    private static string BuildPresetLabel(string presetName) =>
-        "FactionLoadout_General_IdeoPresetLabel".Translate(presetName).ToString();
+    private static string BuildPresetLabel(string presetName) => "FactionLoadout_General_IdeoPresetLabel".Translate(presetName).ToString();
 
     private static string BuildSavedFileLabel(string fileName, bool isMissing)
     {

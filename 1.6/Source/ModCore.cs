@@ -109,7 +109,7 @@ public class ModCore : Mod
             AccessTools.Method(typeof(PawnGenerator), "GenerateNewPawnInternal"),
             postfix: new HarmonyMethod(AccessTools.Method(typeof(PawnGenPatchCore), nameof(PawnGenPatchCore.Postfix)))
         );
-        // Forced-ideology hooks are meaningless without the DLC — don't pay the trampoline.
+        // Forced-ideology hooks are meaningless without the DLC
         if (ModsConfig.IdeologyActive)
         {
             harmony.Patch(

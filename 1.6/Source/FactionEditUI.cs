@@ -157,6 +157,7 @@ public class FactionEditUI : Window
             );
         }
 
+        // Because this is faction level and these aren't real factions skip
         if (
             ModsConfig.IdeologyActive
             && Current.Faction is { IsMissing: false }

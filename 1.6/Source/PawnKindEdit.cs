@@ -159,9 +159,8 @@ public class PawnKindEdit : IExposable
     /// <summary>
     /// Portable forced-ideology reference: a <c>.rid</c> filename (when
     /// <see cref="ForcedIdeoSourceKind"/> is <see cref="ForcedIdeoSource.SavedFile"/>) or an
-    /// <see cref="IdeoPresetDef"/> defName (when <see cref="ForcedIdeoSource.Preset"/>). null =
-    /// override off. At pawn generation this is realised once per save and reused via
-    /// <see cref="ForcedIdeoGameComponent"/>.
+    /// <see cref="IdeoPresetDef"/> defName (when <see cref="ForcedIdeoSource.Preset"/>).
+    /// At pawn generation this is realised once per save and reused via <see cref="ForcedIdeoGameComponent"/>.
     /// </summary>
     public string ForcedIdeoKey = null;
     public ForcedIdeoSource ForcedIdeoSourceKind = ForcedIdeoSource.SavedFile;
@@ -503,8 +502,7 @@ public class PawnKindEdit : IExposable
         }
     }
 
-    private static bool IsDefListOldFormat(XmlNode collectionNode) =>
-        collectionNode != null && collectionNode.HasChildNodes && collectionNode.SelectSingleNode("li/defName") == null;
+    private static bool IsDefListOldFormat(XmlNode collectionNode) => collectionNode is { HasChildNodes: true } && collectionNode.SelectSingleNode("li/defName") == null;
 
     // ==================== Queries ====================
 
