@@ -346,6 +346,8 @@
     <FactionLoadout_Appearance_Hair>Forced Hair Styles</FactionLoadout_Appearance_Hair>
     <FactionLoadout_Appearance_HairColors>Forced Hair Colors</FactionLoadout_Appearance_HairColors>
     <FactionLoadout_Appearance_BodyTypes>Allowed Body Types</FactionLoadout_Appearance_BodyTypes>
+    <FactionLoadout_Appearance_FaceTattoos>Forced Face Tattoos</FactionLoadout_Appearance_FaceTattoos>
+    <FactionLoadout_Appearance_BodyTattoos>Forced Body Tattoos</FactionLoadout_Appearance_BodyTattoos>
 
     <!-- Apparel Tab -->
     <FactionLoadout_Apparel_Color>Apparel Color (where applicable)</FactionLoadout_Apparel_Color>

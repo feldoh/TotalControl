@@ -147,6 +147,8 @@ public class PawnKindEdit : IExposable
     public List<DefRef<HairDef>> CustomHair = null;
     public List<DefRef<BeardDef>> CustomBeards = null;
     public List<DefRef<BodyTypeDef>> BodyTypes = null;
+    public List<DefRef<TattooDef>> CustomFaceTattoos = null;
+    public List<DefRef<TattooDef>> CustomBodyTattoos = null;
     public List<Color> CustomHairColors = null;
     public List<ForcedHediff> ForcedHediffs = null;
     public List<ForcedGene> ForcedGenes = null;
@@ -267,6 +269,8 @@ public class PawnKindEdit : IExposable
         ScribeMigrateDefRefList(ref BodyTypes, "bodyTypes");
         ScribeMigrateDefRefList(ref CustomBeards, "customBeards");
         ScribeMigrateDefRefList(ref CustomHair, "customHair");
+        ScribeMigrateDefRefList(ref CustomFaceTattoos, "customFaceTattoos");
+        ScribeMigrateDefRefList(ref CustomBodyTattoos, "customBodyTattoos");
         Scribe_Collections.Look(ref CustomHairColors, "customHairColors");
         Scribe_Collections.Look(ref ForcedHediffs, "forcedHediffs", LookMode.Deep);
         Scribe_Collections.Look(ref ForcedGenes, "forcedGenes", LookMode.Deep);

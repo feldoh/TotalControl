@@ -166,22 +166,15 @@ public class FactionEditUI : Window
         )
         {
             PawnKindDef defaultBasic = Current.Faction?.Def?.basicMemberKind;
-            string basicLabel =
-                Current.BasicMemberKind switch
-                {
-                    { HasValue: true } => Current.BasicMemberKind.LabelCap,
-                    { IsMissing: true } => "FactionLoadout_DefRef_Missing"
-                        .Translate(Current.BasicMemberKind.DefName, Current.BasicMemberKind.ModName ?? "FactionLoadout_DefRef_UnknownMod".Translate())
-                        .ToString(),
-                    _ => "FactionLoadout_NotOverriden_WithDefault".Translate(defaultBasic?.LabelCap ?? "None".Translate()).ToString()
-                };
-            if (
-                inner.ButtonTextLabeled(
-                    "FactionLoadout_Faction_BasicMemberKind".Translate(),
-                    basicLabel,
-                    tooltip: "FactionLoadout_Faction_BasicMemberKindTooltip".Translate()
-                )
-            )
+            string basicLabel = Current.BasicMemberKind switch
+            {
+                { HasValue: true } => Current.BasicMemberKind.LabelCap,
+                { IsMissing: true } => "FactionLoadout_DefRef_Missing"
+                    .Translate(Current.BasicMemberKind.DefName, Current.BasicMemberKind.ModName ?? "FactionLoadout_DefRef_UnknownMod".Translate())
+                    .ToString(),
+                _ => "FactionLoadout_NotOverriden_WithDefault".Translate(defaultBasic?.LabelCap ?? "None".Translate()).ToString(),
+            };
+            if (inner.ButtonTextLabeled("FactionLoadout_Faction_BasicMemberKind".Translate(), basicLabel, tooltip: "FactionLoadout_Faction_BasicMemberKindTooltip".Translate()))
             {
                 OpenBasicMemberKindPicker(defaultBasic);
             }
@@ -609,10 +602,7 @@ public class FactionEditUI : Window
     {
         // basicMemberKind is a humanlike "representative member"; offer humanlike kinds only,
         // with a leading "not overridden" entry (null payload) to clear the override.
-        List<PawnKindDef> kinds = DefDatabase<PawnKindDef>
-            .AllDefsListForReading.Where(k => k.RaceProps is { Humanlike: true })
-            .OrderBy(k => k.LabelCap.ToString())
-            .ToList();
+        List<PawnKindDef> kinds = DefDatabase<PawnKindDef>.AllDefsListForReading.Where(k => k.RaceProps is { Humanlike: true }).OrderBy(k => k.LabelCap.ToString()).ToList();
         kinds.Insert(0, null);
 
         List<MenuItemBase> items = CustomFloatMenu.MakeItems(
