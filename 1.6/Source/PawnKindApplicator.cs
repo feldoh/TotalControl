@@ -60,13 +60,13 @@ public static class PawnKindApplicator
         ReplaceUtils.ReplaceMaybeDefRefList(ref def.apparelRequired, edit.ApparelRequired, global?.ApparelRequired != null);
         ReplaceUtils.ReplaceMaybeDefRefList(ref def.techHediffsRequired, edit.TechRequired, global?.TechRequired != null);
 
-        // Backstory filters override — BackstoryFilter extends BackstoryCategoryFilter, so cast directly.
+        // Backstory filters override - BackstoryFilter extends BackstoryCategoryFilter, so cast directly.
         if (edit.BackstoryFiltersOverride is { Count: > 0 })
             def.backstoryFiltersOverride = [.. edit.BackstoryFiltersOverride];
 
         ReplaceUtils.ReplaceMaybe(ref def.backstoryCryptosleepCommonality, edit.BackstoryCryptosleepCommonality);
 
-        // Fixed backstories — resolve DefRefs to actual defs, skipping missing ones.
+        // Fixed backstories - resolve DefRefs to actual defs, skipping missing ones.
         ReplaceUtils.ReplaceMaybeDefRefList(ref def.fixedChildBackstories, edit.FixedChildBackstories, global?.FixedChildBackstories != null);
         ReplaceUtils.ReplaceMaybeDefRefList(ref def.fixedAdultBackstories, edit.FixedAdultBackstories, global?.FixedAdultBackstories != null);
 
@@ -89,7 +89,7 @@ public static class PawnKindApplicator
                 def.lifeStages = realKind.lifeStages;
         }
 
-        // Colour: pure white would be ignored by RimWorld — use near-white instead.
+        // Colour: pure white would be ignored by RimWorld - use near-white instead.
         Color? color = edit.ApparelColor;
         if (color != null && color == Color.white)
             color = new Color(0.995f, 0.995f, 0.995f, 1f);
@@ -97,7 +97,7 @@ public static class PawnKindApplicator
 
         if (!def.RaceProps.Animal && edit.ForcedTraitsDef != null)
         {
-            // Replace (not append) — the user activated the override, so they control the full list.
+            // Replace (not append) - the user activated the override, so they control the full list.
             def.forcedTraits = [];
             foreach (ForcedTrait t in edit.ForcedTraitsDef)
             {

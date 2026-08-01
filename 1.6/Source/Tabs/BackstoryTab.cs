@@ -435,7 +435,7 @@ public class BackstoryTab : EditTab
                 TooltipHandler.TipRegion(itemRect, "FactionLoadout_Traits_ConflictWarning".Translate());
             }
 
-            // Trait selector button — left side, same row as delete button
+            // Trait selector button - left side, same row as delete button
             float selectorW = showChance ? (itemW - 38) * 0.55f : itemW - 38;
             Rect selectorBtn = new(itemRect.x + 4, itemRect.y + 4, selectorW, 28);
             string traitLabel = TraitLabel(item.TraitDef, item.degree);
@@ -463,7 +463,7 @@ public class BackstoryTab : EditTab
             }
             GUI.color = Color.white;
 
-            // Chance slider (only for probabilistic section) — between selector and delete button
+            // Chance slider (only for probabilistic section) - between selector and delete button
             if (showChance)
             {
                 float afterSelector = selectorBtn.xMax + 4;
@@ -474,7 +474,7 @@ public class BackstoryTab : EditTab
                 item.chance = Widgets.HorizontalSlider(chanceSlider, item.chance, 0f, 1f, middleAlignment: true, $"{item.chance:P0}");
             }
 
-            // Delete button — right side, same row as selector
+            // Delete button - right side, same row as selector
             Rect deleteBtn = new(itemRect.xMax - 28, itemRect.y + 4, 24, 28);
             GUI.color = Color.red;
             if (Widgets.ButtonText(deleteBtn, "X"))
@@ -521,7 +521,7 @@ public class BackstoryTab : EditTab
     {
         if (a == b)
         {
-            return true; // same TraitDef at any degree conflicts — pawn can only have one degree of a trait
+            return true; // same TraitDef at any degree conflicts - pawn can only have one degree of a trait
         }
 
         if (a.conflictingTraits != null && a.conflictingTraits.Contains(b))
@@ -556,7 +556,7 @@ public class BackstoryTab : EditTab
         }
 
         // Degree data label is the primary display name for all traits.
-        // TraitDef.label / LabelCap is often null — labels live in degreeDatas.
+        // TraitDef.label / LabelCap is often null - labels live in degreeDatas.
         TraitDegreeData data = def.DataAtDegree(degree);
         string degLabel = data?.label;
         string displayName;

@@ -41,6 +41,12 @@ public class FactionViewScreen
             ref MySettings.PatchKindInRequests,
             "FactionLoadout_Settings_PatchKindInRequestsDesc".Translate()
         );
+        ui.CheckboxLabeled("FactionLoadout_Settings_IgnorePrice".Translate(), ref MySettings.IgnorePriceLimits, "FactionLoadout_Settings_IgnorePriceDesc".Translate());
+        ui.CheckboxLabeled(
+            "FactionLoadout_Settings_OverrideForcedIdeos".Translate(),
+            ref MySettings.OverrideForcedIdeos,
+            "FactionLoadout_Settings_OverrideForcedIdeosDesc".Translate()
+        );
         ui.GapLine();
 
         Preset preset = Controller.SelectedPreset;

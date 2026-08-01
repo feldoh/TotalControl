@@ -44,6 +44,10 @@
     <FactionLoadout_Settings_FactionPresetDesc>Here you can manage faction edit <b>presets</b>.\nEach preset contains a collection of faction edits. Only one preset can be active at a time.\n<i>Hold the SHIFT key to delete presets.</i>\nRemember all changes require a game restart to take effect.</FactionLoadout_Settings_FactionPresetDesc>
     <FactionLoadout_Settings_PatchKindInRequests>Patch forced pawn kinds in PawnGen (Restart Required):  </FactionLoadout_Settings_PatchKindInRequests>
     <FactionLoadout_Settings_PatchKindInRequestsDesc>Patch the pawn kind set in PawnGenerationRequests. Should catch cases where the game generates a pawn without taking the patched version from the faction when generating pawns like for royal permits. Currently experimental.</FactionLoadout_Settings_PatchKindInRequestsDesc>
+    <FactionLoadout_Settings_IgnorePrice>Ignore price limits when necessary</FactionLoadout_Settings_IgnorePrice>
+    <FactionLoadout_Settings_IgnorePriceDesc>When a Total Control-managed pawn can't afford any allowed weapon or torso apparel within its budget, equip the cheapest matching option anyway instead of leaving the slot empty. With verbose logging on, such cases are logged even when this is off, so you know to raise the budget.</FactionLoadout_Settings_IgnorePriceDesc>
+    <FactionLoadout_Settings_OverrideForcedIdeos>Override Forced Ideoligions</FactionLoadout_Settings_OverrideForcedIdeos>
+    <FactionLoadout_Settings_OverrideForcedIdeosDesc>Allow Total Control Ideoligion overrides to apply even to pawns with forced ideoligions like traders, warning, may affect quests if they require a specific ideoligion.</FactionLoadout_Settings_OverrideForcedIdeosDesc>
 
     <FactionLoadout_Faction_Techlevel>Tech Level</FactionLoadout_Faction_Techlevel>
     <FactionLoadout_NotOverriden_WithDefault>Not Overriden ({0})</FactionLoadout_NotOverriden_WithDefault>
@@ -86,7 +90,7 @@
     <FactionLoadout_Traits_Chance>Chance:</FactionLoadout_Traits_Chance>
     <FactionLoadout_Traits_ConflictWarning>This trait may conflict with another forced trait on this pawn and may be silently skipped during generation.</FactionLoadout_Traits_ConflictWarning>
     <FactionLoadout_Traits_TraitCount>{0} trait(s)</FactionLoadout_Traits_TraitCount>
-    <FactionLoadout_DefRef_Missing>{0} (missing — from {1})</FactionLoadout_DefRef_Missing>
+    <FactionLoadout_DefRef_Missing>{0} (missing - from {1})</FactionLoadout_DefRef_Missing>
     <FactionLoadout_DefRef_UnknownMod>unknown mod</FactionLoadout_DefRef_UnknownMod>
     <FactionLoadout_None>None</FactionLoadout_None>
 
@@ -134,10 +138,10 @@
     <FactionLoadout_CE_AttachmentTags>Attachment Tags</FactionLoadout_CE_AttachmentTags>
 
     <!-- CE: Warnings and notes -->
-    <FactionLoadout_CE_SidearmListSuppressed>(Sidearms list ignored — Forced Sidearm is active)</FactionLoadout_CE_SidearmListSuppressed>
-    <FactionLoadout_CE_Warn_NoTags>⚠ No weapon tags set — sidearm will not generate (add at least one tag)</FactionLoadout_CE_Warn_NoTags>
-    <FactionLoadout_CE_Warn_NoMoney>⚠ Money range is zero — no weapon can be afforded (set a budget, e.g. 100–500)</FactionLoadout_CE_Warn_NoMoney>
-    <FactionLoadout_CE_Note_Disabled>(disabled — generate chance is 0%, increase to enable)</FactionLoadout_CE_Note_Disabled>
+    <FactionLoadout_CE_SidearmListSuppressed>(Sidearms list ignored - Forced Sidearm is active)</FactionLoadout_CE_SidearmListSuppressed>
+    <FactionLoadout_CE_Warn_NoTags>⚠ No weapon tags set - sidearm will not generate (add at least one tag)</FactionLoadout_CE_Warn_NoTags>
+    <FactionLoadout_CE_Warn_NoMoney>⚠ Money range is zero - no weapon can be afforded (set a budget, e.g. 100–500)</FactionLoadout_CE_Warn_NoMoney>
+    <FactionLoadout_CE_Note_Disabled>(disabled - generate chance is 0%, increase to enable)</FactionLoadout_CE_Note_Disabled>
 
     <!-- GiddyUp Module -->
     <GiddyUp_Mounts>GiddyUp Mounts</GiddyUp_Mounts>
@@ -164,10 +168,10 @@
     <GU_NonWildAnimalWeight>Domestic Animal Weight</GU_NonWildAnimalWeight>
     <GU_WeightDefault>Default</GU_WeightDefault>
     <GU_WeightDefault_Known>Default ({0})</GU_WeightDefault_Known>
-    <GU_WeightDefault_Tip>No override set — GiddyUp will use its own global animal weight settings.</GU_WeightDefault_Tip>
-    <GU_AllowedWildAnimals>Wild Animal Whitelist</GU_AllowedWildAnimals>
+    <GU_WeightDefault_Tip>No override set - GiddyUp will use its own global animal weight settings.</GU_WeightDefault_Tip>
+    <GU_AllowedWildAnimals>Wild Animal Allowlist</GU_AllowedWildAnimals>
     <GU_AllowedWildAnimals_Note>When set, only these wild animals can be chosen as mounts for this faction. Leave empty to allow all wild animals.</GU_AllowedWildAnimals_Note>
-    <GU_AllowedNonWildAnimals>Domestic Animal Whitelist</GU_AllowedNonWildAnimals>
+    <GU_AllowedNonWildAnimals>Domestic Animal Allowlist</GU_AllowedNonWildAnimals>
     <GU_AllowedNonWildAnimals_Note>When set, only these domestic animals can be chosen as mounts for this faction. Leave empty to allow all domestic animals.</GU_AllowedNonWildAnimals_Note>
     <GU_AddWildAnimal>Add wild animal...</GU_AddWildAnimal>
     <GU_AddNonWildAnimal>Add domestic animal...</GU_AddNonWildAnimal>
@@ -192,14 +196,14 @@
 
     <!-- Missing faction handling -->
     <FactionLoadout_EditAnyway>Edit anyway</FactionLoadout_EditAnyway>
-    <FactionLoadout_FactionMissing>(missing — mod not loaded)</FactionLoadout_FactionMissing>
-    <FactionLoadout_FactionMissingEditWarning>This faction is missing — its mod is probably not loaded. You can still edit and delete the pawnkind overrides below, but the faction-level settings and pawn preview are unavailable.</FactionLoadout_FactionMissingEditWarning>
+    <FactionLoadout_FactionMissing>(missing - mod not loaded)</FactionLoadout_FactionMissing>
+    <FactionLoadout_FactionMissingEditWarning>This faction is missing - its mod is probably not loaded. You can still edit and delete the pawnkind overrides below, but the faction-level settings and pawn preview are unavailable.</FactionLoadout_FactionMissingEditWarning>
 
     <!-- Packaged presets -->
     <FactionLoadout_PackagedLabel>Packaged</FactionLoadout_PackagedLabel>
     <FactionLoadout_CopyToMyPresets>Copy to my presets</FactionLoadout_CopyToMyPresets>
     <FactionLoadout_EditSourceFile>Edit source file (advanced)</FactionLoadout_EditSourceFile>
-    <FactionLoadout_PackagedPresetWarning>This preset is bundled with {0}. Saving will overwrite the source file — Steam updates may reset it. Consider using "Copy to my presets" instead.</FactionLoadout_PackagedPresetWarning>
+    <FactionLoadout_PackagedPresetWarning>This preset is bundled with {0}. Saving will overwrite the source file - Steam updates may reset it. Consider using "Copy to my presets" instead.</FactionLoadout_PackagedPresetWarning>
     <FactionLoadout_CopySuffix>(copy)</FactionLoadout_CopySuffix>
     <FactionLoadout_SaveToSourceFile>Save to source file</FactionLoadout_SaveToSourceFile>
 
@@ -212,7 +216,7 @@
     <FactionLoadout_SpawnGroups_OrphanKindTooltip>This pawnkind is not in any spawn group. Your edits are preserved, but it won't appear in game until added to a group via Edit Spawn Groups.</FactionLoadout_SpawnGroups_OrphanKindTooltip>
 
     <!-- Group Editor window -->
-    <FactionLoadout_GroupEditor_Title>Spawn Groups — {0}</FactionLoadout_GroupEditor_Title>
+    <FactionLoadout_GroupEditor_Title>Spawn Groups - {0}</FactionLoadout_GroupEditor_Title>
     <FactionLoadout_GroupEditor_HelpText>These groups control which pawns can appear and under what conditions. A pawnkind must be in at least one group to spawn in game.</FactionLoadout_GroupEditor_HelpText>
     <FactionLoadout_GroupEditor_AddGroup>+ Add Group</FactionLoadout_GroupEditor_AddGroup>
     <FactionLoadout_GroupEditor_ResetButton>Reset to Faction Defaults...</FactionLoadout_GroupEditor_ResetButton>
@@ -225,7 +229,7 @@
     <FactionLoadout_GroupEditor_GroupType>Group Type:</FactionLoadout_GroupEditor_GroupType>
     <FactionLoadout_GroupEditor_GroupTypeTooltip>The kind of group this is (e.g. Combat, Trade). Determines which game systems can select it.</FactionLoadout_GroupEditor_GroupTypeTooltip>
     <FactionLoadout_GroupEditor_Commonality>Commonality:</FactionLoadout_GroupEditor_Commonality>
-    <FactionLoadout_GroupEditor_CommonalityTooltip>Relative chance this group is chosen over other groups of the same type. Not a percentage — it's a weight. Two Combat groups at 100 and 50 are chosen ~67% and ~33% of the time respectively.</FactionLoadout_GroupEditor_CommonalityTooltip>
+    <FactionLoadout_GroupEditor_CommonalityTooltip>Relative chance this group is chosen over other groups of the same type. Not a percentage - it's a weight. Two Combat groups at 100 and 50 are chosen ~67% and ~33% of the time respectively.</FactionLoadout_GroupEditor_CommonalityTooltip>
     <FactionLoadout_GroupEditor_MaxPoints>Max Group Points:</FactionLoadout_GroupEditor_MaxPoints>
     <FactionLoadout_GroupEditor_MaxPointsTooltip>The game won't select this group for raids with more threat points than this value. Leave at 9999999 for no cap. Useful to restrict large groups to early-game only.</FactionLoadout_GroupEditor_MaxPointsTooltip>
     <FactionLoadout_GroupEditor_BlockStrategies>Block Strategies:</FactionLoadout_GroupEditor_BlockStrategies>
@@ -249,7 +253,7 @@
     <FactionLoadout_GroupEditor_WeightTooltip>Relative chance of this PawnKind being picked from the pool. Not a percentage. A PawnKind with weight 2.0 alongside one with weight 1.0 is picked ~67% of the time.</FactionLoadout_GroupEditor_WeightTooltip>
     <FactionLoadout_GroupEditor_NoPawns>(none)</FactionLoadout_GroupEditor_NoPawns>
     <FactionLoadout_GroupEditor_UnknownKind>&lt;unknown&gt;</FactionLoadout_GroupEditor_UnknownKind>
-    <FactionLoadout_GroupEditor_VanillaGroups>Showing vanilla groups (read-only) — click Customize Groups to start editing</FactionLoadout_GroupEditor_VanillaGroups>
+    <FactionLoadout_GroupEditor_VanillaGroups>Showing vanilla groups (read-only) - click Customize Groups to start editing</FactionLoadout_GroupEditor_VanillaGroups>
     <FactionLoadout_GroupEditor_CustomizeGroups>Customize Groups</FactionLoadout_GroupEditor_CustomizeGroups>
 
     <!-- Pawnkind picker dialog -->
@@ -276,8 +280,14 @@
     <FactionLoadout_RightClickToInspect>Right-click to inspect</FactionLoadout_RightClickToInspect>
     <FactionLoadout_Apparel_Layers>Layers: {0}</FactionLoadout_Apparel_Layers>
     <FactionLoadout_Apparel_Coverage>Coverage: {0}</FactionLoadout_Apparel_Coverage>
-    <FactionLoadout_ApparelBlacklist>Apparel Blacklist</FactionLoadout_ApparelBlacklist>
-    <FactionLoadout_WeaponBlacklist>Weapon Blacklist</FactionLoadout_WeaponBlacklist>
+    <FactionLoadout_ApparelBlacklist>Apparel Blocklist</FactionLoadout_ApparelBlacklist>
+    <FactionLoadout_WeaponBlacklist>Weapon Blocklist</FactionLoadout_WeaponBlacklist>
+    <FactionLoadout_ApparelMaterials>Apparel Materials</FactionLoadout_ApparelMaterials>
+    <FactionLoadout_WeaponMaterials>Weapon Materials</FactionLoadout_WeaponMaterials>
+    <FactionLoadout_Materials_ModeAllowlist>Mode: Allowlist (only these)</FactionLoadout_Materials_ModeAllowlist>
+    <FactionLoadout_Materials_ModeBlocklist>Mode: Blocklist (all except these)</FactionLoadout_Materials_ModeBlocklist>
+    <FactionLoadout_Materials_AllowedSummary>Allowed: {0}</FactionLoadout_Materials_AllowedSummary>
+    <FactionLoadout_Materials_NoValidStuff>No material allowed by this kind's material rule can make this item, it will be skipped when the pawn is generated.</FactionLoadout_Materials_NoValidStuff>
 
     <!-- Shared UI patterns -->
     <FactionLoadout_OverrideYesNo>Override: &lt;color={0}&gt;{1}&lt;/color&gt;</FactionLoadout_OverrideYesNo>
@@ -310,6 +320,24 @@
     <FactionLoadout_General_RenameDef>Rename Def [{0} =&gt; {1}]{2}</FactionLoadout_General_RenameDef>
     <FactionLoadout_General_ForcedByGlobal> - Forced By Global</FactionLoadout_General_ForcedByGlobal>
     <FactionLoadout_General_RenameTooltip>This will give the cloned pawn kind a new name\nThis may have unintended consequences and may break existing pawns spawned for this faction.</FactionLoadout_General_RenameTooltip>
+
+    <!-- Ideology (General Tab) -->
+    <FactionLoadout_General_ForcedIdeo>Forced Ideo</FactionLoadout_General_ForcedIdeo>
+    <FactionLoadout_General_ForcedIdeoTooltip>Forces pawns of this kind to follow a specific ideo instead of their faction's default.\n\n- Presets create a NEW random ideo in that style, the name and details will differ in every save.\n- Saved files reproduce your exact ideo, (save one in-game via the Ideoligion tab's Save button). Files live on this computer and are not carried inside a shared preset.\n- A forced ideo becomes a minor belief of the whole faction, so a few pawns of other kinds may adopt it too unless forced.\n\nEach choice is created once per faction per save and then reused. Disabled in classic ideo mode.</FactionLoadout_General_ForcedIdeoTooltip>
+    <FactionLoadout_General_IdeoFactionPrimary>Faction's primary ideo</FactionLoadout_General_IdeoFactionPrimary>
+    <FactionLoadout_General_IdeoFactionPrimaryPickTooltip>Pin to the faction's current primary ideology, never a minor one. Use this to lock out minor-ideo assignment while still tracking whatever ideo the faction ends up with</FactionLoadout_General_IdeoFactionPrimaryPickTooltip>
+    <FactionLoadout_General_IdeoPresetLabel>{0} (preset)</FactionLoadout_General_IdeoPresetLabel>
+    <FactionLoadout_General_IdeoSavedLabel>{0} (saved file)</FactionLoadout_General_IdeoSavedLabel>
+    <FactionLoadout_General_IdeoSavedLabelMissing>{0} (saved file) &lt;color=red&gt;{1}&lt;/color&gt;</FactionLoadout_General_IdeoSavedLabelMissing>
+    <FactionLoadout_General_IdeoPresetPickTooltip>Generates a NEW random ideo in this style. Each faction and each save rolls its own, the name and precepts will differ.</FactionLoadout_General_IdeoPresetPickTooltip>
+    <FactionLoadout_General_IdeoSavedPickTooltip>Reproduces this exact saved ideo. The file lives on this computer only, sharing a preset does not include it; the recipient needs the same file in their Ideos folder.</FactionLoadout_General_IdeoSavedPickTooltip>
+    <FactionLoadout_General_IdeoFileMissing>(file missing!)</FactionLoadout_General_IdeoFileMissing>
+    <FactionLoadout_General_IdeoClassicDisabled>Ideo overrides are disabled in classic ideo mode.</FactionLoadout_General_IdeoClassicDisabled>
+    <FactionLoadout_General_IdeoNoTemplates>No ideo presets or saved ideo files found. Save an ideo in-game via the Ideoligion tab's Save button.</FactionLoadout_General_IdeoNoTemplates>
+    <FactionLoadout_Faction_PrimaryIdeo>Primary Ideo</FactionLoadout_Faction_PrimaryIdeo>
+    <FactionLoadout_Faction_PrimaryIdeoNotOverridden>Not overridden (game decides)</FactionLoadout_Faction_PrimaryIdeoNotOverridden>
+    <FactionLoadout_Faction_PrimaryIdeoTooltip>Forces this faction's primary ideo. Each faction in a game realises this choice once and keeps it. Pawnkind edits that pick the same ideology automatically share it; pawnkinds picking a different one become minority believers within the faction. Does not affect the player faction.</FactionLoadout_Faction_PrimaryIdeoTooltip>
+    <FactionLoadout_General_FactionDefault>Use faction ideology</FactionLoadout_General_FactionDefault>
 
     <!-- Appearance Tab -->
     <FactionLoadout_Appearance_Beards>Forced Beard Styles</FactionLoadout_Appearance_Beards>

@@ -14,7 +14,7 @@ namespace TotalControlMechsuitCompat;
 ///
 /// Fixes issue #43: when Total Control forces mechsuit apparel onto a PawnKindDef that doesn't
 /// already have a <see cref="ModExtForceApparelGen"/> extension, the framework's own initialization
-/// postfix (on PawnGenerator.GenerateGearFor) never fires — leaving the exosuit core with
+/// postfix (on PawnGenerator.GenerateGearFor) never fires - leaving the exosuit core with
 /// uninitialized health.
 ///
 /// At Apply time, this module detects exosuit core apparel in the edit's SpecificApparel list and

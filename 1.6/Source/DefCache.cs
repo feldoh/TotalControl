@@ -11,7 +11,7 @@ namespace FactionLoadout;
 /// <summary>
 /// Lazily populated caches of def lists used throughout the editor UI.
 /// Call <see cref="ScanDefs"/> once (guarded by a null-check) before accessing any list.
-/// that are needed by multiple draw-support classes.
+/// Needed for multiple draw-support classes.
 /// </summary>
 public static class DefCache
 {
@@ -27,6 +27,7 @@ public static class DefCache
     public static List<PawnKindDef> AllAnimalKindDefs;
     public static List<RulePackDef> AllRulePackDefs;
     public static List<GeneDef> AllGeneDefs;
+    public static Dictionary<FactionDef, List<PawnKindDef>> DefaultFactionKinds;
 
     public static List<string> AllBackstoryCategories;
     public static List<BackstoryDef> AllChildhoodBackstories;
@@ -55,11 +56,25 @@ public static class DefCache
         HashSet<BodyTypeDef> allBodyTypeDefs = new(32);
         HashSet<GeneDef> allGeneDefs = new(1024);
 
+        Dictionary<FactionDef, List<PawnKindDef>> defaultFactionKinds = new(64);
+
         foreach (PawnKindDef def in DefDatabase<PawnKindDef>.AllDefsListForReading)
         {
             if (def.RaceProps is { Animal: true, packAnimal: true })
                 allAnimalKindDefs.Add(def);
+
+            if (def.defaultFactionDef != null)
+            {
+                if (!defaultFactionKinds.TryGetValue(def.defaultFactionDef, out List<PawnKindDef> factionKinds))
+                {
+                    factionKinds = [];
+                    defaultFactionKinds[def.defaultFactionDef] = factionKinds;
+                }
+                factionKinds.Add(def);
+            }
         }
+
+        DefaultFactionKinds = defaultFactionKinds;
 
         foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
         {
@@ -153,7 +168,7 @@ public static class DefCache
         AllGeneDefs = [.. allGeneDefs];
         AllGeneDefs.Sort((a, b) => string.Compare((string)a.LabelCap ?? a.defName, (string)b.LabelCap ?? b.defName, StringComparison.InvariantCulture));
 
-        // Backstory categories and defs — discovered from DefDatabase so modded content is included.
+        // Backstory categories and defs - discovered from DefDatabase so modded content is included.
         HashSet<string> backstoryCategories = new(64);
         List<BackstoryDef> childBackstories = new(256);
         List<BackstoryDef> adultBackstories = new(256);
@@ -215,13 +230,78 @@ public static class DefCache
     }
 
     /// <summary>
-    /// Pre-cached blacklists built at apply time: cloned PawnKindDef → blacklisted ThingDefs.
+    /// Pre-cached blocklists built at apply time: cloned PawnKindDef → blocklisted ThingDefs.
     /// Includes both global and specific edits merged. Keyed by cloned def for O(1) lookup at generation time.
     /// </summary>
     public static Dictionary<PawnKindDef, HashSet<ThingDef>> ApparelBlacklistCache = new();
 
     public static Dictionary<PawnKindDef, HashSet<ThingDef>> WeaponBlacklistCache = new();
+
+    /// <summary>
+    /// Pre-cached material rules built at apply time: cloned PawnKindDef → (stuff set, isBlocklist).
+    /// Allowlist (isBlocklist false) allows only the set; blocklist bans the set. Specific edit's list
+    /// (and its mode) wins; otherwise, the faction's global edit's. Absent (or empty) key = no restriction.
+    /// </summary>
+    public static Dictionary<PawnKindDef, (HashSet<ThingDef> defs, bool blocklist)> ApparelMaterialCache = new();
+
+    public static Dictionary<PawnKindDef, (HashSet<ThingDef> defs, bool blocklist)> WeaponMaterialCache = new();
     public static RulePackDef FakeRulePack = new() { defName = "NONE" };
+
+    /// <summary>True if the kind's apparel material rule permits <paramref name="stuff"/> (no rule / null stuff = allowed).</summary>
+    public static bool ApparelMaterialAllows(PawnKindDef kind, ThingDef stuff) => MaterialAllows(ApparelMaterialCache, kind, stuff);
+
+    /// <summary>True if the kind's weapon material rule permits <paramref name="stuff"/> (no rule / null stuff = allowed).</summary>
+    public static bool WeaponMaterialAllows(PawnKindDef kind, ThingDef stuff) => MaterialAllows(WeaponMaterialCache, kind, stuff);
+
+    public static bool MaterialAllows(Dictionary<PawnKindDef, (HashSet<ThingDef> defs, bool blocklist)> cache, PawnKindDef kind, ThingDef stuff)
+    {
+        if (stuff == null || !cache.TryGetValue(kind, out (HashSet<ThingDef> defs, bool blocklist) rule))
+            return true;
+        bool listed = rule.defs.Contains(stuff);
+        return rule.blocklist ? !listed : listed;
+    }
+
+    /// <summary>
+    /// Builds a per-stuff-category count of the materials a list+mode actually permits
+    /// (e.g. "Leathery: 13   Metallic: 4"), for the editor summary. Returns null if nothing is permitted.
+    /// </summary>
+    public static string MaterialCategorySummary(List<DefRef<ThingDef>> materials, bool isBlocklist)
+    {
+        IEnumerable<ThingDef> allowed;
+        if (isBlocklist)
+        {
+            // Blocklist: allowed = every stuff except the banned ones, so we need the set and full scan.
+            HashSet<ThingDef> banned = [];
+            if (materials != null)
+            {
+                foreach (DefRef<ThingDef> r in materials)
+                {
+                    if (r.HasValue)
+                        banned.Add(r.Def);
+                }
+            }
+            allowed = GenStuff.StuffDefs.Where(s => !banned.Contains(s));
+        }
+        else
+        {
+            // Allowlist: allowed = exactly the selected materials - no set or full scan needed.
+            allowed = (materials ?? Enumerable.Empty<DefRef<ThingDef>>()).Where(r => r.HasValue).Select(r => r.Def);
+        }
+
+        Dictionary<StuffCategoryDef, int> counts = new();
+        foreach (ThingDef s in allowed)
+        {
+            if (s?.stuffProps?.categories == null)
+                continue;
+            foreach (StuffCategoryDef cat in s.stuffProps.categories)
+            {
+                counts.TryGetValue(cat, out int c);
+                counts[cat] = c + 1;
+            }
+        }
+
+        return counts.Count == 0 ? null : string.Join("   ", counts.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key.LabelCap}: {kv.Value}"));
+    }
 
     public static void BuildBlacklistCaches(PawnKindEdit edit, PawnKindDef def, PawnKindEdit global)
     {
@@ -233,11 +313,11 @@ public static class DefCache
 
         if (apparelBl.Count > 0)
         {
-            DefCache.ApparelBlacklistCache[def] = apparelBl;
+            ApparelBlacklistCache[def] = apparelBl;
         }
         else
         {
-            DefCache.ApparelBlacklistCache.Remove(def);
+            ApparelBlacklistCache.Remove(def);
         }
 
         HashSet<ThingDef> weaponBl = (global?.WeaponBlacklist ?? Enumerable.Empty<DefRef<ThingDef>>())
@@ -248,11 +328,38 @@ public static class DefCache
 
         if (weaponBl.Count > 0)
         {
-            DefCache.WeaponBlacklistCache[def] = weaponBl;
+            WeaponBlacklistCache[def] = weaponBl;
         }
         else
         {
-            DefCache.WeaponBlacklistCache.Remove(def);
+            WeaponBlacklistCache.Remove(def);
+        }
+
+        // Material rules: specific edit's list (and its mode) wins, else the faction's global edit's.
+        // Resolve to currently present stuff defs; missing-mod entries stay in the saved DefRef list
+        // but don't constrain generation until their mod returns.
+        List<DefRef<ThingDef>> apparelMatList = edit.ApparelMaterials ?? global?.ApparelMaterials;
+        bool apparelMatBlocklist = edit.ApparelMaterials != null ? edit.ApparelMaterialsBlocklist : global?.ApparelMaterialsBlocklist ?? false;
+        HashSet<ThingDef> apparelMat = apparelMatList?.Where(r => r.HasValue).Select(r => r.Def).ToHashSet();
+        if (apparelMat is { Count: > 0 })
+        {
+            ApparelMaterialCache[def] = (apparelMat, apparelMatBlocklist);
+        }
+        else
+        {
+            ApparelMaterialCache.Remove(def);
+        }
+
+        List<DefRef<ThingDef>> weaponMatList = edit.WeaponMaterials ?? global?.WeaponMaterials;
+        bool weaponMatBlocklist = edit.WeaponMaterials != null ? edit.WeaponMaterialsBlocklist : global?.WeaponMaterialsBlocklist ?? false;
+        HashSet<ThingDef> weaponMat = weaponMatList?.Where(r => r.HasValue).Select(r => r.Def).ToHashSet();
+        if (weaponMat is { Count: > 0 })
+        {
+            WeaponMaterialCache[def] = (weaponMat, weaponMatBlocklist);
+        }
+        else
+        {
+            WeaponMaterialCache.Remove(def);
         }
     }
 }

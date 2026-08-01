@@ -44,7 +44,10 @@ public class FactionEditScreen
         head.Begin(new Rect(inRect.x, inRect.y, inRect.width, 240f));
 
         Rect titleRect = head.GetRect(44f);
-        Widgets.Label(titleRect, $"<size=30><b>{"FactionLoadout_TC_FactionHeader".Translate()}: <color=#cf9af5>{Current.Faction.Def?.LabelCap ?? "None".Translate()}</color></b></size>");
+        Widgets.Label(
+            titleRect,
+            $"<size=30><b>{"FactionLoadout_TC_FactionHeader".Translate()}: <color=#cf9af5>{Current.Faction.Def?.LabelCap ?? "None".Translate()}</color></b></size>"
+        );
 
         if (Current.Faction.IsMissing)
             head.Label($"<color=orange>{"FactionLoadout_FactionMissingEditWarning".Translate()}</color>");
@@ -201,6 +204,38 @@ public class FactionEditScreen
             );
         }
 
+        // Forced primary ideology (Ideology). Skipped for the synthetic special factions.
+        if (
+            ModsConfig.IdeologyActive
+            && Current.Faction is { IsMissing: false }
+            && Current.Faction?.Def != Preset.SpecialWildManFaction
+            && Current.Faction?.Def != Preset.SpecialCreepjoinerFaction
+            && Current.Faction?.Def != Preset.SpecialFactionlessPawnsFaction
+        )
+        {
+            ui.GapLine();
+            string primaryLabel =
+                ForcedIdeoRefUI.DisabledByClassicMode ? "FactionLoadout_General_IdeoClassicDisabled".Translate().ToString()
+                : string.IsNullOrEmpty(Current.ForcedPrimaryIdeoKey) ? "FactionLoadout_Faction_PrimaryIdeoNotOverridden".Translate().ToString()
+                : ForcedIdeoRefUI.DisplayName(Current.ForcedPrimaryIdeoSourceKind, Current.ForcedPrimaryIdeoKey);
+            if (
+                ui.ButtonTextLabeled("FactionLoadout_Faction_PrimaryIdeo".Translate(), primaryLabel, tooltip: "FactionLoadout_Faction_PrimaryIdeoTooltip".Translate())
+                && !ForcedIdeoRefUI.DisabledByClassicMode
+            )
+            {
+                ForcedIdeoRefUI.OpenPicker(
+                    includeFactionPrimary: false,
+                    (source, key) =>
+                    {
+                        Current.ForcedPrimaryIdeoSourceKind = source;
+                        Current.ForcedPrimaryIdeoKey = key;
+                    },
+                    onClear: () => Current.ForcedPrimaryIdeoKey = null,
+                    clearLabel: "FactionLoadout_Faction_PrimaryIdeoNotOverridden".Translate().ToString()
+                );
+            }
+        }
+
         // Xenotype spawn rates (Biotech).
         if (
             ModsConfig.BiotechActive
@@ -216,7 +251,9 @@ public class FactionEditScreen
             }
 
             ui.GapLine();
-            string xenoState = Current.OverrideFactionXenotypes ? "FactionLoadout_Xenotype_ActiveCount".Translate(Current.xenotypeChances.Count) : "FactionLoadout_Xenotype_Off".Translate();
+            string xenoState = Current.OverrideFactionXenotypes
+                ? "FactionLoadout_Xenotype_ActiveCount".Translate(Current.xenotypeChances.Count)
+                : "FactionLoadout_Xenotype_Off".Translate();
             if (ui.ButtonTextLabeled("FactionLoadout_EditXenoSpawnRates".Translate(), xenoState))
                 Find.WindowStack.Add(new Dialog_XenotypeEdit(Current));
         }
@@ -233,7 +270,10 @@ public class FactionEditScreen
             Text.Anchor = TextAnchor.MiddleLeft;
             string groupsSummary;
             if (Current.PawnGroupMakerEdits != null)
-                groupsSummary = "FactionLoadout_SpawnGroups_SummaryModified".Translate(Current.PawnGroupMakerEdits.Count, "FactionLoadout_GroupEditor_NewTag".Translate().ToString().ToLower());
+                groupsSummary = "FactionLoadout_SpawnGroups_SummaryModified".Translate(
+                    Current.PawnGroupMakerEdits.Count,
+                    "FactionLoadout_GroupEditor_NewTag".Translate().ToString().ToLower()
+                );
             else
                 groupsSummary = "FactionLoadout_SpawnGroups_Summary".Translate(Current?.Faction?.Def?.pawnGroupMakers?.Count ?? 0);
 
@@ -354,7 +394,10 @@ public class FactionEditScreen
         List<PawnKindDef> kinds = MakeKinds().ToList();
         List<MenuItemBase> items = CustomFloatMenu.MakeItems(
             kinds,
-            k => k != null ? new MenuItemText(k, $"{k.LabelCap} ({k.defName})", tooltip: k.description) : new MenuItemText(null, $"<color=cyan><b>{"FactionLoadout_GlobalLabel".Translate()}</b></color>")
+            k =>
+                k != null
+                    ? new MenuItemText(k, $"{k.LabelCap} ({k.defName})", tooltip: k.description)
+                    : new MenuItemText(null, $"<color=cyan><b>{"FactionLoadout_GlobalLabel".Translate()}</b></color>")
         );
         CustomFloatMenu.Open(
             items,

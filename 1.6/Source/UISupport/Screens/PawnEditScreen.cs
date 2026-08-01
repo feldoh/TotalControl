@@ -186,18 +186,16 @@ public class PawnEditScreen
         bool isAnimal = dk.RaceProps.Animal;
         if (!isAnimal)
         {
-            tabs.AddRange(
-                [
-                    new BackstoryTab(Current, dk),
-                    new AppearanceTab(Current, dk),
-                    new ApparelTab(Current, dk),
-                    new WeaponTab(Current, dk),
-                    new ImplantsTab(Current, dk),
-                    new InventoryTab(Current, dk),
-                    new RaidPointsTab(Current, dk),
-                    new RaidLootTab(Current, dk),
-                ]
-            );
+            tabs.AddRange([
+                new BackstoryTab(Current, dk),
+                new AppearanceTab(Current, dk),
+                new ApparelTab(Current, dk),
+                new WeaponTab(Current, dk),
+                new ImplantsTab(Current, dk),
+                new InventoryTab(Current, dk),
+                new RaidPointsTab(Current, dk),
+                new RaidLootTab(Current, dk),
+            ]);
             if (VFEAncientsReflectionModule.ModLoaded.Value)
                 tabs.Add(new AncientsTab(Current, dk));
             if (VEPsycastsReflectionModule.ModLoaded.Value)

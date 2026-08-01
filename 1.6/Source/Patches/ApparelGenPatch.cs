@@ -60,6 +60,10 @@ public static class ApparelGenPatch
         if (edits.editCount > 0 && pawn.RaceProps.ToolUser)
             ForceGiveClothes(pawn, edits);
 
+        // For TC-managed kinds, surface (and optionally fix) a bare torso left by a too-low budget.
+        if (edits.editCount > 0 && !edits.anyForceNaked)
+            HandleApparelPriceLimit(pawn);
+
         HairDef hair = GetForcedHair(edits);
         BeardDef beard = GetForcedBeard(edits);
         Color? color = GetForcedHairColor(edits);
@@ -206,8 +210,37 @@ public static class ApparelGenPatch
         if (spec.Style != null)
             thing.SetStyleDef(spec.Style);
 
-        if (spec.Quality != null)
-            thing.TryGetComp<CompQuality>()?.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
+        CompQuality compQuality = thing.TryGetComp<CompQuality>();
+        if (compQuality != null)
+        {
+            if (spec.Quality != null)
+            {
+                compQuality.SetQuality(spec.Quality.Value, ArtGenerationContext.Outsider);
+            }
+            else
+            {
+                QualityCategory quality = QualityUtility.GenerateQualityGeneratingPawn(pawn.kindDef, thing.def);
+                if (pawn.royalty != null && pawn.Faction != null)
+                {
+                    RoyalTitleDef currentTitle = pawn.royalty.GetCurrentTitle(pawn.Faction);
+                    if (currentTitle != null)
+                    {
+                        quality = (QualityCategory)Mathf.Clamp((int)quality, (int)currentTitle.requiredMinimumApparelQuality, 6);
+                    }
+                }
+                compQuality.SetQuality(quality, ArtGenerationContext.Outsider);
+            }
+        }
+
+        if (thing.def.useHitPoints)
+        {
+            float healthFactor = pawn.kindDef.gearHealthRange.RandomInRange;
+            if (healthFactor < 1f)
+            {
+                int hitPoints = Mathf.Max(1, Mathf.RoundToInt(healthFactor * thing.MaxHitPoints));
+                thing.HitPoints = hitPoints;
+            }
+        }
 
         if (spec.Color != default)
             thing.SetColor(spec.Color, false);
@@ -252,12 +285,103 @@ public static class ApparelGenPatch
         c.a = 1f;
         return c;
     }
+
+    // ==================== Price-limited apparel fallback ====================
+
+    /// <summary>
+    /// When a TC-managed pawn ends up with no torso apparel, determines whether price was the
+    /// limiting factor (an allowed torso item exists but costs more than the budget) and, if so,
+    /// logs it (verbose) and optionally wears the cheapest matching item (<see cref="MySettings.IgnorePriceLimits"/>).
+    /// </summary>
+    private static void HandleApparelPriceLimit(Pawn pawn)
+    {
+        // Nothing to log or fix when both toggles are off - skip the allApparelPairs scan entirely.
+        if (!MySettings.VerboseLogging && !MySettings.IgnorePriceLimits)
+            return;
+
+        if (pawn.apparel == null || !pawn.RaceProps.ToolUser || !pawn.RaceProps.IsFlesh || !BodyHasTorso(pawn) || CoversTorso(pawn))
+            return;
+
+        ThingStuffPair? cheapest = CheapestEligibleTorsoApparel(pawn);
+        if (cheapest == null)
+            return; // No allowed torso apparel exists → the cause is tags/filters, not price.
+
+        ThingStuffPair pair = cheapest.Value;
+
+        // Only act when price was genuinely the limiter. Vanilla draws a random budget in apparelMoney and
+        // spends it down as it adds items then prunes anything pricier than what's left.
+        // Subtract what was actually spent on the pawn's other apparel and only bail when even the best-case can't cover it.
+        // Prices use the same abstract MarketValue as vanilla's budget math; free warmth/vacuum layers are
+        // not budget-charged, so spent is a slight overestimate - hence the clamp.
+        float spent = pawn.apparel.WornApparel.Sum(a => a.def.GetStatValueAbstract(StatDefOf.MarketValue, a.Stuff));
+        float budgetLeft = Mathf.Max(0f, pawn.kindDef.apparelMoney.max - spent);
+        if (pair.Price <= budgetLeft)
+            return;
+
+        if (MySettings.VerboseLogging)
+        {
+            string mat = pair.stuff != null ? $" ({pair.stuff.LabelCap})" : "";
+            string spentNote = spent > 0f ? $" (${spent:F0} already spent on other apparel)" : "";
+            ModCore.Warn(
+                $"Apparel slot left empty by price for '{pawn.kindDef.LabelCap}': no torso apparel affordable within apparelMoney {pawn.kindDef.apparelMoney}{spentNote}. "
+                    + $"Cheapest matching option is {pair.thing.LabelCap}{mat} at ${pair.Price:F0} - raise apparelMoney or relax the apparel/material filters."
+            );
+        }
+
+        if (MySettings.IgnorePriceLimits)
+            WearFallbackApparel(pawn, pair);
+    }
+
+    /// <summary>
+    /// True if the pawn's body has any part in the Torso group. Non-humanlike ToolUsers (some modded
+    /// races/mechs) can lack a torso entirely, in which case a "bare torso" is normal, not a price failure.
+    /// </summary>
+    private static bool BodyHasTorso(Pawn pawn) => Enumerable.Any(pawn.RaceProps?.body?.AllParts ?? [], t => t.IsInGroup(BodyPartGroupDefOf.Torso));
+
+    private static bool CoversTorso(Pawn pawn) =>
+        pawn.apparel?.WornApparel?.Select(t => t.def.apparel?.bodyPartGroups).Any(groups => groups != null && groups.Contains(BodyPartGroupDefOf.Torso)) ?? false;
+
+    private static ThingStuffPair? CheapestEligibleTorsoApparel(Pawn pawn)
+    {
+        ThingStuffPair? best = null;
+        List<ThingStuffPair> pairs = PawnApparelGenerator.allApparelPairs;
+        foreach (ThingStuffPair p in pairs)
+        {
+            List<BodyPartGroupDef> groups = p.thing.apparel?.bodyPartGroups;
+            if (groups == null || !groups.Contains(BodyPartGroupDefOf.Torso))
+                continue;
+            // CanUsePair (with unlimited money) applies all of vanilla's filters plus our own
+            // blocklist/material postfix, so we reuse it rather than duplicating that logic.
+            if (!PawnApparelGenerator.CanUsePair(p, pawn, float.MaxValue, true, pawn.thingIDNumber))
+                continue;
+            if (best == null || p.Price < best.Value.Price)
+                best = p;
+        }
+
+        return best;
+    }
+
+    private static void WearFallbackApparel(Pawn pawn, ThingStuffPair pair)
+    {
+        try
+        {
+            if (ThingMaker.MakeThing(pair.thing, pair.stuff) is not Apparel apparel)
+                return;
+            PawnApparelGenerator.PostProcessApparel(apparel, pawn);
+            pawn.apparel.Wear(apparel, false);
+            ModCore.Debug($"Ignore-price fallback dressed '{pawn.kindDef.LabelCap}' in {apparel.LabelCap}.");
+        }
+        catch (Exception e)
+        {
+            ModCore.Error($"Ignore-price apparel fallback failed for '{pawn.kindDef.LabelCap}'", e);
+        }
+    }
 }
 
 /// <summary>
-/// Prevents blacklisted ThingDefs from entering vanilla's apparel candidate pool.
+/// Prevents blocklisted ThingDefs from entering vanilla's apparel candidate pool.
 /// Uses <see cref="DefCache.ApparelBlacklistCache"/> populated at Apply() time
-/// for O(1) lookup per pair — no per-pawn edit iteration at patch time.
+/// for O(1) lookup per pair - no per-pawn edit iteration at patch time.
 /// </summary>
 [HarmonyPatch(typeof(PawnApparelGenerator), "CanUsePair")]
 public static class CanUsePairBlacklistPatch
@@ -268,6 +392,28 @@ public static class CanUsePairBlacklistPatch
             return;
 
         if (DefCache.ApparelBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
+        {
+            __result = false;
+            return;
+        }
+
+        // Material rule (allowlist or blocklist) - keeps disallowed materials out of the candidate pool.
+        if (!DefCache.ApparelMaterialAllows(pawn.kindDef, pair.stuff))
+            __result = false;
+    }
+}
+
+/// <summary>
+/// Applies the per-kind apparel material rule to vanilla's stuff gate. REQUIRED apparel
+/// (PawnKindDef.apparelRequired) picks its stuff via CanUseStuff and never touches CanUsePair,
+/// so without this, a required item could spawn in a disallowed material.
+/// </summary>
+[HarmonyPatch(typeof(PawnApparelGenerator), "CanUseStuff")]
+public static class CanUseStuffMaterialPatch
+{
+    static void Postfix(Pawn pawn, ThingStuffPair pair, ref bool __result)
+    {
+        if (__result && !DefCache.ApparelMaterialAllows(pawn.kindDef, pair.stuff))
             __result = false;
     }
 }

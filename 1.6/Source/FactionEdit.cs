@@ -18,6 +18,16 @@ public class FactionEdit : IExposable
 
     private static readonly Dictionary<string, FactionDef> originalFactionDefs = new();
     private static Dictionary<(FactionDef, PawnKindDef), PawnKindDef> factionSpecificPawnKindReplacements = new();
+
+    /// <summary>FactionDef defName → the FactionEdit applied to it by the active preset(s). Rebuilt on preset apply.</summary>
+    public static readonly Dictionary<string, FactionEdit> ActiveFactionEdits = new();
+
+    /// <summary>Returns the active <see cref="FactionEdit"/> for a runtime faction's def, or null.</summary>
+    public static FactionEdit GetActiveEditFor(FactionDef def) =>
+        def == null ? null
+        : ActiveFactionEdits.TryGetValue(def.defName, out FactionEdit edit) ? edit
+        : null;
+
     public bool Active = true;
     public ThingFilter ApparelStuffFilter;
     public TechLevel? TechLevel = null;
@@ -27,6 +37,17 @@ public class FactionEdit : IExposable
     private Dictionary<string, string> preservedFactionModuleXml;
 
     public DefRef<FactionDef> Faction = new();
+
+    /// <summary>
+    /// Portable forced PRIMARY ideology reference for this faction (a <c>.rid</c> filename or an
+    /// <see cref="IdeoPresetDef"/> defName; null = don't force). Each real faction instance
+    /// realises this once per save via <see cref="ForcedIdeoGameComponent"/> and has it set as its
+    /// primary ideology, so the ideology listing matches what pawns actually believe. Pawnkind
+    /// edits referencing the same source+key resolve to the same realised instance.
+    /// </summary>
+    public string ForcedPrimaryIdeoKey = null;
+    public ForcedIdeoSource ForcedPrimaryIdeoSourceKind = ForcedIdeoSource.SavedFile;
+
     public List<PawnKindEdit> KindEdits = [];
     public List<PawnGroupMakerEdit> PawnGroupMakerEdits = null;
     public Dictionary<string, float> xenotypeChances = [];
@@ -48,6 +69,8 @@ public class FactionEdit : IExposable
         Scribe_Deep.Look(ref ApparelStuffFilter, "apparelStuffFilter");
         Scribe_Deep.Look(ref Faction, "faction");
         Scribe_Values.Look(ref TechLevel, "techLevel");
+        Scribe_Values.Look(ref ForcedPrimaryIdeoKey, "forcedPrimaryIdeoKey");
+        Scribe_Values.Look(ref ForcedPrimaryIdeoSourceKind, "forcedPrimaryIdeoSourceKind", ForcedIdeoSource.SavedFile);
         Scribe_Collections.Look(ref KindEdits, "kindEdits", LookMode.Deep);
         Scribe_Collections.Look(ref xenotypeChances, "xenotypeChances", LookMode.Value, LookMode.Value);
         if (Scribe.mode == LoadSaveMode.Saving)
@@ -59,6 +82,7 @@ public class FactionEdit : IExposable
         if (Scribe.mode != LoadSaveMode.PostLoadInit)
             return;
 
+        xenotypeChances ??= [];
         MaterializeXenotypeChances();
         if (!(xenotypeChances.NullOrEmpty() && xenotypeChancesByDef.NullOrEmpty()))
             OverrideFactionXenotypes = true;
@@ -259,6 +283,11 @@ public class FactionEdit : IExposable
         if (def.fixedLeaderKinds != null)
             kinds.AddRange(def.fixedLeaderKinds);
 
+        if (DefCache.DefaultFactionKinds != null && DefCache.DefaultFactionKinds.TryGetValue(def, out List<PawnKindDef> defaultKinds))
+        {
+            kinds.AddRange(defaultKinds);
+        }
+
         return kinds.ToArray();
     }
 
@@ -266,6 +295,7 @@ public class FactionEdit : IExposable
     {
         originalFactionDefs.Clear();
         factionSpecificPawnKindReplacements.Clear();
+        ActiveFactionEdits.Clear();
     }
 
     public static FactionDef TryGetOriginal(string factionDefName)
@@ -330,7 +360,7 @@ public class FactionEdit : IExposable
     /// </summary>
     public HashSet<PawnKindDef> GetOrphanedKinds()
     {
-        // Normalise clone defs back to originals before comparing — after Apply(),
+        // Normalise clone defs back to originals before comparing - after Apply(),
         // faction def group makers contain cloned PawnKindDefs (e.g. Archer_TCCln_Gentle)
         // while edit.Def references the original (Archer).
         HashSet<string> inGroups = GetAllKindDefsForUI().Select(k => PawnKindEdit.NormaliseDef(k).defName).ToHashSet();
@@ -369,6 +399,7 @@ public class FactionEdit : IExposable
         //    def.apparelStuffFilter = ApparelStuffFilter;
 
         def = EnsureOriginal(def);
+        ActiveFactionEdits[def.defName] = this;
 
         // Apply group edits before discovering pawnkinds so that newly added
         // pawnkinds are visible to the rest of the Apply() pipeline.
@@ -462,10 +493,12 @@ public class FactionEdit : IExposable
     public void CopyFrom(FactionEdit source)
     {
         TechLevel = source.TechLevel;
+        ForcedPrimaryIdeoKey = source.ForcedPrimaryIdeoKey;
+        ForcedPrimaryIdeoSourceKind = source.ForcedPrimaryIdeoSourceKind;
         OverrideFactionXenotypes = source.OverrideFactionXenotypes;
         xenotypeChances = source.xenotypeChances != null ? new Dictionary<string, float>(source.xenotypeChances) : [];
         xenotypeChancesByDef = source.xenotypeChancesByDef != null ? new Dictionary<XenotypeDef, float>(source.xenotypeChancesByDef) : [];
-        // Group edits are not copied by the faction-level clipboard — they are
+        // Group edits are not copied by the faction-level clipboard - they are
         // structural changes that should not be blindly overwritten.
     }
 
