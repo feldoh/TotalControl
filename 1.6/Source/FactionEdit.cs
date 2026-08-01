@@ -362,8 +362,7 @@ public class FactionEdit : IExposable
     /// </summary>
     public IEnumerable<PawnKindDef> GetAllKindDefsForUI()
     {
-        IEnumerable<PawnKindDef> kinds =
-            PawnGroupMakerEdits != null ? PawnGroupMakerEdits.SelectMany(g => g.GetAllKinds()).Distinct() : GetAllPawnKinds(Faction.Def);
+        IEnumerable<PawnKindDef> kinds = PawnGroupMakerEdits != null ? PawnGroupMakerEdits.SelectMany(g => g.GetAllKinds()).Distinct() : GetAllPawnKinds(Faction.Def);
         if (EffectiveBasicMemberKind != null)
             kinds = kinds.Append(EffectiveBasicMemberKind).Distinct();
         return kinds;
