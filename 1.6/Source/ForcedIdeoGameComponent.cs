@@ -408,7 +408,7 @@ public class ForcedIdeoGameComponent : GameComponent
             }
         }
 
-        if (missing.NullOrEmpty())
+        if (!missing.NullOrEmpty())
             ModCore.Warn(
                 $"Forced ideology saved file(s) not found on this machine: {string.Join(", ", missing)}. Affected pawns keep their faction's ideology until the file(s) exist in the Ideos folder."
             );
