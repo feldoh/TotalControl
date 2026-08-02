@@ -255,7 +255,7 @@ public static class DefCache
 
     public static bool MaterialAllows(Dictionary<PawnKindDef, (HashSet<ThingDef> defs, bool blocklist)> cache, PawnKindDef kind, ThingDef stuff)
     {
-        if (stuff == null || !cache.TryGetValue(kind, out (HashSet<ThingDef> defs, bool blocklist) rule))
+        if (kind == null || stuff == null || !cache.TryGetValue(kind, out (HashSet<ThingDef> defs, bool blocklist) rule))
             return true;
         bool listed = rule.defs.Contains(stuff);
         return rule.blocklist ? !listed : listed;

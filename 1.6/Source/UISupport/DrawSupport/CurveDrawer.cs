@@ -35,6 +35,7 @@ public static class CurveDrawer
             {
                 curve.Points.RemoveAt(i);
                 curvePointBuffer.RemoveAt(i);
+                i--;
             }
 
             listing.GapLine();

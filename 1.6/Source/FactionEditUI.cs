@@ -524,7 +524,7 @@ public class FactionEditUI : Window
                 framesSinceF = 0;
             _previewFailed = false;
 
-            FactionDef toClone = FactionEdit.TryGetOriginal(Current.Faction.Def.defName) ?? Current.Faction.Def;
+            FactionDef toClone = FactionEdit.TryGetOriginal(Current.Faction.DefName) ?? Current.Faction.Def;
             clonedFac = CloningUtility.Clone(toClone);
             clonedFac.defName = Current.Faction.Def.defName;
             clonedFac.humanlikeFaction = Current.Faction.Def.humanlikeFaction;

@@ -29,7 +29,12 @@ public class PawnKindEdit : IExposable
 
     public static void SetActiveEdits(PawnKindDef pawnKindDef, List<PawnKindEdit> edits) => activeEdits.SetOrAdd(pawnKindDef, edits);
 
-    public static PawnKindDef NormaliseDef(PawnKindDef def) => replacementToOriginal.TryGetValue(def, def);
+    public static PawnKindDef NormaliseDef(PawnKindDef def)
+    {
+        if (def == null)
+            return null;
+        return replacementToOriginal.TryGetValue(def, out PawnKindDef orig) ? orig ?? def : def;
+    }
 
     public static IEnumerable<PawnKindEdit> GetEditsFor(PawnKindDef def, FactionDef factionDef)
     {

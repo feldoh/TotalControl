@@ -28,7 +28,7 @@ public class PawnKindEditUI : Window
             if (Current.DeletedOrClosed)
                 return Current.Def;
 
-            FactionDef found = FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.DefName);
+            FactionDef found = FactionEdit.TryGetOriginal(Current.ParentEdit?.Faction?.DefName);
             if (found == null)
                 return Current.Def;
             PawnKindDef found2 = found.GetKindDefs().FirstOrDefault(k => k.defName == Current.Def.defName);

@@ -333,7 +333,7 @@ public static class WeaponGetCommonalityBlacklistPatch
 {
     static void Postfix(Pawn pawn, ThingStuffPair pair, ref float __result)
     {
-        if (__result <= 0f)
+        if (__result <= 0f || pawn?.kindDef == null)
             return;
 
         if (DefCache.WeaponBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
