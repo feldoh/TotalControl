@@ -394,7 +394,7 @@ public static class CanUsePairBlacklistPatch
 {
     static void Postfix(ThingStuffPair pair, Pawn pawn, ref bool __result)
     {
-        if (!__result)
+        if (!__result || pawn?.kindDef == null)
             return;
 
         if (DefCache.ApparelBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
@@ -419,7 +419,7 @@ public static class CanUseStuffMaterialPatch
 {
     static void Postfix(Pawn pawn, ThingStuffPair pair, ref bool __result)
     {
-        if (__result && !DefCache.ApparelMaterialAllows(pawn.kindDef, pair.stuff))
+        if (__result && pawn?.kindDef != null && !DefCache.ApparelMaterialAllows(pawn.kindDef, pair.stuff))
             __result = false;
     }
 }
