@@ -34,7 +34,7 @@ public class RaidPointsTab : EditTab
         if (Widgets.ButtonText(overrideButtonRect, "FactionLoadout_FactionDefault".Translate()))
         {
             Current.RaidCommonalityFromPointsCurve = new SimpleCurve(
-                FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidCommonalityFromPointsCurve?.Points ?? []
+                FactionEdit.TryGetOriginal(Current.ParentEdit?.Faction?.DefName)?.raidCommonalityFromPointsCurve?.Points ?? []
             );
         }
 
@@ -50,7 +50,7 @@ public class RaidPointsTab : EditTab
         if (Widgets.ButtonText(maxCostButtonRect, "FactionLoadout_FactionDefault".Translate()))
         {
             Current.MaxPawnCostPerTotalPointsCurve = new SimpleCurve(
-                FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.maxPawnCostPerTotalPointsCurve?.Points ?? []
+                FactionEdit.TryGetOriginal(Current.ParentEdit?.Faction?.DefName)?.maxPawnCostPerTotalPointsCurve?.Points ?? []
             );
         }
 
