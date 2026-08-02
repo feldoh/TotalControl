@@ -39,7 +39,7 @@ public class ForcedHediff : IExposable, IDeepCopyable<ForcedHediff>
         new ForcedHediff
         {
             hediffDef = hediffDef,
-            parts = parts == null ? null : new List<DefRef<BodyPartDef>>(parts),
+            parts = parts?.Select(p => p?.DeepClone()).ToList(),
             maxParts = maxParts,
             maxPartsRange = maxPartsRange,
             chance = chance,
