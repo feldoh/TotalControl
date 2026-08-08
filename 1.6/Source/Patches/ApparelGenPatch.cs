@@ -21,8 +21,10 @@ public static class ApparelGenPatch
         public List<SpecRequirementEdit> pool2 = [];
         public List<SpecRequirementEdit> pool3 = [];
         public List<SpecRequirementEdit> pool4 = [];
-        public List<HairDef> hairs = [];
-        public List<BeardDef> beards = [];
+        public HashSet<HairDef> hairs = [];
+        public HashSet<BeardDef> beards = [];
+        public HashSet<TattooDef> faceTattoos = [];
+        public HashSet<TattooDef> bodyTattoos = [];
         public List<Color> hairColors = [];
         public int editCount;
         public bool anyForceNaked;
@@ -75,6 +77,18 @@ public static class ApparelGenPatch
             pawn.story.hairDef = hair;
         if (color != null)
             pawn.story.HairColor = color.Value;
+
+        // Tattoos are an Ideology feature; only meaningful when the DLC is active.
+        if (ModsConfig.IdeologyActive && pawn.style != null)
+        {
+            TattooDef faceTattoo = GetForcedTattoo(edits.faceTattoos);
+            TattooDef bodyTattoo = GetForcedTattoo(edits.bodyTattoos);
+            if (faceTattoo != null)
+                pawn.style.FaceTattoo = faceTattoo;
+            if (bodyTattoo != null)
+                pawn.style.BodyTattoo = bodyTattoo;
+        }
+
         if (ModLister.IdeologyInstalled)
         {
             pawn.style?.Notify_StyleItemChanged();
@@ -119,6 +133,12 @@ public static class ApparelGenPatch
 
         if (edit.CustomBeards != null)
             edits.beards.AddRange(edit.CustomBeards.Select(r => r.Def).Where(d => d != null));
+
+        if (edit.CustomFaceTattoos != null)
+            edits.faceTattoos.AddRange(edit.CustomFaceTattoos.Select(r => r.Def).Where(d => d != null));
+
+        if (edit.CustomBodyTattoos != null)
+            edits.bodyTattoos.AddRange(edit.CustomBodyTattoos.Select(r => r.Def).Where(d => d != null));
 
         if (edit.CustomHairColors != null)
             edits.hairColors.AddRange(edit.CustomHairColors);
@@ -256,25 +276,11 @@ public static class ApparelGenPatch
         return app;
     }
 
-    private static HairDef GetForcedHair(AccumulatedApparelEdits edits)
-    {
-        if (edits.hairs.Count == 0)
-            return null;
+    private static HairDef GetForcedHair(AccumulatedApparelEdits edits) => edits.hairs.Count > 0 ? edits.hairs.RandomElement() : null;
 
-        edits.hairs.RemoveAll(h => h == null);
-        edits.hairs.RemoveDuplicates((a, b) => a == b);
-        return edits.hairs.Count > 0 ? edits.hairs.RandomElement() : null;
-    }
+    private static BeardDef GetForcedBeard(AccumulatedApparelEdits edits) => edits.beards.Count > 0 ? edits.beards.RandomElement() : null;
 
-    private static BeardDef GetForcedBeard(AccumulatedApparelEdits edits)
-    {
-        if (edits.beards.Count == 0)
-            return null;
-
-        edits.beards.RemoveAll(h => h == null);
-        edits.beards.RemoveDuplicates((a, b) => a == b);
-        return edits.beards.Count > 0 ? edits.beards.RandomElement() : null;
-    }
+    private static TattooDef GetForcedTattoo(HashSet<TattooDef> tattoos) => tattoos.Count > 0 ? tattoos.RandomElement() : null;
 
     private static Color? GetForcedHairColor(AccumulatedApparelEdits edits)
     {
@@ -388,7 +394,7 @@ public static class CanUsePairBlacklistPatch
 {
     static void Postfix(ThingStuffPair pair, Pawn pawn, ref bool __result)
     {
-        if (!__result)
+        if (!__result || pawn?.kindDef == null)
             return;
 
         if (DefCache.ApparelBlacklistCache.TryGetValue(pawn.kindDef, out HashSet<ThingDef> bl) && bl.Contains(pair.thing))
@@ -413,7 +419,7 @@ public static class CanUseStuffMaterialPatch
 {
     static void Postfix(Pawn pawn, ThingStuffPair pair, ref bool __result)
     {
-        if (__result && !DefCache.ApparelMaterialAllows(pawn.kindDef, pair.stuff))
+        if (__result && pawn?.kindDef != null && !DefCache.ApparelMaterialAllows(pawn.kindDef, pair.stuff))
             __result = false;
     }
 }

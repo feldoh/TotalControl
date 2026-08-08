@@ -262,6 +262,29 @@ public class FactionEditScreen
             );
         }
 
+        // Basic member kind override. Skip synthetic special factions - they aren't real
+        // factions, so basicMemberKind is inert there.
+        if (
+            Current.Faction is { IsMissing: false }
+            && Current.Faction?.Def != Preset.SpecialWildManFaction
+            && Current.Faction?.Def != Preset.SpecialCreepjoinerFaction
+            && Current.Faction?.Def != Preset.SpecialFactionlessPawnsFaction
+        )
+        {
+            ui.GapLine();
+            PawnKindDef defaultBasic = Current.Faction?.Def?.basicMemberKind;
+            string basicLabel = Current.BasicMemberKind switch
+            {
+                { HasValue: true } => Current.BasicMemberKind.LabelCap,
+                { IsMissing: true } => "FactionLoadout_DefRef_Missing"
+                    .Translate(Current.BasicMemberKind.DefName, Current.BasicMemberKind.ModName ?? "FactionLoadout_DefRef_UnknownMod".Translate())
+                    .ToString(),
+                _ => "FactionLoadout_NotOverriden_WithDefault".Translate(defaultBasic?.LabelCap ?? "None".Translate()).ToString(),
+            };
+            if (ui.ButtonTextLabeled("FactionLoadout_Faction_BasicMemberKind".Translate(), basicLabel, tooltip: "FactionLoadout_Faction_BasicMemberKindTooltip".Translate()))
+                OpenBasicMemberKindPicker(defaultBasic);
+        }
+
         // Forced primary ideology (Ideology). Skipped for the synthetic special factions.
         if (
             ModsConfig.IdeologyActive
@@ -377,6 +400,30 @@ public class FactionEditScreen
     }
 
     // ------------------------------------------------------------------- helpers
+
+    private void OpenBasicMemberKindPicker(PawnKindDef defaultBasic)
+    {
+        // basicMemberKind is a humanlike "representative member"; offer humanlike kinds only,
+        // with a leading "not overridden" entry (null payload) to clear the override.
+        List<PawnKindDef> kinds = DefDatabase<PawnKindDef>.AllDefsListForReading.Where(k => k.RaceProps is { Humanlike: true }).OrderBy(k => k.LabelCap.ToString()).ToList();
+        kinds.Insert(0, null);
+
+        List<MenuItemBase> items = CustomFloatMenu.MakeItems(
+            kinds,
+            k =>
+                k != null
+                    ? new MenuItemText(k, $"{k.LabelCap} ({k.defName})", tooltip: k.description)
+                    : new MenuItemText(null, $"<color=grey>{"FactionLoadout_NotOverriden_WithDefault".Translate(defaultBasic?.LabelCap ?? "None".Translate())}</color>")
+        );
+        CustomFloatMenu.Open(
+            items,
+            raw =>
+            {
+                PawnKindDef k = raw.GetPayload<PawnKindDef>();
+                Current.BasicMemberKind = k != null ? new DefRef<PawnKindDef>(k) : new DefRef<PawnKindDef>();
+            }
+        );
+    }
 
     private void DrawFactionClipboardToolbar(Listing_Standard ui)
     {

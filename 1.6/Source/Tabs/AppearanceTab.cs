@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using FactionLoadout.UISupport;
 using RimWorld;
 using UnityEngine;
@@ -53,6 +54,49 @@ public class AppearanceTab : EditTab
             false,
             pasteGet: e => e.BodyTypes
         );
+
+        // Tattoos are an Ideology feature - only offer them when the DLC is active.
+        if (ModsConfig.IdeologyActive)
+        {
+            DrawOverride(
+                ui,
+                (List<DefRef<TattooDef>>)null,
+                ref Current.CustomFaceTattoos,
+                "FactionLoadout_Appearance_FaceTattoos".Translate().ToString(),
+                DrawFaceTattoos,
+                GetHeightFor(Current.CustomFaceTattoos),
+                false,
+                pasteGet: e => e.CustomFaceTattoos
+            );
+            DrawOverride(
+                ui,
+                (List<DefRef<TattooDef>>)null,
+                ref Current.CustomBodyTattoos,
+                "FactionLoadout_Appearance_BodyTattoos".Translate().ToString(),
+                DrawBodyTattoos,
+                GetHeightFor(Current.CustomBodyTattoos),
+                false,
+                pasteGet: e => e.CustomBodyTattoos
+            );
+        }
+    }
+
+    private void DrawFaceTattoos(Rect rect, bool active, List<DefRef<TattooDef>> _) => DrawTattoos(rect, active, Current.CustomFaceTattoos, TattooType.Face);
+
+    private void DrawBodyTattoos(Rect rect, bool active, List<DefRef<TattooDef>> _) => DrawTattoos(rect, active, Current.CustomBodyTattoos, TattooType.Body);
+
+    private void DrawTattoos(Rect rect, bool active, List<DefRef<TattooDef>> current, TattooType type)
+    {
+        MenuItemBase MakeItem(TattooDef def)
+        {
+            return new MenuItemIcon(def, $"{def.LabelCap} ({def.modContentPack?.Name ?? "<no-mod>"})", def.Icon) { Size = new Vector2(100, 100), BGColor = Color.white };
+        }
+
+        List<TattooDef> options = DefDatabase<TattooDef>.AllDefsListForReading.Where(t => t.tattooType == type).ToList();
+        CustomFloatMenu sel = DrawDefRefList(rect, active, ref scrolls[scrollIndex++], current, null, options, MakeItem);
+        if (sel == null)
+            return;
+        sel.Columns = 4;
     }
 
     private void DrawHairStyles(Rect rect, bool active, List<DefRef<HairDef>> _)

@@ -143,6 +143,7 @@ public class ImplantsTab : EditTab
             {
                 edits.RemoveAt(i);
                 i--;
+                continue;
             }
 
             GUI.color = Color.white;

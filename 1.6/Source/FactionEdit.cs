@@ -31,6 +31,7 @@ public class FactionEdit : IExposable
     public bool Active = true;
     public ThingFilter ApparelStuffFilter;
     public TechLevel? TechLevel = null;
+    public DefRef<PawnKindDef> BasicMemberKind = new();
     public bool DeletedOrClosed;
 
     /// <summary>Raw XML preserved for faction-level module data belonging to inactive modules.</summary>
@@ -69,6 +70,7 @@ public class FactionEdit : IExposable
         Scribe_Deep.Look(ref ApparelStuffFilter, "apparelStuffFilter");
         Scribe_Deep.Look(ref Faction, "faction");
         Scribe_Values.Look(ref TechLevel, "techLevel");
+        Scribe_Deep.Look(ref BasicMemberKind, "basicMemberKind");
         Scribe_Values.Look(ref ForcedPrimaryIdeoKey, "forcedPrimaryIdeoKey");
         Scribe_Values.Look(ref ForcedPrimaryIdeoSourceKind, "forcedPrimaryIdeoSourceKind", ForcedIdeoSource.SavedFile);
         Scribe_Collections.Look(ref KindEdits, "kindEdits", LookMode.Deep);
@@ -82,6 +84,8 @@ public class FactionEdit : IExposable
         if (Scribe.mode != LoadSaveMode.PostLoadInit)
             return;
 
+        // Old presets predate this field; Scribe_Deep leaves it null when the node is absent.
+        BasicMemberKind ??= new DefRef<PawnKindDef>();
         xenotypeChances ??= [];
         MaterializeXenotypeChances();
         if (!(xenotypeChances.NullOrEmpty() && xenotypeChancesByDef.NullOrEmpty()))
@@ -346,12 +350,26 @@ public class FactionEdit : IExposable
     }
 
     /// <summary>
+    /// The basicMemberKind this faction will actually use once the edit is applied: the
+    /// <see cref="BasicMemberKind"/> override when set, otherwise the live def's value. The editor
+    /// needs this because the override isn't written onto the real <see cref="FactionDef"/> until
+    /// <see cref="Apply"/> runs at game load.
+    /// </summary>
+    public PawnKindDef EffectiveBasicMemberKind => BasicMemberKind is { HasValue: true } ? BasicMemberKind.Def : Faction.Def?.basicMemberKind;
+
+    /// <summary>
     /// Returns all pawnkind defs known to TC for the "Add new…" discovery.
     /// When <see cref="PawnGroupMakerEdits"/> is set, reads from it; otherwise reads
-    /// from the live <see cref="FactionDef"/>.
+    /// from the live <see cref="FactionDef"/>. The effective basicMemberKind is always included:
+    /// it isn't part of any spawn group, and when overridden it isn't on the live def yet either.
     /// </summary>
-    public IEnumerable<PawnKindDef> GetAllKindDefsForUI() =>
-        PawnGroupMakerEdits != null ? PawnGroupMakerEdits.SelectMany(g => g.GetAllKinds()).Distinct() : GetAllPawnKinds(Faction.Def);
+    public IEnumerable<PawnKindDef> GetAllKindDefsForUI()
+    {
+        IEnumerable<PawnKindDef> kinds = PawnGroupMakerEdits != null ? PawnGroupMakerEdits.SelectMany(g => g.GetAllKinds()).Distinct() : GetAllPawnKinds(Faction.Def);
+        if (EffectiveBasicMemberKind != null)
+            kinds = kinds.Append(EffectiveBasicMemberKind).Distinct();
+        return kinds;
+    }
 
     /// <summary>
     /// Returns the set of pawnkinds that have a <see cref="PawnKindEdit"/> in
@@ -434,6 +452,12 @@ public class FactionEdit : IExposable
         if (TechLevel != null)
             def.techLevel = TechLevel.Value;
 
+        // Override the faction's basicMemberKind before discovering kinds so the chosen kind
+        // flows through the normal clone/edit/xenotype pipeline below (and, if it isn't otherwise
+        // referenced by a spawn group, still gets picked up by GetAllPawnKinds).
+        if (BasicMemberKind is { HasValue: true })
+            def.basicMemberKind = BasicMemberKind.Def;
+
         IReadOnlyList<PawnKindDef> kinds = GetAllPawnKinds(def);
 
         foreach (PawnKindDef fkind in kinds)
@@ -493,6 +517,7 @@ public class FactionEdit : IExposable
     public void CopyFrom(FactionEdit source)
     {
         TechLevel = source.TechLevel;
+        BasicMemberKind = source.BasicMemberKind?.DeepClone() ?? new DefRef<PawnKindDef>();
         ForcedPrimaryIdeoKey = source.ForcedPrimaryIdeoKey;
         ForcedPrimaryIdeoSourceKind = source.ForcedPrimaryIdeoSourceKind;
         OverrideFactionXenotypes = source.OverrideFactionXenotypes;

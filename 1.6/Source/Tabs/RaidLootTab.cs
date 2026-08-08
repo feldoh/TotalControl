@@ -25,7 +25,7 @@ public class RaidLootTab : EditTab
         Rect overrideButtonRect = ui.GetRect(30);
         if (Widgets.ButtonText(overrideButtonRect, "FactionLoadout_FactionDefault".Translate()))
         {
-            Current.RaidLootValueFromPointsCurve = new SimpleCurve(FactionEdit.TryGetOriginal(Current.ParentEdit.Faction.Def.defName)?.raidLootValueFromPointsCurve?.Points ?? []);
+            Current.RaidLootValueFromPointsCurve = new SimpleCurve(FactionEdit.TryGetOriginal(Current.ParentEdit?.Faction?.DefName)?.raidLootValueFromPointsCurve?.Points ?? []);
         }
 
         Current.RaidLootValueFromPointsCurve ??= [];
