@@ -11,6 +11,12 @@ public class Dialog_FactionLoadout : Window
     public override Vector2 InitialSize => new Vector2(800f, 600f);
     public Vector2 scrollPosition = Vector2.zero;
 
+    // Height the scroll content used on the previous frame. Seeded large so the very first
+    // frame's inner rect is never shorter than the real content: a short inner rect makes
+    // Listing_Standard wrap into a second column (resetting curY), which corrupts the
+    // measurement. After one frame this settles to the exact measured height.
+    public float lastContentHeight = 100000f;
+
     public Dialog_FactionLoadout()
     {
         doCloseButton = true;
@@ -23,23 +29,34 @@ public class Dialog_FactionLoadout : Window
 
     public override void DoWindowContents(Rect inRect)
     {
-        int presetHeight = (Preset.LoadedPresets.Count + 1) * 30;
-        int restHeight = 300; // Adjust this value as needed
+        // Everything except the create button lives in one scroll view; the button is pinned
+        // just below it so it can never be scrolled out of reach or clipped by content growth
+        // above it (the bug this replaced). The scroll view's inner height is the height the
+        // content measured to last frame, so it is always correct without hardcoding row math.
+        //
+        // DoWindowContents is called two ways with different rect contracts:
+        //   * standalone window (main-menu link) — we own the frame, so the base Window draws
+        //     its Close button overlapping the bottom of inRect; reserve space for it.
+        //   * inline from Dialog_ModSettings — that dialog already carved out its own Close
+        //     button before handing us inRect, so no reservation is needed.
+        const float buttonHeight = 35f;
+        const float gap = 8f;
+        bool standalone = Find.WindowStack.currentlyDrawnWindow == this;
+        float bottomReserve = standalone ? Window.CloseButSize.y + 10f : 0f;
 
-        float scrollViewHeight = presetHeight + restHeight;
+        float contentBottom = inRect.yMax - bottomReserve;
+        Rect createRect = new Rect(inRect.x, contentBottom - buttonHeight, inRect.width, buttonHeight);
+        Rect scrollOuter = new Rect(inRect.x, inRect.y, inRect.width, createRect.y - gap - inRect.y);
 
-        Rect viewRect = new Rect(0, 0, inRect.width - 20, scrollViewHeight);
-        Rect viewPortRect = new Rect(0, 30, inRect.width, inRect.height - 70);
-        scrollPosition = GUI.BeginScrollView(viewPortRect, scrollPosition, viewRect);
+        Rect scrollInner = new Rect(0, 0, inRect.width - 20f, Mathf.Max(lastContentHeight, scrollOuter.height));
+        scrollPosition = GUI.BeginScrollView(scrollOuter, scrollPosition, scrollInner);
         Listing_Standard ui = new Listing_Standard();
-
         try
         {
-            ui.Begin(viewRect);
+            ui.Begin(scrollInner);
 
             ui.Label("FactionLoadout_Settings_FactionPresetDesc".Translate());
             ui.GapLine();
-
             ui.CheckboxLabeled(
                 "FactionLoadout_Settings_VanillaRestrictions".Translate(),
                 ref MySettings.VanillaRestrictions,
@@ -160,25 +177,28 @@ public class Dialog_FactionLoadout : Window
             if (Preset.LoadedPresets.EnumerableNullOrEmpty())
                 ui.Label("FactionLoadout_NothingHere".Translate());
 
-            ui.GapLine();
-            if (ui.ButtonText("FactionLoadout_CreateNewPreset".Translate()))
-            {
-                Preset preset = new();
-                Preset.AddNewPreset(preset);
-                preset.Save();
-
-                MySettings.ActivePreset = preset.GUID;
-
-                PresetUI.OpenEditor(preset);
-
-                Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
-                Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
-            }
+            // Record how tall the content actually was so next frame's inner rect matches it.
+            lastContentHeight = ui.CurHeight;
         }
         finally
         {
             ui.End();
             GUI.EndScrollView();
+        }
+
+        // Pinned create button, always visible below the scroll view.
+        if (Widgets.ButtonText(createRect, "FactionLoadout_CreateNewPreset".Translate()))
+        {
+            Preset preset = new();
+            Preset.AddNewPreset(preset);
+            preset.Save();
+
+            MySettings.ActivePreset = preset.GUID;
+
+            PresetUI.OpenEditor(preset);
+
+            Find.WindowStack.WindowOfType<Dialog_ModSettings>()?.Close();
+            Find.WindowStack.WindowOfType<Dialog_Options>()?.Close();
         }
     }
 
